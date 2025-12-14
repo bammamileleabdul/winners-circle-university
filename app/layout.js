@@ -1,17 +1,12 @@
 import "./globals.css";
-import type { Metadata } from "next";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Winners Circle University",
   description:
-    "Performance-based gold trading powered by AI and disciplined execution.",
+    "Performance-based gold trading framework with disciplined execution",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>{children}</body>
