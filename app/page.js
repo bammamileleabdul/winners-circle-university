@@ -9,8 +9,7 @@ export default function HomePage() {
         alignItems: "center",
         justifyContent: "center",
         padding: "40px",
-        background:
-          "radial-gradient(circle at top, rgba(201,162,77,0.18), transparent 65%)",
+        background: "radial-gradient(circle at top, #1a1405 0%, #0b0b0b 60%)",
       }}
     >
       <div
@@ -18,22 +17,43 @@ export default function HomePage() {
           maxWidth: "900px",
           width: "100%",
           textAlign: "center",
-          background: "rgba(0,0,0,0.7)",
-          border: "1px solid rgba(201,162,77,0.3)",
+          background: "rgba(0,0,0,0.70)",
+          border: "1px solid rgba(201,162,77,0.35)",
           borderRadius: "24px",
           padding: "70px 50px",
-          boxShadow: "0 0 90px rgba(201,162,77,0.2)",
+          boxShadow: "0 0 90px rgba(201,162,77,0.18)",
         }}
       >
-        <h1
+        <div
           style={{
-            fontSize: "48px",
-            fontWeight: 800,
+            display: "inline-block",
+            padding: "8px 14px",
+            borderRadius: "999px",
+            border: "1px solid rgba(201,162,77,0.35)",
             color: "#c9a24d",
-            marginBottom: "22px",
+            fontSize: "13px",
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            marginBottom: "18px",
           }}
         >
-          Winners Circle University
+          Early Access • Limited Onboarding
+        </div>
+
+        <h1
+          style={{
+            fontSize: "52px",
+            fontWeight: 900,
+            color: "#c9a24d",
+            marginBottom: "18px",
+            lineHeight: 1.05,
+          }}
+        >
+          Winners
+          <br />
+          Circle
+          <br />
+          University
         </h1>
 
         <p
@@ -42,11 +62,11 @@ export default function HomePage() {
             lineHeight: 1.7,
             color: "#e5e5e5",
             maxWidth: "720px",
-            margin: "0 auto 20px",
+            margin: "0 auto 18px",
           }}
         >
           A performance-based gold trading framework combining advanced AI
-          modelling with disciplined human execution.
+          modelling with disciplined human market execution.
         </p>
 
         <p
@@ -54,40 +74,73 @@ export default function HomePage() {
             fontSize: "16px",
             color: "#bdbdbd",
             maxWidth: "700px",
-            margin: "0 auto 50px",
+            margin: "0 auto 42px",
           }}
         >
-          No subscriptions. No upfront fees.  
-          We only earn when you earn — a simple 30% performance share.
+          No subscriptions. No upfront fees. We only earn when you earn — a
+          simple 30% performance share.
         </p>
 
-        <Link href="/waitlist">
-          <button
+        <div style={{ display: "flex", gap: "14px", justifyContent: "center" }}>
+          <Link
+            href="/waitlist"
             style={{
-              background: "linear-gradient(135deg, #c9a24d, #f2d27a)",
+              display: "inline-block",
+              background: "linear-gradient(135deg, #e3c87a, #c9a24d)",
               color: "#0b0b0b",
-              border: "none",
-              padding: "18px 44px",
+              padding: "14px 22px",
               fontSize: "16px",
-              fontWeight: 700,
-              borderRadius: "18px",
-              cursor: "pointer",
-              boxShadow: "0 12px 35px rgba(201,162,77,0.4)",
+              fontWeight: 800,
+              borderRadius: "14px",
+              textDecoration: "none",
+              minWidth: "240px",
             }}
           >
-            Join the Winners Circle
-          </button>
-        </Link>
+            Join the Waitlist
+          </Link>
 
-        <p
+          <Link
+            href="/waitlist"
+            style={{
+              display: "inline-block",
+              border: "1px solid rgba(201,162,77,0.40)",
+              color: "#e5e5e5",
+              padding: "14px 22px",
+              fontSize: "16px",
+              fontWeight: 700,
+              borderRadius: "14px",
+              textDecoration: "none",
+              background: "rgba(0,0,0,0.25)",
+            }}
+          >
+            See How It Works
+          </Link>
+        </div>
+
+        <div
           style={{
-            marginTop: "32px",
-            fontSize: "14px",
-            color: "#8a8a8a",
+            marginTop: "38px",
+            display: "flex",
+            justifyContent: "center",
+            gap: "10px",
+            flexWrap: "wrap",
+            color: "#9a9a9a",
+            fontSize: "12px",
           }}
         >
-          Gold (XAUUSD) only · Risk-managed execution · Limited onboarding
-        </p>
+          <span style={{ border: "1px solid rgba(255,255,255,0.08)", padding: "8px 10px", borderRadius: "999px" }}>
+            XAUUSD Focus
+          </span>
+          <span style={{ border: "1px solid rgba(255,255,255,0.08)", padding: "8px 10px", borderRadius: "999px" }}>
+            Risk First
+          </span>
+          <span style={{ border: "1px solid rgba(255,255,255,0.08)", padding: "8px 10px", borderRadius: "999px" }}>
+            Premium/Psychology
+          </span>
+          <span style={{ border: "1px solid rgba(255,255,255,0.08)", padding: "8px 10px", borderRadius: "999px" }}>
+            Systemized Execution
+          </span>
+        </div>
       </div>
     </main>
   );
