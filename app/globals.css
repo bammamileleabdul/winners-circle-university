@@ -1,46 +1,26 @@
-:root {
-  --bg-black: #0b0b0b;
-  --gold: #c9a24d;
-  --gold-soft: #f1df9a;
-  --text-light: #ededed;
-}
-
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
-html,
 body {
-  background: var(--bg-black);
-  color: var(--text-light);
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
+  margin: 0;
+  background: #0b0b0b;
+  color: #ededed;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 a {
-  color: var(--gold);
+  color: inherit;
   text-decoration: none;
 }
 
-h1,
-h2,
-h3 {
-  color: var(--gold);
-  font-weight: 600;
-}
-
 button {
-  background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+  background: linear-gradient(135deg, #c9a24d, #f3d27a);
   color: #0b0b0b;
   border: none;
   padding: 14px 26px;
-  border-radius: 8px;
+  border-radius: 14px;
   font-weight: 600;
+  font-size: 16px;
   cursor: pointer;
-}
-
-button:hover {
-  opacity: 0.9;
 }
