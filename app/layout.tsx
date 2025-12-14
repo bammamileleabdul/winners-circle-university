@@ -1,8 +1,10 @@
 import "./globals.css";
+import type { Metadata } from "next";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Winners Circle University",
-  description: "Performance-based gold trading. You pay only on profitable weeks."
+  description:
+    "Performance-based gold trading powered by AI-assisted and human-verified execution.",
 };
 
 export default function RootLayout({
