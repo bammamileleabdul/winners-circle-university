@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function HomePage() {
   return (
     <main
@@ -6,90 +8,62 @@ export default function HomePage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "radial-gradient(circle at top, #1a1a1a 0%, #0b0b0b 60%)",
         padding: "40px",
+        background:
+          "radial-gradient(circle at top, rgba(201,162,77,0.15), transparent 60%)",
       }}
     >
       <div
         style={{
           maxWidth: "900px",
           textAlign: "center",
-          border: "1px solid rgba(201,164,77,0.25)",
-          borderRadius: "18px",
-          padding: "60px 40px",
-          background: "rgba(0,0,0,0.6)",
-          boxShadow: "0 0 60px rgba(201,164,77,0.15)",
+          border: "1px solid rgba(201,162,77,0.25)",
+          borderRadius: "22px",
+          padding: "64px 48px",
+          background: "rgba(0,0,0,0.65)",
+          boxShadow: "0 0 80px rgba(201,162,77,0.15)",
         }}
       >
         <h1
           style={{
-            fontSize: "42px",
+            fontSize: "44px",
             fontWeight: 700,
-            marginBottom: "20px",
+            marginBottom: "24px",
             color: "#c9a24d",
-            letterSpacing: "0.5px",
           }}
         >
           Winners Circle University
         </h1>
 
-        <p
-          style={{
-            fontSize: "18px",
-            lineHeight: 1.7,
-            color: "#e0e0e0",
-            marginBottom: "30px",
-          }}
-        >
-          A performance-based gold trading framework combining disciplined human
-          execution with advanced AI modelling.
-          <br />
-          Built for traders who value precision, risk control, and consistency.
+        <p style={{ fontSize: "18px", lineHeight: 1.7, marginBottom: "20px" }}>
+          A performance-based gold trading framework combining advanced AI
+          modelling with disciplined human market execution.
         </p>
 
         <p
           style={{
-            fontSize: "15px",
-            color: "#b5b5b5",
+            fontSize: "16px",
+            opacity: 0.85,
             marginBottom: "40px",
           }}
         >
-          No subscriptions. No signal noise.  
+          No subscriptions. No upfront fees.  
           We only earn when you earn — a simple 30% performance share.
         </p>
 
-        <button
-          style={{
-            background: "#c9a24d",
-            color: "#0b0b0b",
-            border: "none",
-            padding: "16px 34px",
-            borderRadius: "10px",
-            fontSize: "16px",
-            fontWeight: 600,
-            cursor: "pointer",
-            transition: "all 0.3s ease",
-          }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.boxShadow =
-              "0 0 25px rgba(201,164,77,0.6)")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.boxShadow = "none")
-          }
-        >
-          Join the Winners Circle
-        </button>
+        <Link href="/waitlist">
+          <button>Join the Winners Circle</button>
+        </Link>
 
-        <div
+        <p
           style={{
-            marginTop: "50px",
-            fontSize: "13px",
-            color: "#8a8a8a",
+            marginTop: "32px",
+            fontSize: "14px",
+            opacity: 0.6,
           }}
         >
           Gold (XAUUSD) only · Risk-managed execution · Limited onboarding
-        </div>
+        </p>
       </div>
     </main>
   );
