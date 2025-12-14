@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Winners Circle University",
   description:
-    "Performance-based gold trading powered by AI-assisted and human-verified execution.",
+    "Performance-based gold trading powered by AI and disciplined execution.",
 };
 
 export default function RootLayout({
