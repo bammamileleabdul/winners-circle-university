@@ -5,48 +5,50 @@ export default function HomePage() {
     <main
       style={{
         minHeight: "100vh",
+        background: "radial-gradient(circle at top, #1a1405 0%, #0b0b0b 65%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "40px",
-        background: "radial-gradient(circle at top, #1a1405 0%, #0b0b0b 60%)",
+        padding: "24px",
       }}
     >
       <div
         style={{
-          maxWidth: "900px",
           width: "100%",
-          textAlign: "center",
-          background: "rgba(0,0,0,0.70)",
+          maxWidth: "420px",
+          background: "rgba(0,0,0,0.75)",
           border: "1px solid rgba(201,162,77,0.35)",
-          borderRadius: "24px",
-          padding: "70px 50px",
-          boxShadow: "0 0 90px rgba(201,162,77,0.18)",
+          borderRadius: "22px",
+          padding: "36px 22px",
+          textAlign: "center",
+          boxShadow: "0 0 70px rgba(201,162,77,0.18)",
         }}
       >
+        {/* Badge */}
         <div
           style={{
             display: "inline-block",
             padding: "8px 14px",
             borderRadius: "999px",
-            border: "1px solid rgba(201,162,77,0.35)",
+            border: "1px solid rgba(201,162,77,0.4)",
             color: "#c9a24d",
-            fontSize: "13px",
+            fontSize: "12px",
             letterSpacing: "0.12em",
             textTransform: "uppercase",
-            marginBottom: "18px",
+            marginBottom: "20px",
           }}
         >
           Early Access • Limited Onboarding
         </div>
 
+        {/* Title */}
         <h1
           style={{
-            fontSize: "52px",
+            fontSize: "36px",
             fontWeight: 900,
             color: "#c9a24d",
-            marginBottom: "18px",
-            lineHeight: 1.05,
+            lineHeight: 1.1,
+            marginBottom: "16px",
           }}
         >
           Winners
@@ -56,13 +58,13 @@ export default function HomePage() {
           University
         </h1>
 
+        {/* Description */}
         <p
           style={{
-            fontSize: "18px",
+            fontSize: "15px",
             lineHeight: 1.7,
             color: "#e5e5e5",
-            maxWidth: "720px",
-            margin: "0 auto 18px",
+            marginBottom: "14px",
           }}
         >
           A performance-based gold trading framework combining advanced AI
@@ -71,29 +73,38 @@ export default function HomePage() {
 
         <p
           style={{
-            fontSize: "16px",
+            fontSize: "14px",
             color: "#bdbdbd",
-            maxWidth: "700px",
-            margin: "0 auto 42px",
+            lineHeight: 1.6,
+            marginBottom: "26px",
           }}
         >
-          No subscriptions. No upfront fees. We only earn when you earn — a
-          simple 30% performance share.
+          No subscriptions. No upfront fees.
+          <br />
+          We only earn when you earn — a simple 30% performance share.
         </p>
 
-        <div style={{ display: "flex", gap: "14px", justifyContent: "center" }}>
+        {/* Buttons */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px",
+            marginBottom: "26px",
+          }}
+        >
           <Link
             href="/waitlist"
             style={{
-              display: "inline-block",
+              display: "block",
+              width: "100%",
               background: "linear-gradient(135deg, #e3c87a, #c9a24d)",
               color: "#0b0b0b",
-              padding: "14px 22px",
+              padding: "14px",
               fontSize: "16px",
-              fontWeight: 800,
+              fontWeight: 900,
               borderRadius: "14px",
               textDecoration: "none",
-              minWidth: "240px",
             }}
           >
             Join the Waitlist
@@ -102,44 +113,47 @@ export default function HomePage() {
           <Link
             href="/waitlist"
             style={{
-              display: "inline-block",
-              border: "1px solid rgba(201,162,77,0.40)",
+              display: "block",
+              width: "100%",
+              border: "1px solid rgba(201,162,77,0.45)",
               color: "#e5e5e5",
-              padding: "14px 22px",
-              fontSize: "16px",
+              padding: "14px",
+              fontSize: "15px",
               fontWeight: 700,
               borderRadius: "14px",
               textDecoration: "none",
-              background: "rgba(0,0,0,0.25)",
+              background: "rgba(0,0,0,0.3)",
             }}
           >
             See How It Works
           </Link>
         </div>
 
+        {/* Tags */}
         <div
           style={{
-            marginTop: "38px",
             display: "flex",
             justifyContent: "center",
-            gap: "10px",
+            gap: "8px",
             flexWrap: "wrap",
-            color: "#9a9a9a",
             fontSize: "12px",
+            color: "#9a9a9a",
           }}
         >
-          <span style={{ border: "1px solid rgba(255,255,255,0.08)", padding: "8px 10px", borderRadius: "999px" }}>
-            XAUUSD Focus
-          </span>
-          <span style={{ border: "1px solid rgba(255,255,255,0.08)", padding: "8px 10px", borderRadius: "999px" }}>
-            Risk First
-          </span>
-          <span style={{ border: "1px solid rgba(255,255,255,0.08)", padding: "8px 10px", borderRadius: "999px" }}>
-            Premium/Psychology
-          </span>
-          <span style={{ border: "1px solid rgba(255,255,255,0.08)", padding: "8px 10px", borderRadius: "999px" }}>
-            Systemized Execution
-          </span>
+          {["XAUUSD Focus", "Risk First", "Psychology", "Systemized Execution"].map(
+            (item) => (
+              <span
+                key={item}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "999px",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
+                {item}
+              </span>
+            )
+          )}
         </div>
       </div>
     </main>
