@@ -1,27 +1,47 @@
+
 "use client";
 
 import { useState } from "react";
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Waitlist
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState("");
+
+  // Interactive reveals
   const [manifestoOpen, setManifestoOpen] = useState(false);
   const [vvipOpen, setVvipOpen] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+
+  const handleWaitlistSubmit = async (e) => {
+    e.preventDefault();
+    setStatus("Submitting...");
+
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!res.ok) throw new Error("Failed");
+
+      setStatus("You’re in. Welcome to the Circle.");
+      setEmail("");
+    } catch (err) {
+      setStatus("Something went wrong. Try again.");
+    }
+  };
 
   return (
     <>
       {/* HEADER */}
       <header className="header">
-        <div />
+        <div className="logo">Winners Circle</div>
         <button className="menuBtn" onClick={() => setMenuOpen(true)}>
           ☰
         </button>
-
-        <img
-          src="/emblem.png.jpg"
-          alt="Winners Circle Emblem"
-          className="headerEmblem"
-        />
       </header>
 
       {/* MOBILE MENU */}
@@ -32,23 +52,27 @@ export default function Home() {
           </button>
 
           <nav className="menuLinks">
-            <a href="#overview" onClick={() => setMenuOpen(false)}>Overview</a>
-            <a href="#how" onClick={() => setMenuOpen(false)}>How It Works</a>
-            <a href="#principles" onClick={() => setMenuOpen(false)}>Principles</a>
-            <a href="#manifesto" onClick={() => setMenuOpen(false)}>Manifesto</a>
-            <a href="#vvip" onClick={() => setMenuOpen(false)}>VVIP Access</a>
+            <a href="#overview" onClick={() => setMenuOpen(false)}>
+              Overview
+            </a>
+            <a href="#how" onClick={() => setMenuOpen(false)}>
+              How It Works
+            </a>
+            <a href="#principles" onClick={() => setMenuOpen(false)}>
+              Principles
+            </a>
+            <a href="#manifesto" onClick={() => setMenuOpen(false)}>
+              Manifesto
+            </a>
+            <a href="#vvip" onClick={() => setMenuOpen(false)}>
+              VVIP Access
+            </a>
           </nav>
         </div>
       )}
 
       {/* HERO */}
       <section id="overview" className="hero">
-        <img
-          src="/emblem.png.jpg"
-          alt=""
-          className="heroWatermark"
-        />
-
         <div className="pill">EARLY ACCESS · LIMITED ONBOARDING</div>
 
         <h1>Winners Circle University</h1>
@@ -57,77 +81,98 @@ export default function Home() {
           modelling with disciplined human execution.
         </p>
 
-        {/* WAITLIST (FORMSPREE + OVERLAY) */}
-        <form
-          className="waitlistForm"
-          action="https://formspree.io/f/xpwveaza"
-          method="POST"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const form = e.currentTarget;
+        {/* WAITLIST FORM (REAL) */}
 
-            fetch(form.action, {
-              method: "POST",
-              body: new FormData(form),
-              headers: { Accept: "application/json" },
-            }).then(() => {
-              form.reset();
-              setShowSuccess(true);
-            });
-          }}
-        >
-          <input
-            className="waitlistInput"
-            type="email"
-            name="email"
-            placeholder="Enter your email"
-            required
-          />
+<form
+  className="waitlistForm"
+  action="https://formspree.io/f/xpwveaza"
+  method="POST"
+>
+  <input
+    className="waitlistInput"
+    type="email"
+    name="email"
+    placeholder="Enter your email"
+    required
+  />
 
-          <input type="hidden" name="source" value="Winners Circle Landing Page" />
+  <input type="hidden" name="source" value="Winners Circle Landing Page" />
 
-          <button className="goldBtn" type="submit">
-            Join the Waitlist
-          </button>
-        </form>
+  <button className="goldBtn" type="submit">
+    Join the Waitlist
+  </button>
+</form>
+
+        <div className="hintRow">
+          <a className="ghostLink" href="#how">
+            See How It Works →
+          </a>
+        </div>
       </section>
 
-      {/* HOW IT WORKS */}
+      {/* HOW IT WORKS (Floating Gold Cards) */}
       <section id="how" className="section">
         <h2>How It Works</h2>
+
         <div className="floatWrap">
           {[
-            ["Read Structure", "We react to price, not predictions."],
-            ["Risk First", "Capital protection is non-negotiable."],
-            ["Execute Clean", "Rules remove emotion from execution."],
-          ].map(([t, d]) => (
-            <div key={t} className="floatCard">
-              <div className="floatTitle">{t}</div>
-              <div className="floatText">{d}</div>
+            {
+              t: "Read Structure",
+              d: "We react to price, not predictions. We wait for confirmation.",
+            },
+            {
+              t: "Risk First",
+              d: "Capital protection is non-negotiable. Survival compounds.",
+            },
+            {
+              t: "Execute Clean",
+              d: "Precision beats frequency. Rules remove emotion.",
+            },
+          ].map((x) => (
+            <div key={x.t} className="floatCard">
+              <div className="floatTitle">{x.t}</div>
+              <div className="floatText">{x.d}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* PRINCIPLES */}
+      {/* PRINCIPLES (Luxury Cards) */}
       <section id="principles" className="section">
         <h2>Our Principles</h2>
+
         <div className="luxGrid">
           {[
-            ["Discipline Over Dopamine", "Calm execution compounds."],
-            ["Risk Before Reward", "If risk isn’t clear, the trade doesn’t exist."],
-            ["Process Over Outcomes", "Decisions compound, not luck."],
-            ["Patience Compounds", "Waiting is a skill."],
-          ].map(([t, d]) => (
-            <div key={t} className="luxCard">
-              <div className="luxTitle">{t}</div>
-              <div className="luxText">{d}</div>
+            {
+              t: "Discipline Over Dopamine",
+              d: "We remove impulse from execution. Calm is an edge.",
+            },
+            {
+              t: "Risk Before Reward",
+              d: "If protection isn’t clear, the trade doesn’t exist.",
+            },
+            {
+              t: "Process Over Outcomes",
+              d: "We judge decisions, not single results. Mastery compounds.",
+            },
+            {
+              t: "Patience Compounds",
+              d: "Waiting is a skill. Quality beats activity.",
+            },
+            {
+              t: "Consistency Creates Inevitability",
+              d: "Repeat what works. Remove what doesn’t. Stay aligned.",
+            },
+          ].map((p) => (
+            <div key={p.t} className="luxCard">
+              <div className="luxTitle">{p.t}</div>
+              <div className="luxText">{p.d}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* MANIFESTO */}
+      {/* MANIFESTO (Curtain / Reveal) */}
       <section id="manifesto" className="section">
         <h2>Manifesto</h2>
 
@@ -138,18 +183,39 @@ export default function Home() {
         ) : (
           <div className="manifestoCard">
             <div className="manifestoHead">Founder’s Manifesto</div>
-            <p>Winners Circle was built for longevity, not excitement.</p>
-            <p>If you’re here to gamble — this won’t work.</p>
-            <p>If you’re here to compound patiently — welcome.</p>
-            <div className="signature">— Lelefx</div>
-            <button className="ghostBtn" onClick={() => setManifestoOpen(false)}>
-              Close
-            </button>
+            <div className="manifestoBody">
+              <p>
+                Winners Circle was not built for excitement. <br />
+                It was built for longevity.
+              </p>
+              <p>
+                I’ve seen what impatience does to talented people. <br />
+                I’ve seen discipline quietly outperform brilliance.
+              </p>
+              <p>
+                This framework exists to remove noise, emotion, and ego —
+                replacing them with structure, risk awareness, and clarity.
+              </p>
+              <p>
+                If you’re here to rush, impress, or gamble — this won’t work.{" "}
+                <br />
+                If you’re here to compound patiently — you’re in the right place.
+              </p>
+
+              <div className="signature">— Lelefx, Founder</div>
+
+              <button
+                className="ghostBtn"
+                onClick={() => setManifestoOpen(false)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         )}
       </section>
 
-      {/* VVIP */}
+      {/* VVIP (Button -> Premium Reveal Panel) */}
       <section id="vvip" className="section last">
         <h2>VVIP Access</h2>
 
@@ -159,7 +225,19 @@ export default function Home() {
           </button>
         ) : (
           <div className="vvipCard">
-            <p>VVIP is invitation-only. Alignment comes first.</p>
+            <div className="vvipHead">Private • Invitation Only</div>
+
+            <p className="vvipText">
+              VVIP is not purchased. It is earned through consistency,
+              discipline, and alignment over time.
+            </p>
+
+            <div className="vvipDivider" />
+
+            <p className="vvipTextMuted">
+              Some members may be contacted discreetly.
+            </p>
+
             <button className="ghostBtn" onClick={() => setVvipOpen(false)}>
               Close
             </button>
@@ -167,26 +245,11 @@ export default function Home() {
         )}
       </section>
 
-      {/* SUCCESS OVERLAY */}
-      {showSuccess && (
-        <div className="successOverlay">
-          <div className="successCard">
-            <div className="successAccent" />
-            <h3>You’re in.</h3>
-            <p>
-              Winners Circle moves with precision.<br />
-              Updates will arrive shortly.
-            </p>
-            <button className="ghostBtn" onClick={() => setShowSuccess(false)}>
-              Continue
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* STYLES */}
       <style jsx>{`
-        html { scroll-behavior: smooth; }
+        :global(html) {
+          scroll-behavior: smooth;
+        }
 
         .header {
           position: sticky;
@@ -195,16 +258,16 @@ export default function Home() {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 14px 18px;
-          background: rgba(0,0,0,.85);
-          border-bottom: 1px solid rgba(230,195,106,.2);
+          padding: 16px 18px;
+          background: rgba(0, 0, 0, 0.82);
+          backdrop-filter: blur(10px);
+          border-bottom: 1px solid rgba(230, 195, 106, 0.18);
         }
 
-        .headerEmblem {
-          width: 42px;
-          height: 42px;
-          object-fit: contain;
-          filter: drop-shadow(0 0 10px rgba(230,195,106,.4));
+        .logo {
+          color: #e6c36a;
+          font-weight: 700;
+          letter-spacing: 0.02em;
         }
 
         .menuBtn {
@@ -214,106 +277,285 @@ export default function Home() {
           font-size: 26px;
         }
 
-        .hero {
-          position: relative;
-          text-align: center;
-          padding: 90px 18px 70px;
-          background: radial-gradient(circle at top, #2a1f0f, #000);
-          overflow: hidden;
+        .menuOverlay {
+          position: fixed;
+          inset: 0;
+          z-index: 1000;
+          padding: 30px;
+          background: radial-gradient(circle at top, #1a1408, #000);
         }
 
-        .heroWatermark {
-          position: absolute;
-          inset: 0;
-          margin: auto;
-          width: 520px;
-          opacity: 0.05;
-          pointer-events: none;
+        .menuClose {
+          background: linear-gradient(135deg, #e6c36a, #b8963f);
+          border: none;
+          padding: 10px 18px;
+          border-radius: 14px;
+          font-weight: 700;
+          color: #000;
+          margin-bottom: 40px;
+          float: right;
+        }
+
+        .menuLinks a {
+          display: block;
+          font-size: 26px;
+          margin-bottom: 26px;
+          color: #e6c36a;
+          text-decoration: none;
+          letter-spacing: 0.02em;
+        }
+
+        .hero {
+          text-align: center;
+          padding: 78px 18px 60px;
+          background: radial-gradient(circle at top, #2a1f0f, #000);
         }
 
         .pill {
           display: inline-block;
           padding: 8px 14px;
           border-radius: 999px;
-          border: 1px solid rgba(230,195,106,.3);
+          border: 1px solid rgba(230, 195, 106, 0.28);
           color: #e6c36a;
           font-size: 12px;
-          letter-spacing: .14em;
-          margin-bottom: 20px;
+          letter-spacing: 0.14em;
+          margin-bottom: 18px;
         }
 
-        h1 { color: #e6c36a; font-size: 42px; }
+        .hero h1 {
+          color: #e6c36a;
+          font-size: 40px;
+          margin: 0 0 16px;
+          line-height: 1.12;
+        }
 
         .heroP {
           color: #cfcfcf;
-          max-width: 620px;
-          margin: 0 auto 28px;
+          max-width: 640px;
+          margin: 0 auto 26px;
           line-height: 1.7;
+          font-size: 15px;
         }
 
         .waitlistForm {
-          max-width: 380px;
-          margin: auto;
           display: flex;
           flex-direction: column;
-          gap: 14px;
+          gap: 12px;
+          max-width: 380px;
+          margin: 0 auto;
         }
 
         .waitlistInput {
           padding: 14px 16px;
           border-radius: 16px;
-          border: 1px solid rgba(230,195,106,.35);
-          background: rgba(0,0,0,.6);
+          border: 1px solid rgba(230, 195, 106, 0.35);
+          background: rgba(0, 0, 0, 0.55);
           color: #fff;
+          font-size: 15px;
+          outline: none;
         }
 
         .goldBtn {
-          background: linear-gradient(135deg,#e6c36a,#b8963f);
+          background: linear-gradient(135deg, #e6c36a, #b8963f);
           border: none;
-          padding: 14px;
+          padding: 14px 18px;
+          border-radius: 999px;
+          font-size: 15px;
+          font-weight: 800;
+          color: #000;
+        }
+
+        .status {
+          color: #e6c36a;
+          font-size: 13px;
+          margin: 6px 0 0;
+        }
+
+        .hintRow {
+          margin-top: 18px;
+        }
+
+        .ghostLink {
+          color: rgba(230, 195, 106, 0.9);
+          text-decoration: none;
+          font-size: 14px;
+          border-bottom: 1px solid rgba(230, 195, 106, 0.3);
+          padding-bottom: 2px;
+        }
+
+        .section {
+          padding: 80px 18px;
+          text-align: center;
+          background: radial-gradient(circle at top, rgba(230, 195, 106, 0.06), #000);
+        }
+
+        .section h2 {
+          color: #e6c36a;
+          margin-bottom: 34px;
+          font-size: 28px;
+        }
+
+        .floatWrap {
+          display: grid;
+          gap: 16px;
+          max-width: 520px;
+          margin: 0 auto;
+        }
+
+        .floatCard {
+          background: linear-gradient(180deg, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.92));
+          border: 1px solid rgba(230, 195, 106, 0.35);
+          border-radius: 22px;
+          padding: 24px;
+          box-shadow: 0 0 40px rgba(230, 195, 106, 0.12);
+          text-align: left;
+        }
+
+        .floatTitle {
+          color: #e6c36a;
+          font-weight: 800;
+          font-size: 18px;
+          margin-bottom: 10px;
+        }
+
+        .floatText {
+          color: #d7d7d7;
+          line-height: 1.6;
+          font-size: 14px;
+        }
+
+        .luxGrid {
+          display: grid;
+          gap: 14px;
+          max-width: 700px;
+          margin: 0 auto;
+        }
+
+        .luxCard {
+          background: linear-gradient(180deg, rgba(230, 195, 106, 0.08), rgba(0, 0, 0, 0.9));
+          border: 1px solid rgba(230, 195, 106, 0.32);
+          border-radius: 22px;
+          padding: 26px;
+          text-align: left;
+          box-shadow: 0 0 55px rgba(230, 195, 106, 0.1);
+        }
+
+        .luxTitle {
+          color: #e6c36a;
+          font-weight: 900;
+          font-size: 16px;
+          letter-spacing: 0.02em;
+          margin-bottom: 8px;
+        }
+
+        .luxText {
+          color: #d8d2b6;
+          font-size: 14px;
+          line-height: 1.7;
+        }
+
+        .curtainBtn {
+          background: transparent;
+          border: 1px solid rgba(230, 195, 106, 0.55);
+          color: #e6c36a;
+          padding: 16px 22px;
           border-radius: 999px;
           font-weight: 800;
         }
 
-        .section {
-          padding: 90px 18px;
-          background: #000;
-          text-align: center;
-        }
-
-        .successOverlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(0,0,0,.9);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 9999;
-        }
-
-        .successCard {
-          background: #000;
-          border: 1px solid rgba(230,195,106,.45);
-          padding: 34px;
+        .manifestoCard {
+          max-width: 760px;
+          margin: 0 auto;
+          background: linear-gradient(180deg, rgba(230, 195, 106, 0.1), rgba(0, 0, 0, 0.92));
+          border: 1px solid rgba(230, 195, 106, 0.35);
           border-radius: 26px;
-          box-shadow: 0 0 80px rgba(230,195,106,.3);
-          text-align: center;
+          padding: 26px;
+          box-shadow: 0 0 80px rgba(230, 195, 106, 0.14);
+          text-align: left;
         }
 
-        .successAccent {
-          height: 3px;
-          width: 120px;
-          background: linear-gradient(90deg,#e6c36a,#b8963f);
-          margin: 0 auto 16px;
+        .manifestoHead {
+          color: #e6c36a;
+          font-weight: 900;
+          font-size: 20px;
+          margin-bottom: 12px;
+        }
+
+        .manifestoBody p {
+          color: #d8d2b6;
+          line-height: 1.8;
+          font-size: 14px;
+          margin: 12px 0;
+        }
+
+        .signature {
+          margin-top: 16px;
+          color: #e6c36a;
+          font-weight: 800;
+        }
+
+        .vvipBtn {
+          background: linear-gradient(135deg, #e6c36a, #8f6b1f);
+          border: none;
+          padding: 16px 26px;
+          border-radius: 999px;
+          font-weight: 900;
+          color: #000;
+          box-shadow: 0 0 60px rgba(230, 195, 106, 0.15);
+        }
+
+        .vvipCard {
+          max-width: 740px;
+          margin: 0 auto;
+          background: radial-gradient(circle at top, rgba(230, 195, 106, 0.12), rgba(0, 0, 0, 0.92));
+          border: 1px solid rgba(230, 195, 106, 0.4);
+          border-radius: 26px;
+          padding: 28px;
+          box-shadow: 0 0 95px rgba(230, 195, 106, 0.18);
+          text-align: left;
+        }
+
+        .vvipHead {
+          color: #e6c36a;
+          font-weight: 900;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          font-size: 12px;
+          margin-bottom: 14px;
+        }
+
+        .vvipText {
+          color: #d8d2b6;
+          line-height: 1.8;
+          font-size: 14px;
+          margin: 0 0 14px;
+        }
+
+        .vvipDivider {
+          height: 1px;
+          background: rgba(230, 195, 106, 0.25);
+          margin: 14px 0;
+        }
+
+        .vvipTextMuted {
+          color: #a7a08a;
+          line-height: 1.7;
+          font-size: 13px;
+          margin: 0 0 14px;
         }
 
         .ghostBtn {
           background: transparent;
-          border: 1px solid rgba(230,195,106,.4);
+          border: 1px solid rgba(230, 195, 106, 0.35);
           color: #e6c36a;
           padding: 12px 18px;
           border-radius: 999px;
-          margin-top: 14px;
+          font-weight: 800;
+          margin-top: 10px;
+        }
+
+        .last {
+          padding-bottom: 110px;
         }
       `}</style>
     </>
