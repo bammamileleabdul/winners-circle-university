@@ -210,6 +210,71 @@ export default function HomePage() {
         ))}
       </section>
 
+      {/* FOUNDER MANIFESTO */}
+      <section
+        style={{
+          maxWidth: 600,
+          margin: "0 auto 60px",
+          background: "rgba(0,0,0,0.75)",
+          border: "1px solid rgba(201,162,77,0.4)",
+          borderRadius: 24,
+          padding: "34px 24px",
+        }}
+      >
+        <h2
+          style={{
+            textAlign: "center",
+            fontSize: 26,
+            fontWeight: 800,
+            color: "#d9b35f",
+            marginBottom: 16,
+          }}
+        >
+          The Founder’s Manifesto
+        </h2>
+
+        <div
+          style={{
+            width: 50,
+            height: 2,
+            background: "#c9a24d",
+            margin: "0 auto 20px",
+            borderRadius: 2,
+          }}
+        />
+
+        <p style={{ fontSize: 15, lineHeight: 1.7, opacity: 0.9 }}>
+          Winners Circle was not built for excitement.  
+          It was built for longevity.
+        </p>
+
+        <p style={{ fontSize: 15, lineHeight: 1.7, opacity: 0.9 }}>
+          I’ve seen what impatience does to talented people.  
+          I’ve seen discipline quietly outperform brilliance.
+        </p>
+
+        <p style={{ fontSize: 15, lineHeight: 1.7, opacity: 0.9 }}>
+          This framework exists to remove noise, emotion, and ego —  
+          and replace them with structure, risk awareness, and clarity.
+        </p>
+
+        <p style={{ fontSize: 15, lineHeight: 1.7, opacity: 0.9 }}>
+          If you’re here to rush, impress, or gamble — this won’t work.  
+          If you’re here to compound patiently — you’re in the right place.
+        </p>
+
+        <p
+          style={{
+            marginTop: 18,
+            fontSize: 14,
+            color: "#bfae7a",
+            textAlign: "right",
+          }}
+        >
+          — Founder, Winners Circle
+        </p>
+      </section>
+
       {/* FILTER SECTION */}
       <section style={{ maxWidth: 600, margin: "0 auto" }}>
         <h2
