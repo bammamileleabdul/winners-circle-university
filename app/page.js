@@ -1,304 +1,235 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import Link from "next/link";
 
 export default function HomePage() {
-  const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!email) return;
-    setSubmitted(true);
-  };
-
   return (
-    <main style={styles.page}>
+    <main
+      style={{
+        minHeight: "100vh",
+        background:
+          "radial-gradient(circle at top, #1a1405 0%, #0b0b0b 65%)",
+        color: "#eaeaea",
+        padding: "32px 18px",
+      }}
+    >
       {/* HERO */}
-      <section style={styles.hero}>
-        <span style={styles.badge}>EARLY ACCESS · LIMITED ONBOARDING</span>
+      <section
+        style={{
+          maxWidth: "720px",
+          margin: "0 auto",
+          textAlign: "center",
+          paddingTop: "40px",
+        }}
+      >
+        <div
+          style={{
+            display: "inline-block",
+            padding: "8px 16px",
+            borderRadius: "999px",
+            border: "1px solid rgba(201,162,77,0.4)",
+            color: "#c9a24d",
+            fontSize: "12px",
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            marginBottom: "18px",
+          }}
+        >
+          Early Access • Limited Onboarding
+        </div>
 
-        <h1 style={styles.title}>Winners Circle University</h1>
+        <h1
+          style={{
+            fontSize: "44px",
+            fontWeight: 900,
+            color: "#c9a24d",
+            lineHeight: 1.05,
+            marginBottom: "16px",
+          }}
+        >
+          Winners Circle
+          <br />
+          University
+        </h1>
 
-        <p style={styles.subtitle}>
+        <p
+          style={{
+            fontSize: "16px",
+            lineHeight: 1.7,
+            maxWidth: "560px",
+            margin: "0 auto 12px",
+            color: "#e5e5e5",
+          }}
+        >
           A performance-based gold trading framework combining advanced AI
           modelling with disciplined human market execution.
         </p>
 
-        <p style={styles.subtext}>
-          No subscriptions. No upfront fees.
-          <br />
-          We only earn when you earn — a simple 30% performance share.
+        <p
+          style={{
+            fontSize: "14px",
+            color: "#bdbdbd",
+            marginBottom: "28px",
+          }}
+        >
+          No subscriptions. No upfront fees. We only earn when you earn — a simple
+          30% performance share.
         </p>
 
-        <button style={styles.primaryButton}>
+        <Link
+          href="/waitlist"
+          style={{
+            display: "block",
+            width: "100%",
+            maxWidth: "360px",
+            margin: "0 auto",
+            background: "linear-gradient(135deg, #e3c87a, #c9a24d)",
+            color: "#0b0b0b",
+            padding: "16px",
+            borderRadius: "16px",
+            fontWeight: 900,
+            fontSize: "16px",
+            textDecoration: "none",
+          }}
+        >
           Join the Waitlist
-        </button>
+        </Link>
       </section>
 
       {/* HOW IT WORKS */}
-      <section style={styles.howItWorks}>
-        <h2 style={styles.sectionTitle}>How It Works</h2>
+      <section
+        style={{
+          maxWidth: "900px",
+          margin: "70px auto 0",
+          paddingBottom: "20px",
+        }}
+      >
+        <h2
+          style={{
+            textAlign: "center",
+            color: "#c9a24d",
+            fontSize: "28px",
+            fontWeight: 800,
+            marginBottom: "28px",
+          }}
+        >
+          How It Works
+        </h2>
 
-        <div style={styles.slider}>
-          {cards.map((card, index) => (
-            <div key={index} style={styles.card}>
-              <h3 style={styles.cardTitle}>{card.title}</h3>
-              <p style={styles.cardText}>{card.text}</p>
+        <div
+          style={{
+            display: "flex",
+            gap: "16px",
+            overflowX: "auto",
+            paddingBottom: "10px",
+          }}
+        >
+          {[
+            {
+              title: "Read Structure",
+              text: "We don’t predict markets. We read price and react with precision.",
+            },
+            {
+              title: "Risk First",
+              text: "Capital protection is non-negotiable. Risk defines every decision.",
+            },
+            {
+              title: "Execute Clean",
+              text: "Execution is systematic, rule-based, and emotionless.",
+            },
+          ].map((card, i) => (
+            <div
+              key={i}
+              style={{
+                minWidth: "260px",
+                background: "rgba(0,0,0,0.75)",
+                borderRadius: "18px",
+                padding: "22px",
+                border: "1px solid rgba(201,162,77,0.25)",
+                boxShadow: "0 0 40px rgba(201,162,77,0.08)",
+              }}
+            >
+              <h3
+                style={{
+                  color: "#c9a24d",
+                  fontSize: "18px",
+                  marginBottom: "8px",
+                }}
+              >
+                {card.title}
+              </h3>
+              <p style={{ fontSize: "14px", lineHeight: 1.6 }}>
+                {card.text}
+              </p>
             </div>
           ))}
-
-          {/* FINAL GOLD CARD */}
-          <div style={{ ...styles.card, ...styles.finalCard }}>
-            <h3 style={styles.finalTitle}>Execution Is Earned</h3>
-            <p style={styles.finalText}>
-              We don’t sell certainty.
-              <br />
-              We build consistency.
-            </p>
-            <div style={styles.divider} />
-            <p style={styles.finalSub}>
-              This is where patience compounds.
-            </p>
-          </div>
         </div>
 
-        <p style={styles.swipeHint}>Swipe to explore →</p>
+        <p
+          style={{
+            textAlign: "center",
+            fontSize: "12px",
+            color: "#888",
+            marginTop: "10px",
+          }}
+        >
+          Swipe to explore →
+        </p>
       </section>
 
-      {/* WAITLIST MODAL */}
-      {submitted && (
-        <div style={styles.overlay}>
-          <div style={styles.modal}>
-            <div style={styles.goldDot} />
+      {/* OUR PRINCIPLES */}
+      <section
+        style={{
+          maxWidth: "720px",
+          margin: "80px auto",
+          background: "rgba(0,0,0,0.78)",
+          borderRadius: "24px",
+          padding: "36px 26px",
+          border: "1px solid rgba(201,162,77,0.35)",
+          boxShadow: "0 0 70px rgba(201,162,77,0.18)",
+          textAlign: "center",
+        }}
+      >
+        <h2
+          style={{
+            color: "#c9a24d",
+            fontSize: "26px",
+            fontWeight: 900,
+            marginBottom: "14px",
+          }}
+        >
+          Our Principles
+        </h2>
 
-            <h2 style={styles.modalTitle}>
-              Welcome to the Winners Circle
-            </h2>
+        <div
+          style={{
+            width: "60px",
+            height: "2px",
+            background: "#c9a24d",
+            margin: "0 auto 22px",
+            borderRadius: "2px",
+          }}
+        />
 
-            <p style={styles.modalText}>
-              You’ve taken the first step toward disciplined growth
-              and elite execution.
-            </p>
-
-            <div style={styles.divider} />
-
-            <p style={styles.modalSub}>
-              This is where patience compounds.
-            </p>
-
-            <button
-              style={styles.primaryButton}
-              onClick={() => setSubmitted(false)}
-            >
-              Done
-            </button>
-          </div>
-        </div>
-      )}
+        {[
+          "Discipline over dopamine.",
+          "Risk before reward.",
+          "Process over outcomes.",
+          "Patience compounds.",
+          "Consistency creates inevitability.",
+        ].map((line, i) => (
+          <p
+            key={i}
+            style={{
+              fontSize: "15px",
+              marginBottom: "14px",
+              color: "#e5e5e5",
+            }}
+          >
+            {line}
+          </p>
+        ))}
+      </section>
     </main>
   );
 }
-
-const cards = [
-  {
-    title: 'Read Structure',
-    text: 'We don’t predict markets. We read price and react with precision.'
-  },
-  {
-    title: 'Risk First',
-    text: 'Capital preservation comes before profit. Always.'
-  },
-  {
-    title: 'Execution Rules',
-    text: 'Entries are earned through confirmation, not emotion.'
-  },
-  {
-    title: 'XAUUSD Focus',
-    text: 'One market. Deep understanding. No distractions.'
-  }
-];
-
-const gold = '#e3c26f';
-
-const styles = {
-  page: {
-    background: 'radial-gradient(circle at top, #1a1408, #000)',
-    minHeight: '100vh',
-    color: '#fff',
-    fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont'
-  },
-
-  hero: {
-    padding: '80px 20px',
-    textAlign: 'center',
-    maxWidth: 720,
-    margin: '0 auto'
-  },
-
-  badge: {
-    display: 'inline-block',
-    padding: '8px 16px',
-    border: `1px solid ${gold}`,
-    borderRadius: 999,
-    color: gold,
-    fontSize: 12,
-    letterSpacing: 1,
-    marginBottom: 24
-  },
-
-  title: {
-    fontSize: 40,
-    fontWeight: 700,
-    marginBottom: 20,
-    color: gold
-  },
-
-  subtitle: {
-    fontSize: 18,
-    lineHeight: 1.6,
-    opacity: 0.9,
-    marginBottom: 16
-  },
-
-  subtext: {
-    fontSize: 14,
-    opacity: 0.7,
-    marginBottom: 32
-  },
-
-  primaryButton: {
-    background: gold,
-    color: '#000',
-    border: 'none',
-    padding: '16px 28px',
-    borderRadius: 999,
-    fontSize: 16,
-    fontWeight: 600,
-    cursor: 'pointer'
-  },
-
-  howItWorks: {
-    padding: '60px 0 80px'
-  },
-
-  sectionTitle: {
-    textAlign: 'center',
-    fontSize: 28,
-    color: gold,
-    marginBottom: 32
-  },
-
-  slider: {
-    display: 'flex',
-    gap: 16,
-    overflowX: 'auto',
-    padding: '0 20px',
-    scrollSnapType: 'x mandatory'
-  },
-
-  card: {
-    minWidth: 260,
-    padding: 24,
-    borderRadius: 20,
-    background: 'rgba(0,0,0,0.7)',
-    border: '1px solid rgba(227,194,111,0.25)',
-    scrollSnapAlign: 'start',
-    boxShadow: '0 0 30px rgba(227,194,111,0.1)'
-  },
-
-  cardTitle: {
-    color: gold,
-    fontSize: 18,
-    marginBottom: 12
-  },
-
-  cardText: {
-    fontSize: 14,
-    opacity: 0.85,
-    lineHeight: 1.5
-  },
-
-  finalCard: {
-    border: `1px solid ${gold}`,
-    boxShadow: `0 0 40px rgba(227,194,111,0.35)`
-  },
-
-  finalTitle: {
-    color: gold,
-    fontSize: 20,
-    marginBottom: 12
-  },
-
-  finalText: {
-    fontSize: 15,
-    opacity: 0.9,
-    marginBottom: 16
-  },
-
-  divider: {
-    width: 40,
-    height: 2,
-    background: gold,
-    margin: '12px auto'
-  },
-
-  finalSub: {
-    fontSize: 13,
-    opacity: 0.75,
-    textAlign: 'center'
-  },
-
-  swipeHint: {
-    textAlign: 'center',
-    marginTop: 16,
-    fontSize: 12,
-    opacity: 0.6
-  },
-
-  overlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(0,0,0,0.8)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20
-  },
-
-  modal: {
-    background: '#000',
-    borderRadius: 24,
-    padding: 32,
-    maxWidth: 360,
-    width: '100%',
-    textAlign: 'center',
-    border: `1px solid ${gold}`,
-    boxShadow: `0 0 50px rgba(227,194,111,0.4)`
-  },
-
-  goldDot: {
-    width: 16,
-    height: 16,
-    borderRadius: '50%',
-    background: gold,
-    margin: '0 auto 16px'
-  },
-
-  modalTitle: {
-    color: gold,
-    fontSize: 22,
-    marginBottom: 12
-  },
-
-  modalText: {
-    fontSize: 14,
-    opacity: 0.9
-  },
-
-  modalSub: {
-    fontSize: 13,
-    opacity: 0.75,
-    marginBottom: 24
-  }
-};
