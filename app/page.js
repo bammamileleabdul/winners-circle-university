@@ -81,7 +81,13 @@ export default function Home() {
         </p>
 
         {/* WAITLIST FORM (REAL) */}
-        <form className="waitlistForm" onSubmit={handleWaitlistSubmit}>
+
+<form
+  className="waitlistForm"
+  action="https://formspree.io/f/YOUR_FORM_ID"
+  method="POST"
+>
+
           <input
             className="waitlistInput"
             type="email"
