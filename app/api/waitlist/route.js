@@ -1,14 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-
-const supabaseUrl = process.env.SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error('Missing Supabase environment variables')
-}
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+import { createClient } from '@supabase/supabase-js'
 
 export async function POST(req) {
   try {
@@ -21,26 +12,36 @@ export async function POST(req) {
       )
     }
 
+    const supabaseUrl = process.env.SUPABASE_URL
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    // 🚨 DO NOT THROW AT BUILD TIME
+    if (!supabaseUrl || !serviceKey) {
+      return NextResponse.json(
+        { error: 'Server not configured' },
+        { status: 500 }
+      )
+    }
+
+    const supabase = createClient(supabaseUrl, serviceKey)
+
     const { error } = await supabase
       .from('waitlist')
       .insert([{ email }])
 
     if (error) {
-      console.error('Supabase insert error:', error)
+      console.error(error)
       return NextResponse.json(
-        { error: 'Database insert failed' },
+        { error: 'Database error' },
         { status: 500 }
       )
     }
 
-    return NextResponse.json(
-      { success: true },
-      { status: 200 }
-    )
+    return NextResponse.json({ success: true })
   } catch (err) {
-    console.error('API error:', err)
+    console.error(err)
     return NextResponse.json(
-      { error: 'Server error' },
+      { error: 'Unexpected error' },
       { status: 500 }
     )
   }
