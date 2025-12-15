@@ -1,23 +1,24 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
-// ✅ Read environment variables (SERVER-SIDE ONLY)
-const supabaseUrl = process.env.SUPABASE_URL
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
-
-// 🚨 Hard fail at build time if missing (prevents silent bugs)
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase environment variables are missing')
-}
-
-// ✅ Create Supabase client
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-// ✅ POST /api/waitlist
 export async function POST(req) {
   try {
-    const body = await req.json()
-    const { email } = body
+    const supabaseUrl = process.env.SUPABASE_URL
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return NextResponse.json(
+        { error: 'Server misconfiguration' },
+        { status: 500 }
+      )
+    }
+
+    const supabase = createClient(
+      supabaseUrl,
+      supabaseAnonKey
+    )
+
+    const { email } = await req.json()
 
     if (!email) {
       return NextResponse.json(
