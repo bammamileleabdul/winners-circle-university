@@ -619,6 +619,79 @@ export default function Home() {
           padding-bottom: 110px;
         }
       `}</style>
+        {/* MINI LELEFX */}
+<section className="section">
+  <h2>mini lelefx</h2>
+
+  <div className="aiBox">
+    <div className="aiResponse">{status}</div>
+
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setStatus("Thinking...");
+
+        const res = await fetch("/api/mini-lelefx", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: email }),
+        });
+
+        const data = await res.json();
+        setStatus(data.reply);
+        setEmail("");
+      }}
+    >
+      <input
+        className="waitlistInput"
+        placeholder="Ask mini lelefx anything…"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+          .status {
+  margin-top: 16px;
+  padding: 14px 18px;
+  border-radius: 16px;
+
+  background: linear-gradient(
+    180deg,
+    rgba(230, 195, 106, 0.15),
+    rgba(0, 0, 0, 0.85)
+  );
+
+  border: 1px solid rgba(230, 195, 106, 0.4);
+  box-shadow: 0 0 40px rgba(230, 195, 106, 0.25);
+
+  color: #e6c36a;
+  font-size: 14px;
+  line-height: 1.6;
+  text-align: left;
+
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+
+  animation: fadeUp 0.4s ease-out;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+      <button className="goldBtn" type="submit">
+        Ask mini lelefx
+      </button>
+          {status && <p className="status">{status}</p>}
+    </form>
+  </div>
+</section>
     </>
   );
 }
