@@ -1,23 +1,17 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  throw new Error("Missing Supabase environment variables");
+}
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
 export async function POST(req) {
   try {
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-      return NextResponse.json(
-        { error: "Server not configured" },
-        { status: 500 }
-      );
-    }
-
-    const supabase = createClient(
-      supabaseUrl,
-      supabaseServiceKey
-    );
-
     const { email } = await req.json();
 
     if (!email) {
@@ -32,19 +26,18 @@ export async function POST(req) {
       .insert([{ email }]);
 
     if (error) {
-      console.error("Supabase insert error:", error);
+      console.error("Supabase error:", error);
       return NextResponse.json(
-        { error: "Database error" },
+        { error: error.message },
         { status: 500 }
       );
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
-
   } catch (err) {
-    console.error("API crash:", err);
+    console.error("API error:", err);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Server error" },
       { status: 500 }
     );
   }
