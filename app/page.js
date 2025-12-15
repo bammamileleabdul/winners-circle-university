@@ -1,20 +1,21 @@
-import Link from "next/link";
+"use client";
 
-export default function HomePage() {
+export default function Home() {
   return (
     <main
       style={{
         minHeight: "100vh",
         background:
-          "radial-gradient(circle at top, rgba(201,162,77,0.15), #000 55%)",
-        color: "#e5e5e5",
+          "radial-gradient(circle at top, #1a1408 0%, #000 55%)",
+        color: "#fff",
+        fontFamily: "Inter, system-ui, sans-serif",
         paddingBottom: "120px",
       }}
     >
       {/* HERO */}
       <section
         style={{
-          padding: "90px 20px 60px",
+          padding: "120px 20px 80px",
           textAlign: "center",
           maxWidth: "900px",
           margin: "0 auto",
@@ -28,70 +29,64 @@ export default function HomePage() {
             border: "1px solid rgba(201,162,77,0.4)",
             color: "#c9a24d",
             fontSize: "12px",
-            letterSpacing: "0.14em",
             marginBottom: "24px",
           }}
         >
-          EARLY ACCESS · LIMITED ONBOARDING
+          EARLY ACCESS • LIMITED ONBOARDING
         </div>
 
         <h1
           style={{
-            fontSize: "46px",
+            fontSize: "44px",
             fontWeight: 900,
-            color: "#c9a24d",
             lineHeight: 1.1,
-            marginBottom: "22px",
+            color: "#c9a24d",
           }}
         >
-          Winners Circle
-          <br />
-          University
+          Winners Circle University
         </h1>
 
         <p
           style={{
-            fontSize: "17px",
-            lineHeight: 1.7,
+            marginTop: "22px",
+            fontSize: "16px",
             color: "#d0d0d0",
-            marginBottom: "16px",
+            lineHeight: 1.7,
           }}
         >
-          A performance-based gold trading framework combining advanced AI
-          modelling with disciplined human market execution.
+          A performance-based gold trading framework combining disciplined
+          human execution with structured market logic.
         </p>
 
         <p
           style={{
-            fontSize: "15px",
-            color: "#9a9a9a",
-            marginBottom: "36px",
+            marginTop: "12px",
+            fontSize: "14px",
+            color: "#a0a0a0",
           }}
         >
-          No subscriptions. No upfront fees. We only earn when you earn — a simple
-          30% performance share.
+          No subscriptions. No upfront fees.  
+          We earn only when you earn — a simple 30% performance share.
         </p>
 
-        <Link
-          href="/waitlist"
+        <button
           style={{
-            display: "inline-block",
-            background: "linear-gradient(135deg, #e3c87a, #c9a24d)",
-            color: "#0b0b0b",
-            padding: "16px 28px",
+            marginTop: "36px",
+            padding: "18px 34px",
             fontSize: "16px",
-            fontWeight: 900,
-            borderRadius: "16px",
-            textDecoration: "none",
-            minWidth: "260px",
+            fontWeight: 700,
+            borderRadius: "14px",
+            background: "#c9a24d",
+            color: "#000",
+            border: "none",
           }}
         >
           Join the Waitlist
-        </Link>
+        </button>
       </section>
 
       {/* HOW IT WORKS */}
-      <section style={{ marginTop: "80px", padding: "0 20px" }}>
+      <section style={{ padding: "80px 20px" }}>
         <h2
           style={{
             textAlign: "center",
@@ -107,7 +102,7 @@ export default function HomePage() {
         <div
           style={{
             display: "flex",
-            gap: "16px",
+            gap: "20px",
             overflowX: "auto",
             paddingBottom: "10px",
           }}
@@ -116,49 +111,48 @@ export default function HomePage() {
             {
               title: "Read Structure",
               text:
-                "We don’t predict markets. We read price and react with precision.",
+                "We don’t predict markets. We read price, structure, and liquidity with precision.",
             },
             {
               title: "Risk First",
               text:
-                "Capital protection is non-negotiable. Risk is defined before entry.",
+                "Capital protection is non-negotiable. Risk defines every decision.",
             },
             {
               title: "Execution",
               text:
-                "Only high-probability setups aligned with higher-timeframe bias.",
+                "Entries are systematic. No impulse. No chasing.",
             },
             {
-              title: "Review",
+              title: "Review & Refine",
               text:
-                "Every trade is reviewed. Process is refined. Emotions are removed.",
+                "Every outcome is reviewed. Process always improves.",
             },
           ].map((card) => (
             <div
               key={card.title}
               style={{
                 minWidth: "260px",
-                background: "rgba(0,0,0,0.7)",
-                border: "1px solid rgba(201,162,77,0.35)",
+                background: "rgba(0,0,0,0.75)",
+                border: "1px solid rgba(201,162,77,0.3)",
                 borderRadius: "22px",
                 padding: "26px",
-                boxShadow: "0 0 60px rgba(201,162,77,0.12)",
               }}
             >
               <h3
                 style={{
+                  color: "#c9a24d",
                   fontSize: "20px",
                   fontWeight: 800,
-                  color: "#c9a24d",
-                  marginBottom: "10px",
                 }}
               >
                 {card.title}
               </h3>
               <p
                 style={{
+                  marginTop: "10px",
                   fontSize: "14px",
-                  color: "#cfcfcf",
+                  color: "#d0d0d0",
                   lineHeight: 1.6,
                 }}
               >
@@ -171,20 +165,46 @@ export default function HomePage() {
         <p
           style={{
             textAlign: "center",
+            marginTop: "16px",
             fontSize: "13px",
-            color: "#777",
-            marginTop: "14px",
+            color: "#888",
           }}
         >
           Swipe to explore →
         </p>
       </section>
 
-      {/* OUR PRINCIPLES */}
+      {/* THE PATH */}
+      <section style={{ padding: "80px 20px", textAlign: "center" }}>
+        <h2
+          style={{
+            fontSize: "32px",
+            fontWeight: 900,
+            color: "#c9a24d",
+          }}
+        >
+          The Path
+        </h2>
+
+        <p
+          style={{
+            marginTop: "18px",
+            maxWidth: "700px",
+            marginInline: "auto",
+            fontSize: "15px",
+            color: "#cfcfcf",
+            lineHeight: 1.7,
+          }}
+        >
+          This is not fast money.  
+          This is slow, controlled, professional growth.
+        </p>
+      </section>
+
+      {/* PRINCIPLES */}
       <section
         style={{
-          marginTop: "100px",
-          padding: "0 20px",
+          padding: "80px 20px",
           display: "flex",
           justifyContent: "center",
         }}
@@ -193,10 +213,10 @@ export default function HomePage() {
           style={{
             maxWidth: "800px",
             width: "100%",
-            background: "rgba(0,0,0,0.8)",
-            border: "1px solid rgba(201,162,77,0.35)",
-            borderRadius: "28px",
-            padding: "50px 28px",
+            background: "rgba(0,0,0,0.75)",
+            border: "1px solid rgba(201,162,77,0.4)",
+            borderRadius: "30px",
+            padding: "50px 30px",
             textAlign: "center",
           }}
         >
@@ -205,7 +225,6 @@ export default function HomePage() {
               fontSize: "30px",
               fontWeight: 900,
               color: "#c9a24d",
-              marginBottom: "16px",
             }}
           >
             Our Principles
@@ -213,154 +232,92 @@ export default function HomePage() {
 
           <div
             style={{
-              width: "60px",
-              height: "2px",
-              background: "#c9a24d",
-              margin: "0 auto 26px",
+              marginTop: "28px",
+              display: "grid",
+              gap: "14px",
+              fontSize: "15px",
+              color: "#e0e0e0",
             }}
-          />
-
-          {[
-            "Discipline over dopamine.",
-            "Risk before reward.",
-            "Process over outcomes.",
-            "Patience compounds.",
-            "Consistency creates inevitability.",
-          ].map((line) => (
-            <p
-              key={line}
-              style={{
-                fontSize: "16px",
-                margin: "10px 0",
-                color: "#dcdcdc",
-              }}
-            >
-              {line}
-            </p>
-          ))}
+          >
+            <p>Discipline over dopamine.</p>
+            <p>Risk before reward.</p>
+            <p>Process over outcomes.</p>
+            <p>Patience compounds.</p>
+            <p>Consistency creates inevitability.</p>
+          </div>
         </div>
       </section>
 
-      {/* THE PATH */}
+      {/* FILTER SECTION */}
       <section
         style={{
-          marginTop: "110px",
-          padding: "0 20px",
+          padding: "100px 20px",
           display: "flex",
           justifyContent: "center",
         }}
       >
-        <div
-          style={{
-            maxWidth: "900px",
-            width: "100%",
-            background:
-              "linear-gradient(180deg, rgba(0,0,0,0.9), rgba(12,10,5,0.95))",
-            border: "1px solid rgba(201,162,77,0.35)",
-            borderRadius: "28px",
-            padding: "60px 28px",
-          }}
-        >
+        <div style={{ maxWidth: "1000px", width: "100%" }}>
           <h2
             style={{
               textAlign: "center",
               fontSize: "34px",
               fontWeight: 900,
               color: "#c9a24d",
-              marginBottom: "10px",
+              marginBottom: "24px",
             }}
           >
-            The Path
+            This Is Not For Everyone
           </h2>
 
-          <p
+          <div
             style={{
-              textAlign: "center",
-              fontSize: "15px",
-              color: "#bdbdbd",
-              marginBottom: "40px",
+              display: "grid",
+              gap: "22px",
             }}
           >
-            A system built for longevity — not lucky streaks.
-          </p>
-
-          {[
-            ["01", "Observe", "We study structure. We wait. No impulse."],
-            [
-              "02",
-              "Prepare",
-              "Risk is defined first. Capital is protected.",
-            ],
-            [
-              "03",
-              "Execute",
-              "Only high-probability setups aligned with bias.",
-            ],
-            ["04", "Review", "Process audited. Emotion removed."],
-            ["05", "Compound", "Consistency creates inevitability."],
-          ].map(([num, title, text]) => (
             <div
-              key={num}
               style={{
-                display: "flex",
-                gap: "16px",
-                marginBottom: "18px",
-                background: "rgba(0,0,0,0.55)",
-                padding: "18px 20px",
-                borderRadius: "18px",
-                border: "1px solid rgba(201,162,77,0.25)",
+                border: "1px solid rgba(201,162,77,0.3)",
+                borderRadius: "26px",
+                padding: "34px",
               }}
             >
-              <div
-                style={{
-                  minWidth: "36px",
-                  height: "36px",
-                  borderRadius: "50%",
-                  background:
-                    "linear-gradient(135deg, #e3c87a, #c9a24d)",
-                  color: "#000",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: 900,
-                }}
-              >
-                {num}
-              </div>
-
-              <div>
-                <h3
-                  style={{
-                    margin: 0,
-                    fontSize: "18px",
-                    fontWeight: 800,
-                    color: "#e5e5e5",
-                  }}
-                >
-                  {title}
-                </h3>
-                <p
-                  style={{
-                    margin: "6px 0 0",
-                    fontSize: "14px",
-                    color: "#bdbdbd",
-                  }}
-                >
-                  {text}
-                </p>
-              </div>
+              <h3 style={{ color: "#ff6b6b", fontWeight: 800 }}>
+                ❌ Not for you if:
+              </h3>
+              <p>• You want signals or shortcuts.</p>
+              <p>• You chase excitement.</p>
+              <p>• You ignore rules.</p>
+              <p>• You blame outcomes.</p>
             </div>
-          ))}
+
+            <div
+              style={{
+                border: "1px solid rgba(201,162,77,0.6)",
+                borderRadius: "26px",
+                padding: "34px",
+                boxShadow: "0 0 50px rgba(201,162,77,0.2)",
+              }}
+            >
+              <h3 style={{ color: "#c9a24d", fontWeight: 800 }}>
+                ✔ For you if:
+              </h3>
+              <p>• You value discipline.</p>
+              <p>• You respect risk.</p>
+              <p>• You think long-term.</p>
+              <p>• You want mastery.</p>
+            </div>
+          </div>
 
           <p
             style={{
-              marginTop: "30px",
+              marginTop: "16px",
               textAlign: "center",
-              fontSize: "14px",
-              color: "#9a9a9a",
+              fontSize: "13px",
+              color: "#888",
             }}
           >
-            This path rewards patience — not urgency.
+            If this made you uncomfortable — this probably isn’t your circle.
           </p>
         </div>
       </section>
