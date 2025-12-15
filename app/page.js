@@ -84,23 +84,23 @@ export default function Home() {
 
 <form
   className="waitlistForm"
-  action="https://formspree.io/f/YOUR_FORM_ID"
+  action="https://formspree.io/f/xpwveaza"
   method="POST"
 >
+  <input
+    className="waitlistInput"
+    type="email"
+    name="email"
+    placeholder="Enter your email"
+    required
+  />
 
-          <input
-            className="waitlistInput"
-            type="email"
-            placeholder="Enter your email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <button className="goldBtn" type="submit">
-            Join the Waitlist
-          </button>
-          {status && <p className="status">{status}</p>}
-        </form>
+  <input type="hidden" name="source" value="Winners Circle Landing Page" />
+
+  <button className="goldBtn" type="submit">
+    Join the Waitlist
+  </button>
+</form>
 
         <div className="hintRow">
           <a className="ghostLink" href="#how">
