@@ -7,20 +7,22 @@ export default function Page() {
 
   return (
     <>
+      {/* HEADER */}
+      <header className="header">
+        <img
+          src="/emblem.png.jpg"
+          alt="Winners Circle Emblem"
+          className="headerLogo"
+        />
+      </header>
+
       {/* HERO */}
       <section className="hero">
-        {/* Top-right emblem */}
+        {/* Faded Background Emblem */}
         <img
-          src="/emblem.png"
-          alt="Winners Circle Emblem"
-          className="emblemTop"
-        />
-
-        {/* Faded background emblem */}
-        <img
-          src="/emblem.png"
+          src="/emblem.png.jpg"
           alt=""
-          className="emblemBg"
+          className="heroEmblem"
         />
 
         <div className="pill">EARLY ACCESS · LIMITED ONBOARDING</div>
@@ -76,10 +78,7 @@ export default function Page() {
               <br />
               Updates will arrive shortly.
             </p>
-            <button
-              className="ghostBtn"
-              onClick={() => setShowSuccess(false)}
-            >
+            <button className="ghostBtn" onClick={() => setShowSuccess(false)}>
               Continue
             </button>
           </div>
@@ -88,33 +87,42 @@ export default function Page() {
 
       {/* STYLES */}
       <style jsx>{`
+        body {
+          margin: 0;
+        }
+
+        /* HEADER */
+        .header {
+          position: fixed;
+          top: 18px;
+          right: 18px;
+          z-index: 50;
+        }
+
+        .headerLogo {
+          width: 46px;
+          opacity: 0.9;
+        }
+
+        /* HERO */
         .hero {
           position: relative;
           min-height: 100vh;
-          padding: 90px 20px;
+          padding: 100px 20px;
+          text-align: center;
           background: radial-gradient(circle at top, #1a1408, #000);
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          text-align: center;
           overflow: hidden;
         }
 
-        .emblemTop {
+        .heroEmblem {
           position: absolute;
-          top: 22px;
-          right: 22px;
-          width: 48px;
-          opacity: 0.95;
-        }
-
-        .emblemBg {
-          position: absolute;
-          inset: 0;
-          margin: auto;
-          width: 300px;
-          opacity: 0.06;
+          width: 520px;
+          opacity: 0.05;
+          filter: blur(1px);
           pointer-events: none;
         }
 
@@ -126,6 +134,7 @@ export default function Page() {
           font-size: 12px;
           letter-spacing: 0.14em;
           margin-bottom: 22px;
+          z-index: 2;
         }
 
         h1 {
@@ -134,14 +143,16 @@ export default function Page() {
           font-weight: 900;
           margin-bottom: 18px;
           line-height: 1.1;
+          z-index: 2;
         }
 
         .heroText {
           color: #d6d6d6;
-          max-width: 540px;
+          max-width: 520px;
           line-height: 1.7;
           margin-bottom: 32px;
           font-size: 15px;
+          z-index: 2;
         }
 
         .waitlistForm {
@@ -150,6 +161,7 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           gap: 14px;
+          z-index: 2;
         }
 
         .waitlistInput {
