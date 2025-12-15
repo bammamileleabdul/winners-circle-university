@@ -1,52 +1,15 @@
-import { createClient } from "@supabase/supabase-js";
-import { NextResponse } from "next/server";
-
 export async function POST(req) {
   try {
-    const { email } = await req.json();
+    const body = await req.json();
+    const email = body?.email;
 
-    if (!email) {
-      return NextResponse.json(
-        { error: "Email is required" },
-        { status: 400 }
-      );
+    if (!email || typeof email !== "string") {
+      return Response.json({ error: "Email is required" }, { status: 400 });
     }
 
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    // Send to Formspree (no redirect, server-to-server)
+    const formspreeUrl = "https://formspree.io/f/xpwveaza";
 
-    // IMPORTANT: do NOT throw during build
-    if (!supabaseUrl || !supabaseServiceKey) {
-      console.error("Supabase env vars missing at runtime");
-      return NextResponse.json(
-        { error: "Server not configured" },
-        { status: 500 }
-      );
-    }
-
-    const supabase = createClient(
-      supabaseUrl,
-      supabaseServiceKey
-    );
-
-    const { error } = await supabase
-      .from("waitlist")
-      .insert([{ email }]);
-
-    if (error) {
-      console.error("Supabase insert error:", error);
-      return NextResponse.json(
-        { error: "Failed to join waitlist" },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ success: true });
-  } catch (err) {
-    console.error("API crash:", err);
-    return NextResponse.json(
-      { error: "Server error" },
-      { status: 500 }
-    );
-  }
-}
+    const res = await fetch(formspreeUrl, {
+      method: "POST",
+      headers: { Accept:
