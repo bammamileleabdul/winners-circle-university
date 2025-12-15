@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -38,7 +37,15 @@ export default function Home() {
     <>
       {/* HEADER */}
       <header className="header">
-        <div className="logo">Winners Circle</div>
+        {/* ✅ ONLY CHANGE: logo text replaced by emblem image */}
+        <div className="logo">
+          <img
+            src="/emblem.jpg"
+            alt="Winners Circle Emblem"
+            className="logoImg"
+          />
+        </div>
+
         <button className="menuBtn" onClick={() => setMenuOpen(true)}>
           ☰
         </button>
@@ -73,6 +80,9 @@ export default function Home() {
 
       {/* HERO */}
       <section id="overview" className="hero">
+        {/* ✅ ONLY ADD: faded hero watermark emblem */}
+        <img src="/emblem.jpg" alt="" className="heroEmblem" />
+
         <div className="pill">EARLY ACCESS · LIMITED ONBOARDING</div>
 
         <h1>Winners Circle University</h1>
@@ -82,26 +92,25 @@ export default function Home() {
         </p>
 
         {/* WAITLIST FORM (REAL) */}
+        <form
+          className="waitlistForm"
+          action="https://formspree.io/f/xpwveaza"
+          method="POST"
+        >
+          <input
+            className="waitlistInput"
+            type="email"
+            name="email"
+            placeholder="Enter your email"
+            required
+          />
 
-<form
-  className="waitlistForm"
-  action="https://formspree.io/f/xpwveaza"
-  method="POST"
->
-  <input
-    className="waitlistInput"
-    type="email"
-    name="email"
-    placeholder="Enter your email"
-    required
-  />
+          <input type="hidden" name="source" value="Winners Circle Landing Page" />
 
-  <input type="hidden" name="source" value="Winners Circle Landing Page" />
-
-  <button className="goldBtn" type="submit">
-    Join the Waitlist
-  </button>
-</form>
+          <button className="goldBtn" type="submit">
+            Join the Waitlist
+          </button>
+        </form>
 
         <div className="hintRow">
           <a className="ghostLink" href="#how">
@@ -268,6 +277,17 @@ export default function Home() {
           color: #e6c36a;
           font-weight: 700;
           letter-spacing: 0.02em;
+          display: flex;
+          align-items: center;
+        }
+
+        /* ✅ ONLY ADD: emblem image styling */
+        .logoImg {
+          height: 40px;
+          width: auto;
+          object-fit: contain;
+          display: block;
+          filter: drop-shadow(0 0 14px rgba(230, 195, 106, 0.45));
         }
 
         .menuBtn {
@@ -309,6 +329,21 @@ export default function Home() {
           text-align: center;
           padding: 78px 18px 60px;
           background: radial-gradient(circle at top, #2a1f0f, #000);
+          position: relative; /* ✅ ONLY ADD: needed for watermark */
+          overflow: hidden; /* ✅ ONLY ADD */
+        }
+
+        /* ✅ ONLY ADD: watermark style */
+        .heroEmblem {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 420px;
+          max-width: 90%;
+          opacity: 0.06;
+          pointer-events: none;
+          filter: drop-shadow(0 0 70px rgba(230, 195, 106, 0.25));
         }
 
         .pill {
@@ -320,6 +355,8 @@ export default function Home() {
           font-size: 12px;
           letter-spacing: 0.14em;
           margin-bottom: 18px;
+          position: relative;
+          z-index: 1;
         }
 
         .hero h1 {
@@ -327,6 +364,8 @@ export default function Home() {
           font-size: 40px;
           margin: 0 0 16px;
           line-height: 1.12;
+          position: relative;
+          z-index: 1;
         }
 
         .heroP {
@@ -335,6 +374,8 @@ export default function Home() {
           margin: 0 auto 26px;
           line-height: 1.7;
           font-size: 15px;
+          position: relative;
+          z-index: 1;
         }
 
         .waitlistForm {
@@ -343,6 +384,8 @@ export default function Home() {
           gap: 12px;
           max-width: 380px;
           margin: 0 auto;
+          position: relative;
+          z-index: 1;
         }
 
         .waitlistInput {
@@ -373,6 +416,8 @@ export default function Home() {
 
         .hintRow {
           margin-top: 18px;
+          position: relative;
+          z-index: 1;
         }
 
         .ghostLink {
@@ -403,7 +448,11 @@ export default function Home() {
         }
 
         .floatCard {
-          background: linear-gradient(180deg, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.92));
+          background: linear-gradient(
+            180deg,
+            rgba(0, 0, 0, 0.72),
+            rgba(0, 0, 0, 0.92)
+          );
           border: 1px solid rgba(230, 195, 106, 0.35);
           border-radius: 22px;
           padding: 24px;
@@ -432,7 +481,11 @@ export default function Home() {
         }
 
         .luxCard {
-          background: linear-gradient(180deg, rgba(230, 195, 106, 0.08), rgba(0, 0, 0, 0.9));
+          background: linear-gradient(
+            180deg,
+            rgba(230, 195, 106, 0.08),
+            rgba(0, 0, 0, 0.9)
+          );
           border: 1px solid rgba(230, 195, 106, 0.32);
           border-radius: 22px;
           padding: 26px;
@@ -466,7 +519,11 @@ export default function Home() {
         .manifestoCard {
           max-width: 760px;
           margin: 0 auto;
-          background: linear-gradient(180deg, rgba(230, 195, 106, 0.1), rgba(0, 0, 0, 0.92));
+          background: linear-gradient(
+            180deg,
+            rgba(230, 195, 106, 0.1),
+            rgba(0, 0, 0, 0.92)
+          );
           border: 1px solid rgba(230, 195, 106, 0.35);
           border-radius: 26px;
           padding: 26px;
@@ -507,7 +564,11 @@ export default function Home() {
         .vvipCard {
           max-width: 740px;
           margin: 0 auto;
-          background: radial-gradient(circle at top, rgba(230, 195, 106, 0.12), rgba(0, 0, 0, 0.92));
+          background: radial-gradient(
+            circle at top,
+            rgba(230, 195, 106, 0.12),
+            rgba(0, 0, 0, 0.92)
+          );
           border: 1px solid rgba(230, 195, 106, 0.4);
           border-radius: 26px;
           padding: 28px;
