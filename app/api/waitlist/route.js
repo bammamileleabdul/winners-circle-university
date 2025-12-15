@@ -4,17 +4,19 @@ import { NextResponse } from "next/server";
 export async function POST(req) {
   try {
     const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    // 🔒 Never crash the build
-    if (!supabaseUrl || !supabaseKey) {
+    if (!supabaseUrl || !supabaseServiceKey) {
       return NextResponse.json(
         { error: "Server not configured" },
         { status: 500 }
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(
+      supabaseUrl,
+      supabaseServiceKey
+    );
 
     const { email } = await req.json();
 
@@ -30,16 +32,19 @@ export async function POST(req) {
       .insert([{ email }]);
 
     if (error) {
+      console.error("Supabase insert error:", error);
       return NextResponse.json(
-        { error: error.message },
+        { error: "Database error" },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true }, { status: 200 });
+
   } catch (err) {
+    console.error("API crash:", err);
     return NextResponse.json(
-      { error: "Unexpected server error" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
