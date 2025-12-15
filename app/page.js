@@ -1,253 +1,554 @@
 "use client";
+
 import { useState } from "react";
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Waitlist
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState("");
+
+  // Interactive reveals
   const [manifestoOpen, setManifestoOpen] = useState(false);
   const [vvipOpen, setVvipOpen] = useState(false);
+
+  const handleWaitlistSubmit = async (e) => {
+    e.preventDefault();
+    setStatus("Submitting...");
+
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!res.ok) throw new Error("Failed");
+
+      setStatus("You’re in. Welcome to the Circle.");
+      setEmail("");
+    } catch (err) {
+      setStatus("Something went wrong. Try again.");
+    }
+  };
 
   return (
     <>
       {/* HEADER */}
       <header className="header">
         <div className="logo">Winners Circle</div>
-        <button className="menu-btn" onClick={() => setMenuOpen(true)}>
+        <button className="menuBtn" onClick={() => setMenuOpen(true)}>
           ☰
         </button>
       </header>
 
       {/* MOBILE MENU */}
       {menuOpen && (
-        <div className="menu-overlay">
-          <button className="menu-close" onClick={() => setMenuOpen(false)}>
+        <div className="menuOverlay">
+          <button className="menuClose" onClick={() => setMenuOpen(false)}>
             × Close
           </button>
 
-          <nav className="menu-links">
-            <a href="#overview" onClick={() => setMenuOpen(false)}>Overview</a>
-            <a href="#how" onClick={() => setMenuOpen(false)}>How It Works</a>
-            <a href="#principles" onClick={() => setMenuOpen(false)}>Principles</a>
-            <a href="#manifesto" onClick={() => setMenuOpen(false)}>Manifesto</a>
-            <a href="#vvip" onClick={() => setMenuOpen(false)}>VVIP Access</a>
+          <nav className="menuLinks">
+            <a href="#overview" onClick={() => setMenuOpen(false)}>
+              Overview
+            </a>
+            <a href="#how" onClick={() => setMenuOpen(false)}>
+              How It Works
+            </a>
+            <a href="#principles" onClick={() => setMenuOpen(false)}>
+              Principles
+            </a>
+            <a href="#manifesto" onClick={() => setMenuOpen(false)}>
+              Manifesto
+            </a>
+            <a href="#vvip" onClick={() => setMenuOpen(false)}>
+              VVIP Access
+            </a>
           </nav>
         </div>
       )}
 
       {/* HERO */}
       <section id="overview" className="hero">
+        <div className="pill">EARLY ACCESS · LIMITED ONBOARDING</div>
+
         <h1>Winners Circle University</h1>
-        <p>
+        <p className="heroP">
           A performance-based gold trading framework combining structured AI
           modelling with disciplined human execution.
         </p>
-        <button className="gold-btn">Join the Waitlist</button>
+
+        {/* WAITLIST FORM (REAL) */}
+        <form className="waitlistForm" onSubmit={handleWaitlistSubmit}>
+          <input
+            className="waitlistInput"
+            type="email"
+            placeholder="Enter your email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <button className="goldBtn" type="submit">
+            Join the Waitlist
+          </button>
+          {status && <p className="status">{status}</p>}
+        </form>
+
+        <div className="hintRow">
+          <a className="ghostLink" href="#how">
+            See How It Works →
+          </a>
+        </div>
       </section>
 
-      {/* HOW IT WORKS */}
+      {/* HOW IT WORKS (Floating Gold Cards) */}
       <section id="how" className="section">
         <h2>How It Works</h2>
 
-        <div className="card">
-          <h3>Read Structure</h3>
-          <p>We react to price, not predictions.</p>
-        </div>
-
-        <div className="card">
-          <h3>Risk First</h3>
-          <p>Capital protection is non-negotiable.</p>
-        </div>
-
-        <div className="card">
-          <h3>Execute Clean</h3>
-          <p>Precision beats frequency.</p>
+        <div className="floatWrap">
+          {[
+            {
+              t: "Read Structure",
+              d: "We react to price, not predictions. We wait for confirmation.",
+            },
+            {
+              t: "Risk First",
+              d: "Capital protection is non-negotiable. Survival compounds.",
+            },
+            {
+              t: "Execute Clean",
+              d: "Precision beats frequency. Rules remove emotion.",
+            },
+          ].map((x) => (
+            <div key={x.t} className="floatCard">
+              <div className="floatTitle">{x.t}</div>
+              <div className="floatText">{x.d}</div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* PRINCIPLES */}
+      {/* PRINCIPLES (Luxury Cards) */}
       <section id="principles" className="section">
         <h2>Our Principles</h2>
 
-        <div className="gold-card">
-          <p><strong>Discipline over dopamine.</strong><br />No impulse. No noise.</p>
-        </div>
-
-        <div className="gold-card">
-          <p><strong>Risk before reward.</strong><br />Survival compounds.</p>
-        </div>
-
-        <div className="gold-card">
-          <p><strong>Process over outcomes.</strong><br />Execution beats emotion.</p>
-        </div>
-
-        <div className="gold-card">
-          <p><strong>Patience compounds.</strong><br />Time is leverage.</p>
-        </div>
-
-        <div className="gold-card">
-          <p><strong>Consistency creates inevitability.</strong></p>
+        <div className="luxGrid">
+          {[
+            {
+              t: "Discipline Over Dopamine",
+              d: "We remove impulse from execution. Calm is an edge.",
+            },
+            {
+              t: "Risk Before Reward",
+              d: "If protection isn’t clear, the trade doesn’t exist.",
+            },
+            {
+              t: "Process Over Outcomes",
+              d: "We judge decisions, not single results. Mastery compounds.",
+            },
+            {
+              t: "Patience Compounds",
+              d: "Waiting is a skill. Quality beats activity.",
+            },
+            {
+              t: "Consistency Creates Inevitability",
+              d: "Repeat what works. Remove what doesn’t. Stay aligned.",
+            },
+          ].map((p) => (
+            <div key={p.t} className="luxCard">
+              <div className="luxTitle">{p.t}</div>
+              <div className="luxText">{p.d}</div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* MANIFESTO CURTAIN */}
+      {/* MANIFESTO (Curtain / Reveal) */}
       <section id="manifesto" className="section">
+        <h2>Manifesto</h2>
+
         {!manifestoOpen ? (
-          <button className="curtain-btn" onClick={() => setManifestoOpen(true)}>
-            Open Founder’s Manifesto
+          <button className="curtainBtn" onClick={() => setManifestoOpen(true)}>
+            This was not written for everyone
           </button>
         ) : (
-          <div className="gold-card manifesto">
-            <h2>The Founder’s Manifesto</h2>
-            <p>
-              Winners Circle was not built for excitement.  
-              It was built for longevity.
-            </p>
-            <p>
-              I’ve seen what impatience does to talented people.
-              I’ve seen discipline quietly outperform brilliance.
-            </p>
-            <p>
-              This framework removes noise, emotion, and ego — and replaces them
-              with structure, risk awareness, and clarity.
-            </p>
-            <p>
-              If you’re here to rush, impress, or gamble — this won’t work.
-              If you’re here to compound patiently — you’re in the right place.
-            </p>
-            <span className="signature">— Lelefx, Founder</span>
+          <div className="manifestoCard">
+            <div className="manifestoHead">Founder’s Manifesto</div>
+            <div className="manifestoBody">
+              <p>
+                Winners Circle was not built for excitement. <br />
+                It was built for longevity.
+              </p>
+              <p>
+                I’ve seen what impatience does to talented people. <br />
+                I’ve seen discipline quietly outperform brilliance.
+              </p>
+              <p>
+                This framework exists to remove noise, emotion, and ego —
+                replacing them with structure, risk awareness, and clarity.
+              </p>
+              <p>
+                If you’re here to rush, impress, or gamble — this won’t work.{" "}
+                <br />
+                If you’re here to compound patiently — you’re in the right place.
+              </p>
+
+              <div className="signature">— Lelefx, Founder</div>
+
+              <button
+                className="ghostBtn"
+                onClick={() => setManifestoOpen(false)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         )}
       </section>
 
-      {/* VVIP */}
-      <section id="vvip" className="section">
+      {/* VVIP (Button -> Premium Reveal Panel) */}
+      <section id="vvip" className="section last">
+        <h2>VVIP Access</h2>
+
         {!vvipOpen ? (
-          <button className="gold-btn" onClick={() => setVvipOpen(true)}>
+          <button className="vvipBtn" onClick={() => setVvipOpen(true)}>
             Explore VVIP Access
           </button>
         ) : (
-          <div className="gold-card">
-            <h2>VVIP Access</h2>
-            <p>
-              VVIP is not purchased.  
-              It is earned through consistency, discipline,
-              and long-term alignment.
+          <div className="vvipCard">
+            <div className="vvipHead">Private • Invitation Only</div>
+
+            <p className="vvipText">
+              VVIP is not purchased. It is earned through consistency,
+              discipline, and alignment over time.
             </p>
-            <p>
-              Select members may be contacted privately.
+
+            <div className="vvipDivider" />
+
+            <p className="vvipTextMuted">
+              Some members may be contacted discreetly.
             </p>
+
+            <button className="ghostBtn" onClick={() => setVvipOpen(false)}>
+              Close
+            </button>
           </div>
         )}
       </section>
 
       {/* STYLES */}
       <style jsx>{`
-        body {
-          margin: 0;
+        :global(html) {
+          scroll-behavior: smooth;
         }
 
         .header {
+          position: sticky;
+          top: 0;
+          z-index: 50;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 20px;
-          color: #e6c36a;
+          padding: 16px 18px;
+          background: rgba(0, 0, 0, 0.82);
+          backdrop-filter: blur(10px);
+          border-bottom: 1px solid rgba(230, 195, 106, 0.18);
         }
 
-        .menu-btn {
+        .logo {
+          color: #e6c36a;
+          font-weight: 700;
+          letter-spacing: 0.02em;
+        }
+
+        .menuBtn {
           background: none;
           border: none;
           color: #e6c36a;
           font-size: 26px;
         }
 
-        .menu-overlay {
+        .menuOverlay {
           position: fixed;
           inset: 0;
-          background: radial-gradient(circle at top, #1a1408, #000);
           z-index: 1000;
           padding: 30px;
+          background: radial-gradient(circle at top, #1a1408, #000);
         }
 
-        .menu-close {
+        .menuClose {
           background: linear-gradient(135deg, #e6c36a, #b8963f);
           border: none;
           padding: 10px 18px;
           border-radius: 14px;
-          font-weight: 600;
+          font-weight: 700;
+          color: #000;
           margin-bottom: 40px;
+          float: right;
         }
 
-        .menu-links a {
+        .menuLinks a {
           display: block;
           font-size: 26px;
           margin-bottom: 26px;
           color: #e6c36a;
           text-decoration: none;
+          letter-spacing: 0.02em;
         }
 
         .hero {
           text-align: center;
-          padding: 100px 20px;
+          padding: 78px 18px 60px;
+          background: radial-gradient(circle at top, #2a1f0f, #000);
+        }
+
+        .pill {
+          display: inline-block;
+          padding: 8px 14px;
+          border-radius: 999px;
+          border: 1px solid rgba(230, 195, 106, 0.28);
+          color: #e6c36a;
+          font-size: 12px;
+          letter-spacing: 0.14em;
+          margin-bottom: 18px;
         }
 
         .hero h1 {
           color: #e6c36a;
-          font-size: 42px;
+          font-size: 40px;
+          margin: 0 0 16px;
+          line-height: 1.12;
         }
 
-        .hero p {
-          color: #ccc;
-          max-width: 600px;
-          margin: 20px auto;
+        .heroP {
+          color: #cfcfcf;
+          max-width: 640px;
+          margin: 0 auto 26px;
+          line-height: 1.7;
+          font-size: 15px;
         }
 
-        .gold-btn {
+        .waitlistForm {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          max-width: 380px;
+          margin: 0 auto;
+        }
+
+        .waitlistInput {
+          padding: 14px 16px;
+          border-radius: 16px;
+          border: 1px solid rgba(230, 195, 106, 0.35);
+          background: rgba(0, 0, 0, 0.55);
+          color: #fff;
+          font-size: 15px;
+          outline: none;
+        }
+
+        .goldBtn {
           background: linear-gradient(135deg, #e6c36a, #b8963f);
           border: none;
-          padding: 16px 30px;
-          border-radius: 30px;
-          font-size: 16px;
-          font-weight: 600;
+          padding: 14px 18px;
+          border-radius: 999px;
+          font-size: 15px;
+          font-weight: 800;
+          color: #000;
+        }
+
+        .status {
+          color: #e6c36a;
+          font-size: 13px;
+          margin: 6px 0 0;
+        }
+
+        .hintRow {
+          margin-top: 18px;
+        }
+
+        .ghostLink {
+          color: rgba(230, 195, 106, 0.9);
+          text-decoration: none;
+          font-size: 14px;
+          border-bottom: 1px solid rgba(230, 195, 106, 0.3);
+          padding-bottom: 2px;
         }
 
         .section {
-          padding: 80px 20px;
+          padding: 80px 18px;
           text-align: center;
+          background: radial-gradient(circle at top, rgba(230, 195, 106, 0.06), #000);
         }
 
-        h2 {
+        .section h2 {
           color: #e6c36a;
-          margin-bottom: 40px;
+          margin-bottom: 34px;
+          font-size: 28px;
         }
 
-        .card,
-        .gold-card {
-          background: linear-gradient(180deg, #0b0b0b, #000);
-          border: 1px solid rgba(230,195,106,0.35);
-          border-radius: 24px;
-          padding: 30px;
-          margin: 20px auto;
-          max-width: 420px;
-          color: #ddd;
+        .floatWrap {
+          display: grid;
+          gap: 16px;
+          max-width: 520px;
+          margin: 0 auto;
         }
 
-        .gold-card h2 {
-          margin-bottom: 20px;
+        .floatCard {
+          background: linear-gradient(180deg, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.92));
+          border: 1px solid rgba(230, 195, 106, 0.35);
+          border-radius: 22px;
+          padding: 24px;
+          box-shadow: 0 0 40px rgba(230, 195, 106, 0.12);
+          text-align: left;
         }
 
-        .curtain-btn {
-          background: none;
-          border: 1px solid #e6c36a;
+        .floatTitle {
           color: #e6c36a;
-          padding: 18px 30px;
-          border-radius: 30px;
+          font-weight: 800;
+          font-size: 18px;
+          margin-bottom: 10px;
+        }
+
+        .floatText {
+          color: #d7d7d7;
+          line-height: 1.6;
+          font-size: 14px;
+        }
+
+        .luxGrid {
+          display: grid;
+          gap: 14px;
+          max-width: 700px;
+          margin: 0 auto;
+        }
+
+        .luxCard {
+          background: linear-gradient(180deg, rgba(230, 195, 106, 0.08), rgba(0, 0, 0, 0.9));
+          border: 1px solid rgba(230, 195, 106, 0.32);
+          border-radius: 22px;
+          padding: 26px;
+          text-align: left;
+          box-shadow: 0 0 55px rgba(230, 195, 106, 0.1);
+        }
+
+        .luxTitle {
+          color: #e6c36a;
+          font-weight: 900;
           font-size: 16px;
+          letter-spacing: 0.02em;
+          margin-bottom: 8px;
+        }
+
+        .luxText {
+          color: #d8d2b6;
+          font-size: 14px;
+          line-height: 1.7;
+        }
+
+        .curtainBtn {
+          background: transparent;
+          border: 1px solid rgba(230, 195, 106, 0.55);
+          color: #e6c36a;
+          padding: 16px 22px;
+          border-radius: 999px;
+          font-weight: 800;
+        }
+
+        .manifestoCard {
+          max-width: 760px;
+          margin: 0 auto;
+          background: linear-gradient(180deg, rgba(230, 195, 106, 0.1), rgba(0, 0, 0, 0.92));
+          border: 1px solid rgba(230, 195, 106, 0.35);
+          border-radius: 26px;
+          padding: 26px;
+          box-shadow: 0 0 80px rgba(230, 195, 106, 0.14);
+          text-align: left;
+        }
+
+        .manifestoHead {
+          color: #e6c36a;
+          font-weight: 900;
+          font-size: 20px;
+          margin-bottom: 12px;
+        }
+
+        .manifestoBody p {
+          color: #d8d2b6;
+          line-height: 1.8;
+          font-size: 14px;
+          margin: 12px 0;
         }
 
         .signature {
-          display: block;
-          margin-top: 20px;
+          margin-top: 16px;
           color: #e6c36a;
+          font-weight: 800;
+        }
+
+        .vvipBtn {
+          background: linear-gradient(135deg, #e6c36a, #8f6b1f);
+          border: none;
+          padding: 16px 26px;
+          border-radius: 999px;
+          font-weight: 900;
+          color: #000;
+          box-shadow: 0 0 60px rgba(230, 195, 106, 0.15);
+        }
+
+        .vvipCard {
+          max-width: 740px;
+          margin: 0 auto;
+          background: radial-gradient(circle at top, rgba(230, 195, 106, 0.12), rgba(0, 0, 0, 0.92));
+          border: 1px solid rgba(230, 195, 106, 0.4);
+          border-radius: 26px;
+          padding: 28px;
+          box-shadow: 0 0 95px rgba(230, 195, 106, 0.18);
+          text-align: left;
+        }
+
+        .vvipHead {
+          color: #e6c36a;
+          font-weight: 900;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          font-size: 12px;
+          margin-bottom: 14px;
+        }
+
+        .vvipText {
+          color: #d8d2b6;
+          line-height: 1.8;
+          font-size: 14px;
+          margin: 0 0 14px;
+        }
+
+        .vvipDivider {
+          height: 1px;
+          background: rgba(230, 195, 106, 0.25);
+          margin: 14px 0;
+        }
+
+        .vvipTextMuted {
+          color: #a7a08a;
+          line-height: 1.7;
+          font-size: 13px;
+          margin: 0 0 14px;
+        }
+
+        .ghostBtn {
+          background: transparent;
+          border: 1px solid rgba(230, 195, 106, 0.35);
+          color: #e6c36a;
+          padding: 12px 18px;
+          border-radius: 999px;
+          font-weight: 800;
+          margin-top: 10px;
+        }
+
+        .last {
+          padding-bottom: 110px;
         }
       `}</style>
     </>
