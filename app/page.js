@@ -1,14 +1,36 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 export default function Page() {
   const [showSuccess, setShowSuccess] = useState(false);
 
   return (
     <>
+      {/* HEADER */}
+      <header className="header">
+        <Image
+          src="/emblem.png"
+          alt="Winners Circle Emblem"
+          width={48}
+          height={48}
+          className="headerEmblem"
+        />
+      </header>
+
       {/* HERO SECTION */}
       <section className="hero">
+        {/* FADED EMBLEM */}
+        <div className="heroEmblem">
+          <Image
+            src="/emblem.png"
+            alt="Winners Circle"
+            fill
+            priority
+          />
+        </div>
+
         <div className="pill">EARLY ACCESS · LIMITED ONBOARDING</div>
 
         <h1>Winners Circle University</h1>
@@ -75,15 +97,43 @@ export default function Page() {
           margin: 0;
         }
 
+        /* HEADER */
+        .header {
+          position: fixed;
+          top: 0;
+          right: 0;
+          padding: 18px 22px;
+          z-index: 50;
+        }
+
+        .headerEmblem {
+          opacity: 0.9;
+        }
+
+        /* HERO */
         .hero {
           min-height: 100vh;
-          padding: 80px 20px;
+          padding: 90px 20px;
           text-align: center;
           background: radial-gradient(circle at top, #1a1408, #000);
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .heroEmblem {
+          position: absolute;
+          inset: 0;
+          opacity: 0.06;
+          pointer-events: none;
+        }
+
+        .heroEmblem :global(img) {
+          object-fit: contain;
+          padding: 120px;
         }
 
         .pill {
@@ -94,6 +144,7 @@ export default function Page() {
           font-size: 12px;
           letter-spacing: 0.14em;
           margin-bottom: 22px;
+          z-index: 1;
         }
 
         h1 {
@@ -102,6 +153,7 @@ export default function Page() {
           font-weight: 900;
           margin-bottom: 18px;
           line-height: 1.1;
+          z-index: 1;
         }
 
         .heroText {
@@ -110,6 +162,7 @@ export default function Page() {
           line-height: 1.7;
           margin-bottom: 32px;
           font-size: 15px;
+          z-index: 1;
         }
 
         .waitlistForm {
@@ -118,6 +171,7 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           gap: 14px;
+          z-index: 1;
         }
 
         .waitlistInput {
