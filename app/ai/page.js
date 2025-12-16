@@ -16,10 +16,7 @@ export default function MiniLelefx() {
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
 
-    const newMessages = [
-      ...messages,
-      { role: "user", content: input },
-    ];
+    const newMessages = [...messages, { role: "user", content: input }];
     setMessages(newMessages);
     setInput("");
     setLoading(true);
@@ -33,17 +30,13 @@ export default function MiniLelefx() {
 
       const data = await res.json();
 
-      setMessages([
-        ...newMessages,
-        { role: "assistant", content: data.reply },
-      ]);
+      setMessages([...newMessages, { role: "assistant", content: data.reply }]);
     } catch {
       setMessages([
         ...newMessages,
         {
           role: "assistant",
-          content:
-            "Connection issue. Pause, reassess, and try again.",
+          content: "Connection issue. Pause, reassess, and try again.",
         },
       ]);
     } finally {
@@ -61,10 +54,7 @@ export default function MiniLelefx() {
 
         <div className="chat">
           {messages.map((m, i) => (
-            <div
-              key={i}
-              className={`msg ${m.role === "user" ? "user" : "ai"}`}
-            >
+            <div key={i} className={`msg ${m.role === "user" ? "user" : "ai"}`}>
               {m.content}
             </div>
           ))}
