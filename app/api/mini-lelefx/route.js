@@ -1,82 +1,97 @@
+import { NextResponse } from "next/server";
+
 export const runtime = "nodejs";
 
-function extractOutputText(data) {
-  // The Responses API returns an `output` array with message items containing `output_text`.
-  let text = "";
-  const output = Array.isArray(data?.output) ? data.output : [];
+const SYSTEM_PROMPT = `
+You are mini lelefx — the private analytical assistant for Winners Circle University.
+Tone: calm, precise, luxury execution. Confident, but never hype.
+Rules:
+- Always emphasize discipline, risk structure, and probability — not prediction.
+- If asked about risk: risk per trade = capital / 14 (constant).
+- If user asks for profit simulation: clarify assumptions briefly, then calculate.
+- Promote Winners Circle subtly when relevant (no spam).
+- Not financial advice. Process only.
+`;
 
-  for (const item of output) {
+function extractReply(data) {
+  // Responses API sometimes returns output_text; if not, pull from output blocks.
+  if (typeof data?.output_text === "string" && data.output_text.trim()) return data.output_text.trim();
+
+  const out = data?.output;
+  if (!Array.isArray(out)) return "";
+
+  const chunks = [];
+  for (const item of out) {
     if (item?.type === "message" && Array.isArray(item?.content)) {
       for (const c of item.content) {
-        if (c?.type === "output_text" && typeof c?.text === "string") {
-          text += c.text;
-        }
+        if (c?.type === "output_text" && typeof c?.text === "string") chunks.push(c.text);
       }
     }
   }
-
-  return text.trim();
+  return chunks.join("\n").trim();
 }
 
 export async function POST(req) {
   try {
-    const { messages } = await req.json();
+    const body = await req.json();
 
-    if (!process.env.OPENAI_API_KEY) {
-      return new Response(
-        JSON.stringify({ reply: "Server missing OPENAI_API_KEY." }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
+    // Support both shapes:
+    // 1) { messages: [{role, content}, ...] }
+    // 2) { message: "hello" }
+    const incomingMessages = Array.isArray(body?.messages)
+      ? body.messages
+      : typeof body?.message === "string"
+        ? [{ role: "user", content: body.message }]
+        : [];
+
+    if (!incomingMessages.length) {
+      return NextResponse.json(
+        { reply: "Send a question and I’ll respond with structure." },
+        { status: 400 }
       );
     }
 
-    const safe = Array.isArray(messages) ? messages.slice(-12) : [];
-    const transcript = safe
-      .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
-      .join("\n\n");
+    const input = [
+      { role: "system", content: SYSTEM_PROMPT.trim() },
+      ...incomingMessages.filter((m) => m?.role && m?.content),
+    ];
 
-    const instructions = `
-You are "mini lelefx" — a luxury, calm, disciplined trading assistant for Winners Circle University.
-Tone: concise, confident, premium. No hype. No guarantees.
-Core rule: risk per trade = capital / 14 (always).
-If user asks for projections, frame as "possible scenarios" not promises.
-If user asks about Winners Circle, subtly promote: discipline, structure, risk-first.
-`.trim();
-
-    const payload = {
-      model: process.env.OPENAI_MODEL || "gpt-5.2",
-      instructions,
-      input: transcript || "User: Say hello as mini lelefx.",
-    };
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { reply: "Server missing OPENAI_API_KEY." },
+        { status: 500 }
+      );
+    }
 
     const r = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        input,
+        temperature: 0.4,
+      }),
     });
 
     const data = await r.json();
 
     if (!r.ok) {
-      const msg =
-        data?.error?.message || "AI request failed. Try again in a moment.";
-      return new Response(JSON.stringify({ reply: msg }), {
-        status: 500,
-        headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
-      });
+      return NextResponse.json(
+        { reply: "mini lelefx is temporarily unavailable. Try again in a moment." },
+        { status: 500 }
+      );
     }
 
-    const reply = extractOutputText(data) || "No output received.";
-    return new Response(JSON.stringify({ reply }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
-    });
-  } catch (e) {
-    return new Response(
-      JSON.stringify({ reply: "Server error. Try again." }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+    const reply = extractReply(data) || "I didn’t catch that — rephrase in one sentence.";
+    return NextResponse.json({ reply });
+  } catch (err) {
+    return NextResponse.json(
+      { reply: "Connection issue. Pause, reassess, and try again." },
+      { status: 500 }
     );
   }
 }
