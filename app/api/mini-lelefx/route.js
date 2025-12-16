@@ -4,83 +4,92 @@ import { NextResponse } from "next/server";
 
 export async function POST(req) {
   try {
-    const apiKey = process.env.OPENAI_API_KEY;
-
-    // If the key isn't available on the server
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "OPENAI_API_KEY is missing on the server." },
-        { status: 500 }
-      );
-    }
-
     const body = await req.json();
-    const message = (body?.message || "").toString().trim();
+    const rawMessage = body?.message || "";
 
-    // If the frontend didn’t send a message
-    if (!message) {
-      return NextResponse.json(
-        { error: "I didn’t receive a proper question. Try again." },
-        { status: 400 }
-      );
+    if (!rawMessage || typeof rawMessage !== "string") {
+      return NextResponse.json({
+        reply:
+          "I didn’t receive a clear question. Ask me about risk (capital ÷ 14), VVIP philosophy, or discipline."
+      });
     }
 
-    // Call OpenAI
-    const response = await fetch(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini", // safe, widely available model
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are mini lelefx, an assistant for Winners Circle University. " +
-                "You talk calm and precise. You never promise profits. " +
-                "You explain risk as capital ÷ 14, position sizing, patience, and discipline. " +
-                "If asked for exact signals, you remind them this is not financial advice.",
-            },
-            {
-              role: "user",
-              content: message,
-            },
-          ],
-          max_tokens: 400,
-          temperature: 0.6,
-        }),
-      }
-    );
+    const message = rawMessage.trim();
+    const lower = message.toLowerCase();
 
-    const data = await response.json();
+    let reply = "";
 
-    // If OpenAI returned an error
-    if (!response.ok) {
-      console.error("OpenAI error:", data);
-      return NextResponse.json(
-        {
-          error:
-            data?.error?.message ||
-            "Backend issue talking to OpenAI. Try again later.",
-        },
-        { status: 500 }
-      );
+    // --- 1) Capital ÷ 14 risk calc demo ---
+    // Try to find a number in the text (like 1400, 500, 2000 etc.)
+    const numMatch = message.replace(/,/g, "").match(/(\d+(\.\d+)?)/);
+    const capital = numMatch ? parseFloat(numMatch[1]) : null;
+
+    const looksLikeRiskQuestion =
+      lower.includes("capital") ||
+      lower.includes("risk") ||
+      lower.includes("÷ 14") ||
+      lower.includes("/14") ||
+      lower.includes("per trade");
+
+    if (looksLikeRiskQuestion && capital && !Number.isNaN(capital)) {
+      const riskPerTrade = capital / 14;
+      const riskRounded = Math.round(riskPerTrade * 100) / 100;
+
+      reply =
+        `Using capital ÷ 14:\n\n` +
+        `• Capital: $${capital.toLocaleString()}\n` +
+        `• Risk per trade: ~$${riskRounded.toLocaleString()}\n\n` +
+        `Same rule every time: protect capital first. No revenge trades, no doubling risk.`;
     }
 
-    const reply =
-      data?.choices?.[0]?.message?.content?.trim() ||
-      "I processed that, but didn’t get a clear response. Ask again another way.";
+    // --- 2) VVIP / principles questions ---
+    else if (lower.includes("vvip")) {
+      reply =
+        "VVIP isn’t bought, it’s earned.\n\n" +
+        "Consistency, discipline and clean execution over a long period. " +
+        "No gambling, no chaos — just structured performance.";
+    } else if (
+      lower.includes("discipline") ||
+      lower.includes("rules") ||
+      lower.includes("process")
+    ) {
+      reply =
+        "mini lelefx answer: process over outcomes.\n\n" +
+        "You control risk, structure, and execution. The market controls outcome. " +
+        "Your job is to show up with the same clean process every session.";
+    }
 
-    return NextResponse.json({ reply }, { status: 200 });
+    // --- 3) Greetings / small talk ---
+    else if (
+      lower.startsWith("hi") ||
+      lower.startsWith("hey") ||
+      lower.startsWith("hello")
+    ) {
+      reply =
+        "Calm. I’m here.\n\nAsk me for a risk breakdown (capital ÷ 14), VVIP criteria, " +
+        "or a reminder of Winners Circle principles.";
+    }
+
+    // --- 4) Fallback generic reply ---
+    else {
+      reply =
+        "I’m in demo mode right now.\n\n" +
+        "I can help you with:\n" +
+        "• Risk examples using capital ÷ 14\n" +
+        "• VVIP philosophy\n" +
+        "• Discipline / process reminders\n\n" +
+        "Try something like: “Explain capital ÷ 14 risk with $1400 and give the risk per trade.”";
+    }
+
+    return NextResponse.json({ reply });
   } catch (err) {
-    console.error("mini-lelefx route error:", err);
+    console.error("mini-lelefx demo error:", err);
     return NextResponse.json(
-      { error: "Server error. Pause, refresh, and try again." },
-      { status: 500 }
+      {
+        reply:
+          "Backend glitch. Refresh the page and try again, keeping the question simple."
+      },
+      { status: 200 }
     );
   }
 }
