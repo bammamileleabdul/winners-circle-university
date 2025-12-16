@@ -1,63 +1,55 @@
+import OpenAI from "openai";
+
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(req) {
   try {
-    const { messages } = await req.json();
-
-    if (!process.env.OPENAI_API_KEY) {
-      return new Response(
-        JSON.stringify({ reply: "Server missing OPENAI_API_KEY in Vercel env vars." }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return Response.json(
+        { reply: "Server is missing OPENAI_API_KEY (Vercel env var not set)." },
+        { status: 500 }
       );
     }
+
+    const body = await req.json();
+    const messages = Array.isArray(body?.messages) ? body.messages : null;
+
+    if (!messages || messages.length === 0) {
+      return Response.json(
+        { reply: "Send a messages[] array to mini lelefx." },
+        { status: 400 }
+      );
+    }
+
+    const client = new OpenAI({ apiKey });
 
     const system = {
       role: "system",
       content:
-        "You are mini lelefx for Winners Circle University. Tone: calm, precise, luxury execution. " +
-        "You help with trading framework questions, discipline, VVIP, and risk math. " +
-        "Risk rule: risk = capital / 14 (always). " +
-        "No financial advice. Process only. Keep answers short, structured, and confident.",
+        "You are mini lelefx, the Winners Circle assistant. Tone: calm, elite, disciplined, premium. " +
+        "You help with trading mindset, risk structure, and clear execution. No hype, no guarantees. " +
+        "If user asks about profit simulations: risk per trade = capital / 14 (constant). " +
+        "If user asks unrelated questions, answer briefly and still sound premium. " +
+        "Never claim certainty about future returns. Encourage patience and structure."
     };
 
-    const payload = {
-      model: "gpt-4o-mini",
-      messages: [system, ...(messages || [])],
-      temperature: 0.6,
-    };
-
-    const r = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify(payload),
+    const completion = await client.chat.completions.create({
+      model: "o3-mini",
+      messages: [system, ...messages],
+      temperature: 0.6
     });
 
-    const text = await r.text();
-
-    if (!r.ok) {
-      // Return the real error so we can see what’s wrong
-      return new Response(
-        JSON.stringify({ reply: `API error (${r.status}): ${text.slice(0, 300)}` }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    const data = JSON.parse(text);
     const reply =
-      data?.choices?.[0]?.message?.content?.trim() ||
+      completion?.choices?.[0]?.message?.content?.trim() ||
       "No reply generated. Try again.";
 
-    return new Response(JSON.stringify({ reply }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (e) {
-    return new Response(
-      JSON.stringify({ reply: "Server crashed. Check Vercel function logs." }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+    return Response.json({ reply });
+  } catch (err) {
+    return Response.json(
+      { reply: "Server error. Check Vercel logs for /api/mini-lelefx." },
+      { status: 500 }
     );
   }
 }
