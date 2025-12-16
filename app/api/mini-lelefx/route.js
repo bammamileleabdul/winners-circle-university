@@ -1,71 +1,63 @@
-import { NextResponse } from "next/server";
-
 export const runtime = "nodejs";
-
-const SYSTEM_PROMPT = `
-You are "mini lelefx" for Winners Circle University.
-Tone: calm, precise, luxury execution.
-Rules:
-- Not financial advice. Education + process only.
-- Focus on discipline, risk structure, probability, and clean execution.
-- If user asks for "risk", use constant rule: risk = capital / 14.
-- If user asks about WCU, explain: performance-based gold trading framework, structured rules, disciplined execution, VVIP is invitation only.
-- Keep answers concise unless user asks for detail.
-`;
 
 export async function POST(req) {
   try {
-    const body = await req.json();
-    const messages = Array.isArray(body?.messages) ? body.messages : [];
+    const { messages } = await req.json();
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { reply: "Server missing OPENAI_API_KEY. Add it in Vercel env vars." },
-        { status: 500 }
+    if (!process.env.OPENAI_API_KEY) {
+      return new Response(
+        JSON.stringify({ reply: "Server missing OPENAI_API_KEY in Vercel env vars." }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    // Build a clean messages array (only user/assistant)
-    const cleaned = messages
-      .filter((m) => m && typeof m.content === "string")
-      .map((m) => ({
-        role: m.role === "assistant" ? "assistant" : "user",
-        content: m.content,
-      }));
+    const system = {
+      role: "system",
+      content:
+        "You are mini lelefx for Winners Circle University. Tone: calm, precise, luxury execution. " +
+        "You help with trading framework questions, discipline, VVIP, and risk math. " +
+        "Risk rule: risk = capital / 14 (always). " +
+        "No financial advice. Process only. Keep answers short, structured, and confident.",
+    };
 
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+    const payload = {
+      model: "gpt-4o-mini",
+      messages: [system, ...(messages || [])],
+      temperature: 0.6,
+    };
+
+    const r = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...cleaned],
-        temperature: 0.4,
-        max_tokens: 400,
-      }),
+      body: JSON.stringify(payload),
     });
 
-    const data = await openaiRes.json().catch(() => null);
+    const text = await r.text();
 
-    if (!openaiRes.ok) {
-      const msg =
-        data?.error?.message ||
-        `OpenAI error (${openaiRes.status}). Check Vercel function logs.`;
-      return NextResponse.json({ reply: msg }, { status: 500 });
+    if (!r.ok) {
+      // Return the real error so we can see what’s wrong
+      return new Response(
+        JSON.stringify({ reply: `API error (${r.status}): ${text.slice(0, 300)}` }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
     }
 
+    const data = JSON.parse(text);
     const reply =
       data?.choices?.[0]?.message?.content?.trim() ||
-      "No reply returned. Try again.";
+      "No reply generated. Try again.";
 
-    return NextResponse.json({ reply });
-  } catch (err) {
-    return NextResponse.json(
-      { reply: "Server error. Try again in a moment." },
-      { status: 500 }
+    return new Response(JSON.stringify({ reply }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(
+      JSON.stringify({ reply: "Server crashed. Check Vercel function logs." }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
     );
   }
 }
