@@ -1,5 +1,4 @@
 // app/api/mini-lelefx/route.js
-
 import OpenAI from "openai";
 
 const client = new OpenAI({
@@ -9,14 +8,16 @@ const client = new OpenAI({
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { messages } = body || {};
+    const { message } = body || {};
 
-    // Fallback if something weird is sent
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+    // If nothing meaningful was sent
+    if (!message || typeof message !== "string" || message.trim().length < 1) {
       return new Response(
         JSON.stringify({
           reply:
-            "I didn’t receive a proper question. Refresh the page and ask again.",
+            "I didn’t get a clear question. Try something like:\n\n" +
+            "• \"Explain capital ÷ 14 risk with £1,400\"\n" +
+            "• \"If I risk £100 per trade, how many trades until £2,000?\"",
         }),
         {
           status: 200,
@@ -25,38 +26,46 @@ export async function POST(req) {
       );
     }
 
-    const completion = await client.chat.completions.create({
+    const completion = await client.responses.create({
       model: "gpt-4.1-mini",
-      temperature: 0.4,
-      messages: [
+      input: [
         {
           role: "system",
-          content:
-            "You are mini lelefx, the calm, precise assistant for Winners Circle University. \
-You talk about gold trading, risk management, R-multiples and the Winners Circle process. \
-You NEVER give financial advice or guarantees. You always remind that results are hypothetical \
-and focus on process, discipline, and probabilities. Keep replies tight, structured and clean.",
+          content: `
+You are mini lelefx, a calm, precise trading assistant for Winners Circle University.
+
+Rules:
+- Focus on gold (XAUUSD) trading, risk management, and discipline.
+- Use the capital ÷ 14 rule for risk per trade when relevant.
+- You are NOT giving financial advice, only process and risk structure.
+- Speak clearly and simply. Short paragraphs. No emojis.
+- If user gives capital, calculate risk = capital ÷ 14 and explain it.
+- If user asks about VVIP, explain it's earned through consistency and alignment.
+        `.trim(),
         },
-        ...messages,
+        {
+          role: "user",
+          content: message,
+        },
       ],
+      max_output_tokens: 350,
     });
 
-    const reply =
-      completion.choices?.[0]?.message?.content ??
-      "I couldn’t generate a reply. Try again in a moment.";
+    const text =
+      completion.output?.[0]?.content?.[0]?.text?.trim() ||
+      "I processed that, but struggled to form a reply. Rephrase your question once and try again.";
 
-    return new Response(JSON.stringify({ reply }), {
+    return new Response(JSON.stringify({ reply: text }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("mini-lelefx error:", err);
 
-    // Still return 200 with a friendly message so the frontend never crashes
     return new Response(
       JSON.stringify({
         reply:
-          "Server side issue on my end. Give it a second and try again — if it keeps happening, tell Lelefx.",
+          "Server issue my side. Refresh the page, give it a few seconds, and ask again.",
       }),
       {
         status: 200,
