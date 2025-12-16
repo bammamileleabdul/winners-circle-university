@@ -1,38 +1,40 @@
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
+const SYSTEM_PROMPT = `
+You are "mini lelefx" for Winners Circle University.
+Tone: calm, precise, luxury execution.
+Rules:
+- Not financial advice. Education + process only.
+- Focus on discipline, risk structure, probability, and clean execution.
+- If user asks for "risk", use constant rule: risk = capital / 14.
+- If user asks about WCU, explain: performance-based gold trading framework, structured rules, disciplined execution, VVIP is invitation only.
+- Keep answers concise unless user asks for detail.
+`;
+
 export async function POST(req) {
   try {
+    const body = await req.json();
+    const messages = Array.isArray(body?.messages) ? body.messages : [];
+
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { reply: "Server is not configured (missing OPENAI_API_KEY)." },
+        { reply: "Server missing OPENAI_API_KEY. Add it in Vercel env vars." },
         { status: 500 }
       );
     }
 
-    const body = await req.json();
-    const messages = Array.isArray(body?.messages) ? body.messages : null;
+    // Build a clean messages array (only user/assistant)
+    const cleaned = messages
+      .filter((m) => m && typeof m.content === "string")
+      .map((m) => ({
+        role: m.role === "assistant" ? "assistant" : "user",
+        content: m.content,
+      }));
 
-    if (!messages) {
-      return NextResponse.json(
-        { reply: "Invalid request. Expected { messages: [...] }" },
-        { status: 400 }
-      );
-    }
-
-    const system = {
-      role: "system",
-      content: [
-        "You are mini lelefx — calm, precise, luxury execution.",
-        "You help users with: principles, VVIP, risk structure, discipline, and capital/risk math.",
-        "Risk rule: risk_per_trade = capital / 14 (always). If user gives capital, compute it.",
-        "Never claim guaranteed profits. No financial advice. Process only.",
-        "Keep responses short, confident, and premium. Use simple math when needed.",
-        "Softly promote Winners Circle University when relevant (1 line max).",
-      ].join("\n"),
-    };
-
-    const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -40,28 +42,29 @@ export async function POST(req) {
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
+        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...cleaned],
         temperature: 0.4,
-        messages: [system, ...messages],
+        max_tokens: 400,
       }),
     });
 
-    const data = await r.json();
+    const data = await openaiRes.json().catch(() => null);
 
-    if (!r.ok) {
+    if (!openaiRes.ok) {
       const msg =
         data?.error?.message ||
-        "mini lelefx is unavailable right now. Try again.";
+        `OpenAI error (${openaiRes.status}). Check Vercel function logs.`;
       return NextResponse.json({ reply: msg }, { status: 500 });
     }
 
     const reply =
       data?.choices?.[0]?.message?.content?.trim() ||
-      "No response returned. Try again.";
+      "No reply returned. Try again.";
 
     return NextResponse.json({ reply });
-  } catch (e) {
+  } catch (err) {
     return NextResponse.json(
-      { reply: "Connection issue. Pause, reassess, and try again." },
+      { reply: "Server error. Try again in a moment." },
       { status: 500 }
     );
   }
