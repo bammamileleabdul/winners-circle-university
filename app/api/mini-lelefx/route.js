@@ -1,72 +1,82 @@
-import { NextResponse } from "next/server";
+export const runtime = "nodejs";
+
+function extractOutputText(data) {
+  // The Responses API returns an `output` array with message items containing `output_text`.
+  let text = "";
+  const output = Array.isArray(data?.output) ? data.output : [];
+
+  for (const item of output) {
+    if (item?.type === "message" && Array.isArray(item?.content)) {
+      for (const c of item.content) {
+        if (c?.type === "output_text" && typeof c?.text === "string") {
+          text += c.text;
+        }
+      }
+    }
+  }
+
+  return text.trim();
+}
 
 export async function POST(req) {
   try {
-    const { message } = await req.json();
+    const { messages } = await req.json();
 
-    if (!message || typeof message !== "string") {
-      return NextResponse.json({ error: "Message is required." }, { status: 400 });
-    }
-
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "Missing OPENAI_API_KEY env var on Vercel." },
-        { status: 500 }
+    if (!process.env.OPENAI_API_KEY) {
+      return new Response(
+        JSON.stringify({ reply: "Server missing OPENAI_API_KEY." }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
+    const safe = Array.isArray(messages) ? messages.slice(-12) : [];
+    const transcript = safe
+      .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
+      .join("\n\n");
 
-    const system = `
-You are "mini lelefx" — a premium, calm, disciplined assistant for Winners Circle University.
-Tone: confident, luxurious, concise, chill-to-the-bone. No hype, no cringe.
-
-You can:
-- Answer questions about the site, principles, manifesto, VVIP concept.
-- Help with trading psychology + process (NOT financial advice).
-- Do simple calculators when asked.
-
-Rule: If user asks "how much should I risk?" your default is:
-risk_per_trade = capital / 14
-
-Never promise profits, never give guaranteed returns.
-If asked for signals, refuse and guide to process/risk.
+    const instructions = `
+You are "mini lelefx" — a luxury, calm, disciplined trading assistant for Winners Circle University.
+Tone: concise, confident, premium. No hype. No guarantees.
+Core rule: risk per trade = capital / 14 (always).
+If user asks for projections, frame as "possible scenarios" not promises.
+If user asks about Winners Circle, subtly promote: discipline, structure, risk-first.
 `.trim();
 
-    const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    const payload = {
+      model: process.env.OPENAI_MODEL || "gpt-5.2",
+      instructions,
+      input: transcript || "User: Say hello as mini lelefx.",
+    };
+
+    const r = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model,
-        temperature: 0.6,
-        max_tokens: 350,
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: message },
-        ],
-      }),
+      body: JSON.stringify(payload),
     });
 
     const data = await r.json();
 
     if (!r.ok) {
-      return NextResponse.json(
-        { error: data?.error?.message || "OpenAI request failed." },
-        { status: 500 }
-      );
+      const msg =
+        data?.error?.message || "AI request failed. Try again in a moment.";
+      return new Response(JSON.stringify({ reply: msg }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+      });
     }
 
-    const reply = data?.choices?.[0]?.message?.content?.trim() || "…";
-
-    return NextResponse.json({ reply });
+    const reply = extractOutputText(data) || "No output received.";
+    return new Response(JSON.stringify({ reply }), {
+      status: 200,
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+    });
   } catch (e) {
-    return NextResponse.json(
-      { error: "Server error. Try again." },
-      { status: 500 }
+    return new Response(
+      JSON.stringify({ reply: "Server error. Try again." }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 }
