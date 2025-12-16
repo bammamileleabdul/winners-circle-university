@@ -1,75 +1,86 @@
 // app/api/mini-lelefx/route.js
-import OpenAI from "openai";
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-const SYSTEM_PROMPT = `
-You are "mini lelefx" – a calm, precise assistant for Winners Circle University.
-
-Rules:
-- Tone: short, disciplined, clear. No hype, no emojis.
-- You NEVER give financial advice. You only explain process, risk structure, and probabilities.
-- Core rule: risk per trade = capital ÷ 14 (always).
-- If user gives capital, show:
-  - risk per trade (capital ÷ 14)
-  - explain it in one clear sentence.
-- If user asks about principles / VVIP / mindset, answer using Winners Circle language:
-  - discipline over dopamine
-  - risk before reward
-  - patience compounds
-  - process over outcome
-- If the question is unclear, ask for a clearer question instead of guessing.
-- Keep answers under ~6–8 lines max.
-`;
+import { NextResponse } from "next/server";
 
 export async function POST(req) {
   try {
-    const body = await req.json();
-    const message = (body?.message || "").trim();
+    const apiKey = process.env.OPENAI_API_KEY;
 
-    if (!message) {
-      return new Response(
-        JSON.stringify({
-          error:
-            "I didn’t receive a proper question. Refresh the page and ask again.",
-        }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+    // If the key isn't available on the server
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "OPENAI_API_KEY is missing on the server." },
+        { status: 500 }
       );
     }
 
-    const completion = await client.chat.completions.create({
-      model: "gpt-4.1-mini",
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: message },
-      ],
-      max_tokens: 350,
-      temperature: 0.4,
-    });
+    const body = await req.json();
+    const message = (body?.message || "").toString().trim();
+
+    // If the frontend didn’t send a message
+    if (!message) {
+      return NextResponse.json(
+        { error: "I didn’t receive a proper question. Try again." },
+        { status: 400 }
+      );
+    }
+
+    // Call OpenAI
+    const response = await fetch(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini", // safe, widely available model
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are mini lelefx, an assistant for Winners Circle University. " +
+                "You talk calm and precise. You never promise profits. " +
+                "You explain risk as capital ÷ 14, position sizing, patience, and discipline. " +
+                "If asked for exact signals, you remind them this is not financial advice.",
+            },
+            {
+              role: "user",
+              content: message,
+            },
+          ],
+          max_tokens: 400,
+          temperature: 0.6,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    // If OpenAI returned an error
+    if (!response.ok) {
+      console.error("OpenAI error:", data);
+      return NextResponse.json(
+        {
+          error:
+            data?.error?.message ||
+            "Backend issue talking to OpenAI. Try again later.",
+        },
+        { status: 500 }
+      );
+    }
 
     const reply =
-      completion.choices?.[0]?.message?.content?.trim() ||
-      "Calm down, refresh, and ask again.";
+      data?.choices?.[0]?.message?.content?.trim() ||
+      "I processed that, but didn’t get a clear response. Ask again another way.";
 
-    return new Response(JSON.stringify({ reply }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return NextResponse.json({ reply }, { status: 200 });
   } catch (err) {
-    console.error("mini-lelefx error:", err);
-    return new Response(
-      JSON.stringify({
-        error: "Backend issue. Pause, refresh and ask again.",
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+    console.error("mini-lelefx route error:", err);
+    return NextResponse.json(
+      { error: "Server error. Pause, refresh, and try again." },
+      { status: 500 }
     );
   }
 }
