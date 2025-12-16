@@ -5,70 +5,69 @@ const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+const SYSTEM_PROMPT = `
+You are "mini lelefx" – a calm, precise assistant for Winners Circle University.
+
+Rules:
+- Tone: short, disciplined, clear. No hype, no emojis.
+- You NEVER give financial advice. You only explain process, risk structure, and probabilities.
+- Core rule: risk per trade = capital ÷ 14 (always).
+- If user gives capital, show:
+  - risk per trade (capital ÷ 14)
+  - explain it in one clear sentence.
+- If user asks about principles / VVIP / mindset, answer using Winners Circle language:
+  - discipline over dopamine
+  - risk before reward
+  - patience compounds
+  - process over outcome
+- If the question is unclear, ask for a clearer question instead of guessing.
+- Keep answers under ~6–8 lines max.
+`;
+
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { message } = body || {};
+    const message = (body?.message || "").trim();
 
-    // If nothing meaningful was sent
-    if (!message || typeof message !== "string" || message.trim().length < 1) {
+    if (!message) {
       return new Response(
         JSON.stringify({
-          reply:
-            "I didn’t get a clear question. Try something like:\n\n" +
-            "• \"Explain capital ÷ 14 risk with £1,400\"\n" +
-            "• \"If I risk £100 per trade, how many trades until £2,000?\"",
+          error:
+            "I didn’t receive a proper question. Refresh the page and ask again.",
         }),
         {
-          status: 200,
+          status: 400,
           headers: { "Content-Type": "application/json" },
         }
       );
     }
 
-    const completion = await client.responses.create({
+    const completion = await client.chat.completions.create({
       model: "gpt-4.1-mini",
-      input: [
-        {
-          role: "system",
-          content: `
-You are mini lelefx, a calm, precise trading assistant for Winners Circle University.
-
-Rules:
-- Focus on gold (XAUUSD) trading, risk management, and discipline.
-- Use the capital ÷ 14 rule for risk per trade when relevant.
-- You are NOT giving financial advice, only process and risk structure.
-- Speak clearly and simply. Short paragraphs. No emojis.
-- If user gives capital, calculate risk = capital ÷ 14 and explain it.
-- If user asks about VVIP, explain it's earned through consistency and alignment.
-        `.trim(),
-        },
-        {
-          role: "user",
-          content: message,
-        },
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: message },
       ],
-      max_output_tokens: 350,
+      max_tokens: 350,
+      temperature: 0.4,
     });
 
-    const text =
-      completion.output?.[0]?.content?.[0]?.text?.trim() ||
-      "I processed that, but struggled to form a reply. Rephrase your question once and try again.";
+    const reply =
+      completion.choices?.[0]?.message?.content?.trim() ||
+      "Calm down, refresh, and ask again.";
 
-    return new Response(JSON.stringify({ reply: text }), {
+    return new Response(JSON.stringify({ reply }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("mini-lelefx error:", err);
-
     return new Response(
       JSON.stringify({
-        reply:
-          "Server issue my side. Refresh the page, give it a few seconds, and ask again.",
+        error: "Backend issue. Pause, refresh and ask again.",
       }),
       {
-        status: 200,
+        status: 500,
         headers: { "Content-Type": "application/json" },
       }
     );
