@@ -33,7 +33,7 @@ export default function Home() {
     }
   };
 
-  // MINI LELEFX
+  // ✅ MINI LELEFX (ONLY ADD)
   const [aiOpen, setAiOpen] = useState(false);
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -87,17 +87,11 @@ export default function Home() {
     }
   };
 
-  // placeholder for pay buttons (UI ONLY)
-  const handlePayClick = (method) => {
-    alert(
-      `Payment via ${method} coming soon. You’ll settle 30% of your net profit, not deposits.`,
-    );
-  };
-
   return (
     <>
       {/* HEADER */}
       <header className="header">
+        {/* Emblem logo */}
         <div className="logo">
           <img
             src="/emblem.jpg"
@@ -128,14 +122,15 @@ export default function Home() {
             <a href="#principles" onClick={() => setMenuOpen(false)}>
               Principles
             </a>
-            <a href="#client-portal" onClick={() => setMenuOpen(false)}>
-              Client Portal
-            </a>
             <a href="#manifesto" onClick={() => setMenuOpen(false)}>
               Manifesto
             </a>
             <a href="#vvip" onClick={() => setMenuOpen(false)}>
               VVIP Access
+            </a>
+            {/* ✅ Real navigation to client portal page */}
+            <a href="/client-portal" onClick={() => setMenuOpen(false)}>
+              Client Portal
             </a>
           </nav>
         </div>
@@ -143,6 +138,7 @@ export default function Home() {
 
       {/* HERO */}
       <section id="overview" className="hero">
+        {/* Faded hero watermark emblem */}
         <img src="/emblem.jpg" alt="" className="heroEmblem" />
 
         <div className="pill">EARLY ACCESS · LIMITED ONBOARDING</div>
@@ -153,7 +149,7 @@ export default function Home() {
           modelling with disciplined human execution.
         </p>
 
-        {/* WAITLIST FORM (REAL) */}
+        {/* WAITLIST FORM (FORMSPREE) */}
         <form
           className="waitlistForm"
           action="https://formspree.io/f/xpwveaza"
@@ -185,7 +181,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
+      {/* HOW IT WORKS (Floating Gold Cards) */}
       <section id="how" className="section">
         <h2>How It Works</h2>
 
@@ -212,7 +208,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PRINCIPLES */}
+      {/* PRINCIPLES (Luxury Cards) */}
       <section id="principles" className="section">
         <h2>Our Principles</h2>
 
@@ -247,127 +243,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 🔐 CLIENT PORTAL (FOR PEOPLE INSIDE THE CIRCLE) */}
-      <section id="client-portal" className="section">
-        <h2>Your Winners Circle Interface</h2>
-        <p className="perfIntro">
-          Once you are onboarded, this is the control panel you use to track
-          your performance, understand how your capital is deployed and settle
-          your <span>30% performance fee</span>. All numbers below assume a{" "}
-          <span>£500</span> starting capital with our{" "}
-          <span>capital ÷ 14</span> risk model and a clean{" "}
-          <span>1 : 1 RR</span>.
-        </p>
-
-        <div className="perfGrid">
-          {/* LEFT: YOUR RISK SETUP */}
-          <div className="perfCard">
-            <div className="perfTag">Your Risk Structure</div>
-            <div className="perfRow">
-              <span className="perfLabel">Starting Capital</span>
-              <span className="perfValue">£500</span>
-            </div>
-            <div className="perfRow">
-              <span className="perfLabel">Risk / Trade (capital ÷ 14)</span>
-              <span className="perfValue">≈ £35.70</span>
-            </div>
-            <div className="perfRow">
-              <span className="perfLabel">Reward / Trade (1 : 1 RR)</span>
-              <span className="perfValue">£35.70</span>
-            </div>
-            <div className="perfDivider" />
-            <div className="perfRow">
-              <span className="perfLabel">TP behaviour</span>
-              <span className="perfValue">Pre-defined & mechanical</span>
-            </div>
-            <div className="perfRow">
-              <span className="perfLabel">SL placement</span>
-              <span className="perfValue">Structure-based, not random</span>
-            </div>
-          </div>
-
-          {/* RIGHT: YOUR WEEKLY SNAPSHOT */}
-          <div className="perfCard">
-            <div className="perfTag">Weekly Snapshot (Example)</div>
-            <div className="perfRow">
-              <span className="perfLabel">Normal week</span>
-              <span className="perfValue">7–9 clean TPs</span>
-            </div>
-            <div className="perfRow">
-              <span className="perfLabel">Bad week</span>
-              <span className="perfValue">≈ 7 TPs · still green</span>
-            </div>
-            <div className="perfRow">
-              <span className="perfLabel">Worst realistic week</span>
-              <span className="perfValue">4 TPs left</span>
-            </div>
-            <div className="perfDivider" />
-            <div className="perfRow">
-              <span className="perfLabel">Profit if 4 TPs land</span>
-              <span className="perfValue">≈ £142</span>
-            </div>
-            <div className="perfRow">
-              <span className="perfLabel">Profit if 9 TPs land</span>
-              <span className="perfValue">≈ £321+</span>
-            </div>
-            <p className="perfFine">
-              This is a preview. Live numbers update with your capital, fills
-              and execution quality. We do not promise outcomes — we enforce
-              structure.
-            </p>
-          </div>
-        </div>
-
-        {/* PAYMENT BLOCK */}
-        <div className="payCard">
-          <div className="payTitle">Settle Your 30% Performance Fee</div>
-          <p className="payText">
-            When you withdraw, you keep <span>70%</span> of net profit. Winners
-            Circle takes <span>30%</span> as a performance fee — only on profit,
-            never on deposits.
-          </p>
-
-          <div className="paySummary">
-            <div className="payRow">
-              <span className="payLabel">Example net profit</span>
-              <span className="payValue">£300</span>
-            </div>
-            <div className="payRow">
-              <span className="payLabel">Your 70%</span>
-              <span className="payValue">£210</span>
-            </div>
-            <div className="payRow">
-              <span className="payLabel">Winners Circle 30%</span>
-              <span className="payValue">£90</span>
-            </div>
-          </div>
-
-          <div className="payMethods">
-            <button
-              className="payBtn"
-              type="button"
-              onClick={() => handlePayClick("Card")}
-            >
-              Pay with Card
-            </button>
-            <button
-              className="payBtn payBtnGhost"
-              type="button"
-              onClick={() => handlePayClick("Crypto")}
-            >
-              Pay with Crypto
-            </button>
-          </div>
-
-          <div className="payNote">
-            This is your client-side interface preview. Live version connects to
-            verified payment providers and only ever charges against realised
-            profit — not deposits, not top-ups.
-          </div>
-        </div>
-      </section>
-
-      {/* MANIFESTO */}
+      {/* MANIFESTO (Curtain / Reveal) */}
       <section id="manifesto" className="section">
         <h2>Manifesto</h2>
 
@@ -411,7 +287,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* VVIP */}
+      {/* VVIP (Button -> Premium Reveal Panel) */}
       <section id="vvip" className="section last">
         <h2>VVIP Access</h2>
 
@@ -454,7 +330,7 @@ export default function Home() {
                 <div className="aiTitle">mini lelefx</div>
                 <div className="aiSub">Calm. Precise. Luxury execution.</div>
               </div>
-            <button className="aiClose" onClick={() => setAiOpen(false)}>
+              <button className="aiClose" onClick={() => setAiOpen(false)}>
                 ×
               </button>
             </div>
@@ -468,7 +344,9 @@ export default function Home() {
                   {m.content}
                 </div>
               ))}
-              {aiLoading && <div className="aiMsg aiBot">Thinking…</div>}
+              {aiLoading && (
+                <div className="aiMsg aiBot">Thinking…</div>
+              )}
             </div>
 
             <form className="aiFooter" onSubmit={sendAi}>
@@ -484,7 +362,9 @@ export default function Home() {
               </button>
             </form>
 
-            <div className="aiNote">Not financial advice. Process only.</div>
+            <div className="aiNote">
+              Not financial advice. Process only.
+            </div>
           </div>
         </div>
       )}
@@ -852,173 +732,7 @@ export default function Home() {
           padding-bottom: 110px;
         }
 
-        /* CLIENT PORTAL / PERFORMANCE STYLES */
-        .perfIntro {
-          max-width: 640px;
-          margin: 0 auto 28px;
-          color: #d8d2b6;
-          font-size: 14px;
-          line-height: 1.7;
-        }
-
-        .perfIntro span {
-          color: #e6c36a;
-          font-weight: 600;
-        }
-
-        .perfGrid {
-          display: grid;
-          gap: 18px;
-          max-width: 880px;
-          margin: 0 auto 28px;
-        }
-
-        @media (min-width: 768px) {
-          .perfGrid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-        }
-
-        .perfCard {
-          text-align: left;
-          border-radius: 22px;
-          padding: 22px 20px;
-          background: linear-gradient(
-            180deg,
-            rgba(230, 195, 106, 0.12),
-            rgba(0, 0, 0, 0.92)
-          );
-          border: 1px solid rgba(230, 195, 106, 0.4);
-          box-shadow: 0 0 55px rgba(230, 195, 106, 0.16);
-        }
-
-        .perfTag {
-          font-size: 11px;
-          text-transform: uppercase;
-          letter-spacing: 0.16em;
-          color: rgba(230, 195, 106, 0.9);
-          margin-bottom: 14px;
-        }
-
-        .perfRow {
-          display: flex;
-          justify-content: space-between;
-          font-size: 13px;
-          margin-bottom: 8px;
-          gap: 10px;
-        }
-
-        .perfLabel {
-          color: #a7a08a;
-        }
-
-        .perfValue {
-          color: #f1e7c6;
-          font-weight: 600;
-        }
-
-        .perfDivider {
-          height: 1px;
-          margin: 10px 0 12px;
-          background: rgba(230, 195, 106, 0.28);
-        }
-
-        .perfFine {
-          margin-top: 12px;
-          font-size: 12px;
-          color: #8f8872;
-          line-height: 1.7;
-        }
-
-        .payCard {
-          max-width: 880px;
-          margin: 0 auto;
-          text-align: left;
-          border-radius: 26px;
-          padding: 24px 20px;
-          background: radial-gradient(
-            circle at top,
-            rgba(230, 195, 106, 0.16),
-            rgba(0, 0, 0, 0.96)
-          );
-          border: 1px solid rgba(230, 195, 106, 0.45);
-          box-shadow: 0 0 80px rgba(230, 195, 106, 0.25);
-        }
-
-        .payTitle {
-          color: #e6c36a;
-          font-weight: 800;
-          margin-bottom: 8px;
-          font-size: 18px;
-        }
-
-        .payText {
-          color: #d8d2b6;
-          font-size: 14px;
-          line-height: 1.7;
-          margin-bottom: 16px;
-        }
-
-        .payText span {
-          color: #e6c36a;
-          font-weight: 600;
-        }
-
-        .paySummary {
-          border-radius: 16px;
-          border: 1px solid rgba(230, 195, 106, 0.35);
-          padding: 14px 14px 10px;
-          margin-bottom: 16px;
-          background: rgba(0, 0, 0, 0.75);
-        }
-
-        .payRow {
-          display: flex;
-          justify-content: space-between;
-          font-size: 13px;
-          margin-bottom: 6px;
-        }
-
-        .payLabel {
-          color: #a7a08a;
-        }
-
-        .payValue {
-          color: #f1e7c6;
-          font-weight: 600;
-        }
-
-        .payMethods {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          margin-bottom: 10px;
-        }
-
-        .payBtn {
-          border-radius: 999px;
-          padding: 10px 16px;
-          border: none;
-          font-size: 13px;
-          font-weight: 700;
-          cursor: pointer;
-          background: linear-gradient(135deg, #e6c36a, #b8963f);
-          color: #000;
-        }
-
-        .payBtnGhost {
-          background: transparent;
-          border: 1px solid rgba(230, 195, 106, 0.6);
-          color: #e6c36a;
-        }
-
-        .payNote {
-          font-size: 11px;
-          color: #8f8872;
-          line-height: 1.7;
-        }
-
-        /* MINI LELEFX */
+        /* MINI LELEFX STYLES */
         .aiFab {
           position: fixed;
           right: 16px;
