@@ -13,7 +13,7 @@ export default function Home() {
   const [manifestoOpen, setManifestoOpen] = useState(false);
   const [vvipOpen, setVvipOpen] = useState(false);
 
-  // ✅ MINI LELEFX STATE
+  // MINI LELEFX STATE
   const [aiOpen, setAiOpen] = useState(false);
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -26,7 +26,6 @@ export default function Home() {
   ]);
 
   const handleWaitlistSubmit = async (e) => {
-    // currently not used because we post directly to Formspree via form action
     e.preventDefault();
     setStatus("Submitting...");
 
@@ -46,7 +45,7 @@ export default function Home() {
     }
   };
 
-  // ✅ MINI LELEFX SEND FUNCTION
+  // MINI LELEFX SEND FUNCTION
   const sendAi = async (e) => {
     e.preventDefault();
     if (!aiInput.trim() || aiLoading) return;
@@ -117,7 +116,8 @@ export default function Home() {
             <a href="#overview" onClick={() => setMenuOpen(false)}>
               Overview
             </a>
-            <a href="#how" onClick={() => setMenuOpen(false)}>
+            {/* 🔁 CHANGED: now links to /how page */}
+            <a href="/how" onClick={() => setMenuOpen(false)}>
               How It Works
             </a>
             <a href="#principles" onClick={() => setMenuOpen(false)}>
@@ -171,13 +171,14 @@ export default function Home() {
         </form>
 
         <div className="hintRow">
-          <a className="ghostLink" href="#how">
+          {/* 🔁 CHANGED: this now goes to /how page */}
+          <a className="ghostLink" href="/how">
             See How It Works →
           </a>
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
+      {/* HOW IT WORKS (on homepage – high level) */}
       <section id="how" className="section">
         <h2>How It Works</h2>
 
@@ -203,7 +204,7 @@ export default function Home() {
           ))}
         </div>
 
-        {/* ✅ SECTION CTA: JOIN + ASK MINI LELEFX */}
+        {/* SECTION CTA: JOIN + ASK MINI LELEFX */}
         <div className="sectionCta">
           <a className="sectionCtaPrimary" href="#overview">
             Join the Waitlist
@@ -326,7 +327,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* ✅ BOTTOM CTA STRIP FOR MINI LELEFX */}
+      {/* BOTTOM CTA STRIP */}
       <section className="ctaStrip">
         <div className="ctaStripText">
           mini lelefx is live. Ask how the framework would treat your capital.
@@ -336,12 +337,12 @@ export default function Home() {
         </button>
       </section>
 
-      {/* ✅ MINI LELEFX FLOATING BUTTON */}
+      {/* MINI LELEFX FLOATING BUTTON */}
       <button className="aiFab" onClick={() => setAiOpen(true)}>
         mini lelefx
       </button>
 
-      {/* ✅ MINI LELEFX MODAL */}
+      {/* MINI LELEFX MODAL */}
       {aiOpen && (
         <div className="aiOverlay" onClick={() => setAiOpen(false)}>
           <div className="aiModal" onClick={(e) => e.stopPropagation()}>
