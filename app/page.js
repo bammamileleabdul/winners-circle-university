@@ -5,15 +5,11 @@ import { useState } from "react";
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Waitlist
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState("");
-
   // Interactive reveals
   const [manifestoOpen, setManifestoOpen] = useState(false);
   const [vvipOpen, setVvipOpen] = useState(false);
 
-  // mini lelefx
+  // MINI LELEFX
   const [aiOpen, setAiOpen] = useState(false);
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -24,26 +20,6 @@ export default function Home() {
         "I’m mini lelefx. Calm. Precise. Ask me anything — principles, VVIP, or risk math (capital ÷ 14).",
     },
   ]);
-
-  const handleWaitlistSubmit = async (e) => {
-    e.preventDefault();
-    setStatus("Submitting...");
-
-    try {
-      const res = await fetch("/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      if (!res.ok) throw new Error("Failed");
-
-      setStatus("You’re in. Welcome to the Circle.");
-      setEmail("");
-    } catch (err) {
-      setStatus("Something went wrong. Try again.");
-    }
-  };
 
   const sendAi = async (e) => {
     e.preventDefault();
@@ -68,7 +44,9 @@ export default function Home() {
           ...m,
           {
             role: "assistant",
-            content: data?.error || "mini lelefx hit a connection issue. Re-center, then try again.",
+            content:
+              data?.error ||
+              "mini lelefx hit a connection issue. Re-center, then try again in a moment.",
           },
         ]);
       } else {
@@ -76,7 +54,7 @@ export default function Home() {
           ...m,
           {
             role: "assistant",
-            content: data.reply || "…",
+            content: data.reply || "Calm answer, but it came back empty.",
           },
         ]);
       }
@@ -85,7 +63,8 @@ export default function Home() {
         ...m,
         {
           role: "assistant",
-          content: "mini lelefx couldn’t reach the backend. Breathe, refresh, and try again.",
+          content:
+            "Network issue. Breathe, refresh the page, and ask again calmly.",
         },
       ]);
     } finally {
@@ -97,17 +76,17 @@ export default function Home() {
     <>
       {/* HEADER */}
       <header className="header">
-        <button className="menuBtn" onClick={() => setMenuOpen(true)}>
-          ☰
-        </button>
-
-        <div className="logo">
+        <a href="/" className="logo">
           <img
             src="/emblem.jpg"
             alt="Winners Circle Emblem"
             className="logoImg"
           />
-        </div>
+        </a>
+
+        <button className="menuBtn" onClick={() => setMenuOpen(true)}>
+          ☰
+        </button>
       </header>
 
       {/* MOBILE MENU */}
@@ -121,7 +100,7 @@ export default function Home() {
             <a href="#overview" onClick={() => setMenuOpen(false)}>
               Overview
             </a>
-            <a href="/how" onClick={() => setMenuOpen(false)}>
+            <a href="#how" onClick={() => setMenuOpen(false)}>
               How It Works
             </a>
             <a href="#principles" onClick={() => setMenuOpen(false)}>
@@ -152,36 +131,38 @@ export default function Home() {
           modelling with disciplined human execution.
         </p>
 
-        {/* WAITLIST FORM */}
+        {/* WAITLIST FORM (Formspree) */}
         <form
           className="waitlistForm"
-          onSubmit={handleWaitlistSubmit}
+          action="https://formspree.io/f/xpwveaza"
+          method="POST"
         >
           <input
             className="waitlistInput"
             type="email"
             name="email"
             placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
             required
+          />
+          <input
+            type="hidden"
+            name="source"
+            value="Winners Circle Landing Page"
           />
 
           <button className="goldBtn" type="submit">
             Join the Waitlist
           </button>
-
-          {status && <p className="status">{status}</p>}
         </form>
 
         <div className="hintRow">
           <a className="ghostLink" href="/how">
-            See How It Works →
+            See detailed breakdown →
           </a>
         </div>
       </section>
 
-      {/* HOW IT WORKS (cards on home) */}
+      {/* HOW IT WORKS (on main page) */}
       <section id="how" className="section">
         <h2>How It Works</h2>
 
@@ -270,10 +251,11 @@ export default function Home() {
               <p>
                 If you’re here to rush, impress, or gamble — this won’t work.{" "}
                 <br />
-                If you’re here to compound patiently — you’re in the right place.
+                If you’re here to compound patiently — you’re in the right
+                place.
               </p>
 
-              <div className="signature">— Lelefx, Founder</div>
+              <div className="signature">— lelefx, Founder</div>
 
               <button
                 className="ghostBtn"
@@ -316,15 +298,11 @@ export default function Home() {
         )}
       </section>
 
-      {/* MINI LELEFX ROBOT BUTTON */}
+      {/* MINI LELEFX FLOATING BUTTON + MODAL */}
       <button className="aiFab" onClick={() => setAiOpen(true)}>
-        <span className="aiBotFace">🤖</span>
-        <span className="aiBubble">
-          Hey, welcome to Winners. What can I help you with?
-        </span>
+        mini lelefx
       </button>
 
-      {/* MINI LELEFX MODAL */}
       {aiOpen && (
         <div className="aiOverlay" onClick={() => setAiOpen(false)}>
           <div className="aiModal" onClick={(e) => e.stopPropagation()}>
@@ -347,7 +325,9 @@ export default function Home() {
                   {m.content}
                 </div>
               ))}
-              {aiLoading && <div className="aiMsg aiBot">Thinking…</div>}
+              {aiLoading && (
+                <div className="aiMsg aiBot">Thinking…</div>
+              )}
             </div>
 
             <form className="aiFooter" onSubmit={sendAi}>
@@ -384,7 +364,7 @@ export default function Home() {
           justify-content: space-between;
           align-items: center;
           padding: 16px 18px;
-          background: linear-gradient(180deg, #0b0602, #211308);
+          background: linear-gradient(180deg, #000, #1a1408);
           backdrop-filter: blur(10px);
           border-bottom: 1px solid rgba(230, 195, 106, 0.18);
         }
@@ -398,7 +378,6 @@ export default function Home() {
           height: 40px;
           width: auto;
           object-fit: contain;
-          display: block;
           filter: drop-shadow(0 0 14px rgba(230, 195, 106, 0.45));
         }
 
@@ -517,12 +496,6 @@ export default function Home() {
           font-size: 15px;
           font-weight: 800;
           color: #000;
-        }
-
-        .status {
-          color: #e6c36a;
-          font-size: 13px;
-          margin: 6px 0 0;
         }
 
         .hintRow {
@@ -730,43 +703,20 @@ export default function Home() {
           padding-bottom: 110px;
         }
 
-        /* mini lelefx FAB + modal */
+        /* MINI LELEFX STYLES */
         .aiFab {
           position: fixed;
           right: 16px;
-          bottom: 18px;
+          bottom: 16px;
           z-index: 9998;
           background: linear-gradient(135deg, #e6c36a, #8f6b1f);
           border: none;
-          padding: 10px 14px;
+          padding: 12px 16px;
           border-radius: 999px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
+          font-weight: 900;
+          color: #000;
           box-shadow: 0 0 70px rgba(230, 195, 106, 0.22);
           cursor: pointer;
-        }
-
-        .aiBotFace {
-          font-size: 18px;
-        }
-
-        .aiBubble {
-          font-size: 12px;
-          font-weight: 600;
-          color: #000;
-          white-space: nowrap;
-          animation: bob 2.8s ease-in-out infinite;
-        }
-
-        @keyframes bob {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-2px);
-          }
         }
 
         .aiOverlay {
@@ -817,17 +767,16 @@ export default function Home() {
         }
 
         .aiClose {
+          display: flex;
+          align-items: center;
+          justify-content: center;
           background: transparent;
           border: 1px solid rgba(230, 195, 106, 0.35);
           color: #e6c36a;
           width: 34px;
           height: 34px;
           border-radius: 999px;
-          font-size: 20px;
-          line-height: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          font-size: 18px;
           cursor: pointer;
         }
 
