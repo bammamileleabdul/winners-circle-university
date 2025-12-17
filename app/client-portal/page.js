@@ -15,20 +15,18 @@ export default function ClientPortal() {
             <span className="logoText">Back to main site</span>
           </a>
 
-          <div className="tag">
-            Live Client Portal · 70/30 Split
-          </div>
+          <div className="tag">Live Client Portal · 70/30 Split</div>
         </header>
 
         {/* MAIN CONTENT */}
         <main className="main">
-          {/* LEFT: SUMMARY */}
+          {/* SUMMARY */}
           <section className="card summary">
             <h1>Client Performance Overview</h1>
             <p className="muted">
-              This portal is for active clients only. Numbers shown here are
-              illustrative – final figures are confirmed privately after each
-              payout cycle.
+              This portal is for active clients only. Numbers here are example
+              figures. Final payouts are always confirmed privately after each
+              cycle.
             </p>
 
             <div className="statsGrid">
@@ -36,7 +34,8 @@ export default function ClientPortal() {
                 <div className="label">Capital (example)</div>
                 <div className="value">£500</div>
                 <div className="hint">
-                  You control the capital. We only work on a profit-share basis.
+                  You keep capital in your own account. We work on profit share
+                  only.
                 </div>
               </div>
 
@@ -44,30 +43,30 @@ export default function ClientPortal() {
                 <div className="label">Framework Risk</div>
                 <div className="value">Capital ÷ 14</div>
                 <div className="hint">
-                  Approx. £35.70 risk per trade at £500 starting capital.
+                  Around £35.70 risk per trade at £500 starting balance.
                 </div>
               </div>
 
               <div className="statBox">
                 <div className="label">Target Split</div>
-                <div className="value">70% · 30%</div>
+                <div className="value">70% / 30%</div>
                 <div className="hint">
-                  70% to you, 30% to Winners Circle on realised profits only.
+                  70% of realised profits to you, 30% to Winners Circle.
                 </div>
               </div>
             </div>
 
             <div className="note">
-              Nothing here is financial advice. This page simply visualises how
-              our process and profit-share can look once you are onboarded.
+              None of this is financial advice. It simply shows how our
+              framework, risk and split are structured when you are onboarded.
             </div>
           </section>
 
-          {/* RIGHT: TRADE LOG + PAYMENT */}
+          {/* TRADE & PAYOUT VIEW */}
           <section className="card trades">
-            <h2>Recent Session Snapshot</h2>
+            <h2>Example Session Snapshot</h2>
             <p className="muted small">
-              Example layout of how your TP / SL and performance can appear.
+              A simple view of how TP / SL and performance can be shown.
             </p>
 
             <div className="table">
@@ -112,10 +111,10 @@ export default function ClientPortal() {
 
             <div className="weekBox">
               <div>
-                <div className="label">Example Week Outcome</div>
+                <div className="label">Illustrative Week Result</div>
                 <div className="value">+4R</div>
                 <div className="hint">
-                  Using £35.70 per R, this would be approx. £142 profit.
+                  At £35.70 per R, that’s around £142 profit.
                 </div>
               </div>
               <div className="split">
@@ -134,8 +133,8 @@ export default function ClientPortal() {
 
             <h3>Payout & Profit Share</h3>
             <p className="muted small">
-              When a payout window opens, you confirm your numbers privately.
-              Then you choose a method below to send the 30% share.
+              When a payout window opens, we confirm results together. Then you
+              choose a method below to send the 30% share.
             </p>
 
             <div className="payMethods">
@@ -144,14 +143,14 @@ export default function ClientPortal() {
             </div>
 
             <p className="tiny">
-              All payments are confirmed manually. This portal is a visual
-              interface only – it does not process live payments.
+              Payments are confirmed manually. This portal doesn’t process live
+              payments yet – it is a clean interface for tracking and
+              settlements.
             </p>
           </section>
         </main>
       </div>
 
-      {/* STYLES */}
       <style jsx>{`
         .wrap {
           min-height: 100vh;
@@ -392,7 +391,6 @@ export default function ClientPortal() {
           margin-top: 4px;
         }
 
-        /* Desktop tweaks */
         @media (min-width: 900px) {
           .wrap {
             padding: 28px 40px 40px;
