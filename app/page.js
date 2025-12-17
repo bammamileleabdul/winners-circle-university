@@ -68,15 +68,16 @@ export default function Home() {
           ...m,
           {
             role: "assistant",
-            content:
-              data?.error ||
-              "mini lelefx hit a connection issue. Re-center, then try again in a moment.",
+            content: data?.error || "mini lelefx hit a connection issue. Re-center, then try again.",
           },
         ]);
       } else {
         setAiMessages((m) => [
           ...m,
-          { role: "assistant", content: data.reply || "…" },
+          {
+            role: "assistant",
+            content: data.reply || "…",
+          },
         ]);
       }
     } catch (err) {
@@ -84,8 +85,7 @@ export default function Home() {
         ...m,
         {
           role: "assistant",
-          content:
-            "Network issue. Breathe, refresh the page, and try again.",
+          content: "mini lelefx couldn’t reach the backend. Breathe, refresh, and try again.",
         },
       ]);
     } finally {
@@ -97,6 +97,10 @@ export default function Home() {
     <>
       {/* HEADER */}
       <header className="header">
+        <button className="menuBtn" onClick={() => setMenuOpen(true)}>
+          ☰
+        </button>
+
         <div className="logo">
           <img
             src="/emblem.jpg"
@@ -104,10 +108,6 @@ export default function Home() {
             className="logoImg"
           />
         </div>
-
-        <button className="menuBtn" onClick={() => setMenuOpen(true)}>
-          ☰
-        </button>
       </header>
 
       {/* MOBILE MENU */}
@@ -121,7 +121,7 @@ export default function Home() {
             <a href="#overview" onClick={() => setMenuOpen(false)}>
               Overview
             </a>
-            <a href="#how" onClick={() => setMenuOpen(false)}>
+            <a href="/how" onClick={() => setMenuOpen(false)}>
               How It Works
             </a>
             <a href="#principles" onClick={() => setMenuOpen(false)}>
@@ -133,7 +133,7 @@ export default function Home() {
             <a href="#vvip" onClick={() => setMenuOpen(false)}>
               VVIP Access
             </a>
-            <a href="/portal" onClick={() => setMenuOpen(false)}>
+            <a href="/client" onClick={() => setMenuOpen(false)}>
               Client Portal
             </a>
           </nav>
@@ -152,8 +152,11 @@ export default function Home() {
           modelling with disciplined human execution.
         </p>
 
-        {/* WAITLIST FORM (REAL) */}
-        <form className="waitlistForm" onSubmit={handleWaitlistSubmit}>
+        {/* WAITLIST FORM */}
+        <form
+          className="waitlistForm"
+          onSubmit={handleWaitlistSubmit}
+        >
           <input
             className="waitlistInput"
             type="email"
@@ -172,13 +175,13 @@ export default function Home() {
         </form>
 
         <div className="hintRow">
-          <a className="ghostLink" href="#how">
+          <a className="ghostLink" href="/how">
             See How It Works →
           </a>
         </div>
       </section>
 
-      {/* HOW IT WORKS (Floating Gold Cards) */}
+      {/* HOW IT WORKS (cards on home) */}
       <section id="how" className="section">
         <h2>How It Works</h2>
 
@@ -205,7 +208,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PRINCIPLES (Luxury Cards) */}
+      {/* PRINCIPLES */}
       <section id="principles" className="section">
         <h2>Our Principles</h2>
 
@@ -240,7 +243,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* MANIFESTO (Curtain / Reveal) */}
+      {/* MANIFESTO */}
       <section id="manifesto" className="section">
         <h2>Manifesto</h2>
 
@@ -283,7 +286,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* VVIP (Button -> Premium Reveal Panel) */}
+      {/* VVIP */}
       <section id="vvip" className="section last">
         <h2>VVIP Access</h2>
 
@@ -313,12 +316,15 @@ export default function Home() {
         )}
       </section>
 
-      {/* mini lelefx FAB */}
+      {/* MINI LELEFX ROBOT BUTTON */}
       <button className="aiFab" onClick={() => setAiOpen(true)}>
-        mini lelefx
+        <span className="aiBotFace">🤖</span>
+        <span className="aiBubble">
+          Hey, welcome to Winners. What can I help you with?
+        </span>
       </button>
 
-      {/* mini lelefx MODAL */}
+      {/* MINI LELEFX MODAL */}
       {aiOpen && (
         <div className="aiOverlay" onClick={() => setAiOpen(false)}>
           <div className="aiModal" onClick={(e) => e.stopPropagation()}>
@@ -327,11 +333,7 @@ export default function Home() {
                 <div className="aiTitle">mini lelefx</div>
                 <div className="aiSub">Calm. Precise. Luxury execution.</div>
               </div>
-              <button
-                className="aiClose"
-                type="button"
-                onClick={() => setAiOpen(false)}
-              >
+              <button className="aiClose" onClick={() => setAiOpen(false)}>
                 ×
               </button>
             </div>
@@ -345,9 +347,7 @@ export default function Home() {
                   {m.content}
                 </div>
               ))}
-              {aiLoading && (
-                <div className="aiMsg aiBot">Thinking…</div>
-              )}
+              {aiLoading && <div className="aiMsg aiBot">Thinking…</div>}
             </div>
 
             <form className="aiFooter" onSubmit={sendAi}>
@@ -384,21 +384,12 @@ export default function Home() {
           justify-content: space-between;
           align-items: center;
           padding: 16px 18px;
-          /* 🔥 warmer top bar to match page */
-          background: linear-gradient(
-            180deg,
-            rgba(42, 31, 15, 0.98),
-            rgba(0, 0, 0, 0.9)
-          );
+          background: linear-gradient(180deg, #0b0602, #211308);
           backdrop-filter: blur(10px);
           border-bottom: 1px solid rgba(230, 195, 106, 0.18);
-          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
         }
 
         .logo {
-          color: #e6c36a;
-          font-weight: 700;
-          letter-spacing: 0.02em;
           display: flex;
           align-items: center;
         }
@@ -743,16 +734,39 @@ export default function Home() {
         .aiFab {
           position: fixed;
           right: 16px;
-          bottom: 16px;
+          bottom: 18px;
           z-index: 9998;
           background: linear-gradient(135deg, #e6c36a, #8f6b1f);
           border: none;
-          padding: 12px 16px;
+          padding: 10px 14px;
           border-radius: 999px;
-          font-weight: 900;
-          color: #000;
+          display: flex;
+          align-items: center;
+          gap: 8px;
           box-shadow: 0 0 70px rgba(230, 195, 106, 0.22);
           cursor: pointer;
+        }
+
+        .aiBotFace {
+          font-size: 18px;
+        }
+
+        .aiBubble {
+          font-size: 12px;
+          font-weight: 600;
+          color: #000;
+          white-space: nowrap;
+          animation: bob 2.8s ease-in-out infinite;
+        }
+
+        @keyframes bob {
+          0%,
+          100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-2px);
+          }
         }
 
         .aiOverlay {
@@ -806,14 +820,14 @@ export default function Home() {
           background: transparent;
           border: 1px solid rgba(230, 195, 106, 0.35);
           color: #e6c36a;
-          width: 44px;
-          height: 26px;
+          width: 34px;
+          height: 34px;
           border-radius: 999px;
-          font-size: 18px;
+          font-size: 20px;
+          line-height: 1;
           display: flex;
           align-items: center;
-          justify-content: center; /* ✅ centers the “×” */
-          padding: 0;
+          justify-content: center;
           cursor: pointer;
         }
 
