@@ -33,7 +33,7 @@ export default function Home() {
     }
   };
 
-  // ✅ MINI LELEFX (ONLY ADD)
+  // MINI LELEFX STATE
   const [aiOpen, setAiOpen] = useState(false);
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -91,7 +91,6 @@ export default function Home() {
     <>
       {/* HEADER */}
       <header className="header">
-        {/* Emblem logo */}
         <div className="logo">
           <img
             src="/emblem.jpg"
@@ -128,7 +127,6 @@ export default function Home() {
             <a href="#vvip" onClick={() => setMenuOpen(false)}>
               VVIP Access
             </a>
-            {/* ✅ Real navigation to client portal page */}
             <a href="/client-portal" onClick={() => setMenuOpen(false)}>
               Client Portal
             </a>
@@ -138,7 +136,6 @@ export default function Home() {
 
       {/* HERO */}
       <section id="overview" className="hero">
-        {/* Faded hero watermark emblem */}
         <img src="/emblem.jpg" alt="" className="heroEmblem" />
 
         <div className="pill">EARLY ACCESS · LIMITED ONBOARDING</div>
@@ -205,6 +202,44 @@ export default function Home() {
               <div className="floatText">{x.d}</div>
             </div>
           ))}
+        </div>
+
+        {/* HOW IT WORKS EXPLANATION BLOCK */}
+        <div className="howExplainer">
+          <h3>How the numbers play out</h3>
+          <p>
+            Example capital: <strong>£500</strong>. We don&apos;t gamble the
+            full amount. We break it into <strong>14 equal risk units</strong>.
+          </p>
+          <p>
+            That means each position risks around{" "}
+            <strong>£35.7 per trade</strong> with a <strong>1:1 RR</strong> —
+            risking £35.7 to make £35.7 when price reaches our TP.
+          </p>
+          <p>
+            An average week after both wins and losses leaves{" "}
+            <strong>7–9 clean TPs</strong> on the table:
+          </p>
+          <ul>
+            <li>
+              <strong>Normal week:</strong> 9 TPs ≈ <strong>£321</strong> profit
+            </li>
+            <li>
+              <strong>Bad week:</strong> 7 TPs ≈ <strong>£250</strong> profit
+            </li>
+            <li>
+              <strong>Worst-case clean week:</strong> 4 TPs ≈{" "}
+              <strong>£142</strong> profit
+            </li>
+          </ul>
+          <p>
+            You keep <strong>70%</strong> of performance, we receive{" "}
+            <strong>30%</strong> as our fee — only when you&apos;re in profit.
+          </p>
+          <p className="howNote">
+            The focus is consistency over hype. When risk is fixed and rules
+            are clear, the maths stays on your side.
+          </p>
         </div>
       </section>
 
@@ -319,7 +354,7 @@ export default function Home() {
 
       {/* MINI LELEFX BUTTON + MODAL */}
       <button className="aiFab" onClick={() => setAiOpen(true)}>
-        mini lelefx
+        🤖 mini lelefx
       </button>
 
       {aiOpen && (
@@ -584,6 +619,52 @@ export default function Home() {
           color: #d7d7d7;
           line-height: 1.6;
           font-size: 14px;
+        }
+
+        .howExplainer {
+          margin: 36px auto 0;
+          max-width: 640px;
+          text-align: left;
+          background: linear-gradient(
+            180deg,
+            rgba(230, 195, 106, 0.1),
+            rgba(0, 0, 0, 0.9)
+          );
+          border-radius: 22px;
+          border: 1px solid rgba(230, 195, 106, 0.32);
+          padding: 24px 20px;
+          box-shadow: 0 0 40px rgba(230, 195, 106, 0.14);
+        }
+
+        .howExplainer h3 {
+          color: #e6c36a;
+          font-size: 18px;
+          margin-bottom: 10px;
+        }
+
+        .howExplainer p {
+          color: #d8d2b6;
+          font-size: 14px;
+          line-height: 1.7;
+          margin-bottom: 8px;
+        }
+
+        .howExplainer ul {
+          padding-left: 20px;
+          margin: 8px 0 10px;
+        }
+
+        .howExplainer li {
+          color: #d8d2b6;
+          font-size: 14px;
+          line-height: 1.7;
+          margin-bottom: 4px;
+        }
+
+        .howNote {
+          margin-top: 8px;
+          font-size: 13px;
+          color: #a7a08a;
         }
 
         .luxGrid {
