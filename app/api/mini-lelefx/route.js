@@ -1,99 +1,118 @@
-import OpenAI from "openai";
+// app/api/mini-lelefx/route.js
+import { NextResponse } from "next/server";
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// --- simple “brain” for mini lelefx without OpenAI ----
+function miniLelefxReply(rawMessage) {
+  const message = rawMessage.trim();
+  const lower = message.toLowerCase();
 
-const SYSTEM_PROMPT = `
-You are mini lelefx — an assistant for Winners Circle University.
+  const lines = [];
 
-Tone:
-- Calm, precise, no hype.
-- Short, clear answers. No essays unless the user asks.
-- Always remind them this is process and probability, not prediction or signals.
+  // 1) Try to detect capital number in the message
+  const numberMatch = message.replace(/,/g, "").match(/(\d+(\.\d+)?)/);
+  if (numberMatch) {
+    const capital = parseFloat(numberMatch[1]);
 
-Core framework (MUST remember):
-- Pair: XAUUSD (gold), intraday framework.
-- Risk per trade is calculated as: capital ÷ 14.
-- Default RR: 1:1 (risk £X to make £X).
-- Over a 14-trade "cycle":
-  - Normal / good week: 7–9 wins out of 14.
-  - Tough week: maybe only 4 wins; still green if risk is controlled.
-- You do NOT promise results. You show examples and say "example" and "not guaranteed".
+    if (!Number.isNaN(capital) && capital > 0) {
+      const riskPerTrade = capital / 14; // your constant rule
+      const normalWinsMin = 7;
+      const normalWinsMax = 9;
+      const worstWins = 4;
 
-When user gives a capital (e.g. £500):
-- Step 1: Calculate risk per trade = capital ÷ 14.
-- Step 2: Show example outcomes:
-  - 7 wins, 7 losses (balanced week).
-  - 9 wins, 5 losses (strong week).
-  - 4 wins, 10 losses (tough week).
-- Explain everything in simple numbers, in £ if they used £, or same currency they used.
+      const midWins = (normalWinsMin + normalWinsMax) / 2;
+      const normalProfitMid = riskPerTrade * midWins;
+      const worstProfit = riskPerTrade * worstWins;
 
-Example for £500:
-- Risk per trade ≈ £35.7.
-- 7 wins, 7 losses → about £0 net (before costs).
-- 9 wins, 5 losses → about 4 * 35.7 ≈ £142 profit.
-- 4 wins, 10 losses → about -6 * 35.7 ≈ -£214 loss.
-
-But ALWAYS:
-- Make it clear these are just examples, not a guarantee.
-- Emphasise survival, discipline, risk before reward.
-
-If they ask about:
-- VVIP: explain it's earned through consistency and alignment, not bought.
-- Waitlist: tell them to join via the form on the homepage.
-- Strategy / signals: you DO NOT give specific live entries or signals.
-  Instead, stay high-level, talk about process and mindset.
-
-If they ask personal / random stuff:
-- You can answer normally but keep the same calm, sharp tone.
-
-End some answers with subtle lines like:
-- "Remember: capital ÷ 14. Survive first, then scale."
-- "No rush. Precision over dopamine."
-`.trim();
-
-export async function POST(req) {
-  try {
-    const { message } = await req.json();
-
-    if (!message || typeof message !== "string") {
-      return new Response(
-        JSON.stringify({ error: "Message is required." }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+      lines.push(
+        `Based on capital £${capital.toFixed(2)} with fixed risk = capital ÷ 14:`
+      );
+      lines.push(
+        `• Risk per trade ≈ £${riskPerTrade.toFixed(
+          2
+        )} (1:1 RR – you risk £${riskPerTrade.toFixed(
+          2
+        )} to make ~£${riskPerTrade.toFixed(2)}).`
+      );
+      lines.push(
+        `• Normal week: ${normalWinsMin}–${normalWinsMax} clean TPs left after SLs → around £${normalProfitMid.toFixed(
+          2
+        )} profit.`
+      );
+      lines.push(
+        `• Tough week (worst case ~${worstWins} TPs) → around £${worstProfit.toFixed(
+          2
+        )} profit.`
+      );
+      lines.push(
+        `This is a structured illustration, not a guarantee. Discipline, patience and following the plan are what make the numbers real.`
       );
     }
+  }
 
-    const completion = await client.chat.completions.create({
-      model: "gpt-4.1-mini",
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: message },
-      ],
-      temperature: 0.3,
-      max_tokens: 400,
-    });
+  // 2) Principles questions
+  if (lower.includes("principle") || lower.includes("rules")) {
+    lines.push(
+      `Core Winners Circle principles:\n` +
+        `• Discipline over dopamine – no revenge trades.\n` +
+        `• Risk before reward – if the SL isn’t clear, the setup doesn’t exist.\n` +
+        `• Process over outcomes – focus on R, not random profits.\n` +
+        `• Patience compounds – wait for your exact confluence.\n` +
+        `• Consistency creates inevitability – same rules, every session.`
+    );
+  }
 
-    const reply = completion.choices?.[0]?.message?.content || "…";
+  // 3) VVIP questions
+  if (lower.includes("vvip") || lower.includes("vip")) {
+    lines.push(
+      `VVIP is not something you buy on day one.\n` +
+        `It’s earned over time through:\n` +
+        `• Consistent risk discipline\n` +
+        `• Journaled execution\n` +
+        `• Respecting max drawdown and no-trade days.\n` +
+        `Selected traders may be invited privately once they prove they can protect capital before chasing size.`
+    );
+  }
 
-    return new Response(JSON.stringify({ reply }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+  // 4) If nothing matched, give a guided answer
+  if (lines.length === 0) {
+    return (
+      `I work on structure, not hype.\n\n` +
+      `Ask me something like:\n` +
+      `• “I have £500 – what does capital ÷ 14 risk look like?”\n` +
+      `• “With £1,000, what’s a normal week vs bad week?”\n` +
+      `• “Explain the core Winners Circle principles.”\n` +
+      `• “What does it take to reach VVIP?”\n\n` +
+      `Give me one clean question and I’ll break it down.`
+    );
+  }
+
+  return lines.join("\n\n");
+}
+
+// ---- API handler ----
+export async function POST(req) {
+  try {
+    const body = await req.json();
+    const message = body?.message;
+
+    if (!message || typeof message !== "string" || message.trim().length < 3) {
+      return NextResponse.json({
+        reply:
+          "I didn’t receive a proper question. Send one clear question – keep it tight and specific.",
+      });
+    }
+
+    const reply = miniLelefxReply(message);
+    return NextResponse.json({ reply });
   } catch (err) {
-    console.error("mini-lelefx error:", err);
-    return new Response(
-      JSON.stringify({
-        error:
-          "mini lelefx hit a connection issue. Re-center, then try again in a moment.",
-      }),
+    console.error("mini lelefx backend error:", err);
+
+    return NextResponse.json(
       {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+        reply:
+          "Backend issue. Pause, refresh, and ask again. If it keeps happening, the team needs to check the server.",
+      },
+      { status: 200 }
     );
   }
 }
