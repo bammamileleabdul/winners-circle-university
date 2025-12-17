@@ -33,7 +33,7 @@ export default function Home() {
     }
   };
 
-  // ✅ MINI LELEFX STATE
+  // ✅ MINI LELEFX (ONLY ADD)
   const [aiOpen, setAiOpen] = useState(false);
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -87,6 +87,11 @@ export default function Home() {
     }
   };
 
+  // simple placeholder click handler for pay buttons (UI ONLY)
+  const handlePayClick = (method) => {
+    alert(`Payment via ${method} coming soon. You’ll settle 30% of your net profit, not deposits.`);
+  };
+
   return (
     <>
       {/* HEADER */}
@@ -116,11 +121,14 @@ export default function Home() {
             <a href="#overview" onClick={() => setMenuOpen(false)}>
               Overview
             </a>
-            <a href="/how" onClick={() => setMenuOpen(false)}>
+            <a href="#how" onClick={() => setMenuOpen(false)}>
               How It Works
             </a>
             <a href="#principles" onClick={() => setMenuOpen(false)}>
               Principles
+            </a>
+            <a href="#performance" onClick={() => setMenuOpen(false)}>
+              Performance
             </a>
             <a href="#manifesto" onClick={() => setMenuOpen(false)}>
               Manifesto
@@ -150,15 +158,12 @@ export default function Home() {
           className="waitlistForm"
           action="https://formspree.io/f/xpwveaza"
           method="POST"
-          onSubmit={handleWaitlistSubmit}
         >
           <input
             className="waitlistInput"
             type="email"
             name="email"
             placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
             required
           />
 
@@ -171,13 +176,11 @@ export default function Home() {
           <button className="goldBtn" type="submit">
             Join the Waitlist
           </button>
-
-          {status && <p className="status">{status}</p>}
         </form>
 
         <div className="hintRow">
-          <a className="ghostLink" href="/how">
-            See Exactly How It Works →
+          <a className="ghostLink" href="#how">
+            See How It Works →
           </a>
         </div>
       </section>
@@ -241,6 +244,122 @@ export default function Home() {
               <div className="luxText">{p.d}</div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ✅ PERFORMANCE & PROFIT SHARE SECTION (NEW UI) */}
+      <section id="performance" className="section">
+        <h2>Performance & Profit Share</h2>
+        <p className="perfIntro">
+          Example based on a <span>£500</span> starting capital using our{" "}
+          <span>capital ÷ 14</span> risk model. Numbers are illustrative, not
+          guaranteed. We operate on structure, not promises.
+        </p>
+
+        <div className="perfGrid">
+          {/* LEFT: WEEK SNAPSHOT */}
+          <div className="perfCard">
+            <div className="perfTag">Trade Structure</div>
+            <div className="perfRow">
+              <span className="perfLabel">Starting Capital</span>
+              <span className="perfValue">£500</span>
+            </div>
+            <div className="perfRow">
+              <span className="perfLabel">Risk / Trade (capital ÷ 14)</span>
+              <span className="perfValue">≈ £35.70</span>
+            </div>
+            <div className="perfRow">
+              <span className="perfLabel">Reward / Trade (1 : 1 RR)</span>
+              <span className="perfValue">£35.70</span>
+            </div>
+            <div className="perfDivider" />
+            <div className="perfRow">
+              <span className="perfLabel">TP targets</span>
+              <span className="perfValue">Fixed & pre-defined</span>
+            </div>
+            <div className="perfRow">
+              <span className="perfLabel">SL placement</span>
+              <span className="perfValue">Structure-based, not random</span>
+            </div>
+          </div>
+
+          {/* RIGHT: WEEK PROJECTION */}
+          <div className="perfCard">
+            <div className="perfTag">Example Weekly Outcomes</div>
+            <div className="perfRow">
+              <span className="perfLabel">Normal week</span>
+              <span className="perfValue">7–9 clean TPs</span>
+            </div>
+            <div className="perfRow">
+              <span className="perfLabel">Bad week</span>
+              <span className="perfValue">~7 TPs · still green</span>
+            </div>
+            <div className="perfRow">
+              <span className="perfLabel">Worst realistic week</span>
+              <span className="perfValue">4 TPs left</span>
+            </div>
+            <div className="perfDivider" />
+            <div className="perfRow">
+              <span className="perfLabel">Example profit (4 TPs)</span>
+              <span className="perfValue">≈ £142</span>
+            </div>
+            <div className="perfRow">
+              <span className="perfLabel">Example profit (9 TPs)</span>
+              <span className="perfValue">≈ £321+</span>
+            </div>
+            <p className="perfFine">
+              All scenarios assume strict risk rules and 1:1 execution. No
+              compounding or overleveraging.
+            </p>
+          </div>
+        </div>
+
+        {/* PAYMENT BLOCK */}
+        <div className="payCard">
+          <div className="payTitle">Settle Your 30% Performance Fee</div>
+          <p className="payText">
+            You keep <span>70%</span> of net profit. Winners Circle takes{" "}
+            <span>30%</span> as a performance fee — only on profit, never on
+            deposits.
+          </p>
+
+          <div className="paySummary">
+            <div className="payRow">
+              <span className="payLabel">Example net profit</span>
+              <span className="payValue">£300</span>
+            </div>
+            <div className="payRow">
+              <span className="payLabel">Your 70%</span>
+              <span className="payValue">£210</span>
+            </div>
+            <div className="payRow">
+              <span className="payLabel">Winners Circle 30%</span>
+              <span className="payValue">£90</span>
+            </div>
+          </div>
+
+          <div className="payMethods">
+            <button
+              className="payBtn"
+              type="button"
+              onClick={() => handlePayClick("Card")}
+            >
+              Pay with Card
+            </button>
+            <button
+              className="payBtn payBtnGhost"
+              type="button"
+              onClick={() => handlePayClick("Crypto")}
+            >
+              Pay with Crypto
+            </button>
+          </div>
+
+          <div className="payNote">
+            Payment rail is processed securely via third-party providers. No
+            funds are ever held in-platform. This is a performance settlement,
+            not a deposit request.
+          </div>
         </div>
       </section>
 
@@ -317,22 +436,11 @@ export default function Home() {
         )}
       </section>
 
-      {/* ✅ MINI LELEFX ROBOT BUTTON */}
+      {/* MINI LELEFX FLOATING BUTTON + MODAL */}
       <button className="aiFab" onClick={() => setAiOpen(true)}>
-        <div className="aiFabBot">
-          <div className="aiFabFace">
-            <span className="aiEye left" />
-            <span className="aiEye right" />
-          </div>
-          <div className="aiAntenna" />
-        </div>
-        <div className="aiFabSpeech">
-          <div className="aiFabLine1">Hey, welcome to Winners.</div>
-          <div className="aiFabLine2">What can I help you with today?</div>
-        </div>
+        mini lelefx
       </button>
 
-      {/* MINI LELEFX MODAL */}
       {aiOpen && (
         <div className="aiOverlay" onClick={() => setAiOpen(false)}>
           <div className="aiModal" onClick={(e) => e.stopPropagation()}>
@@ -355,9 +463,7 @@ export default function Home() {
                   {m.content}
                 </div>
               ))}
-              {aiLoading && (
-                <div className="aiMsg aiBot">Thinking…</div>
-              )}
+              {aiLoading && <div className="aiMsg aiBot">Thinking…</div>}
             </div>
 
             <form className="aiFooter" onSubmit={sendAi}>
@@ -373,9 +479,7 @@ export default function Home() {
               </button>
             </form>
 
-            <div className="aiNote">
-              Not financial advice. Process only.
-            </div>
+            <div className="aiNote">Not financial advice. Process only.</div>
           </div>
         </div>
       )}
@@ -743,98 +847,188 @@ export default function Home() {
           padding-bottom: 110px;
         }
 
-        /* MINI LELEFX ROBOT BUTTON */
+        /* PERFORMANCE SECTION STYLES */
+        .perfIntro {
+          max-width: 640px;
+          margin: 0 auto 28px;
+          color: #d8d2b6;
+          font-size: 14px;
+          line-height: 1.7;
+        }
+
+        .perfIntro span {
+          color: #e6c36a;
+          font-weight: 600;
+        }
+
+        .perfGrid {
+          display: grid;
+          gap: 18px;
+          max-width: 880px;
+          margin: 0 auto 28px;
+        }
+
+        @media (min-width: 768px) {
+          .perfGrid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+
+        .perfCard {
+          text-align: left;
+          border-radius: 22px;
+          padding: 22px 20px;
+          background: linear-gradient(
+            180deg,
+            rgba(230, 195, 106, 0.12),
+            rgba(0, 0, 0, 0.92)
+          );
+          border: 1px solid rgba(230, 195, 106, 0.4);
+          box-shadow: 0 0 55px rgba(230, 195, 106, 0.16);
+        }
+
+        .perfTag {
+          font-size: 11px;
+          text-transform: uppercase;
+          letter-spacing: 0.16em;
+          color: rgba(230, 195, 106, 0.9);
+          margin-bottom: 14px;
+        }
+
+        .perfRow {
+          display: flex;
+          justify-content: space-between;
+          font-size: 13px;
+          margin-bottom: 8px;
+          gap: 10px;
+        }
+
+        .perfLabel {
+          color: #a7a08a;
+        }
+
+        .perfValue {
+          color: #f1e7c6;
+          font-weight: 600;
+        }
+
+        .perfDivider {
+          height: 1px;
+          margin: 10px 0 12px;
+          background: rgba(230, 195, 106, 0.28);
+        }
+
+        .perfFine {
+          margin-top: 12px;
+          font-size: 12px;
+          color: #8f8872;
+          line-height: 1.7;
+        }
+
+        .payCard {
+          max-width: 880px;
+          margin: 0 auto;
+          text-align: left;
+          border-radius: 26px;
+          padding: 24px 20px;
+          background: radial-gradient(
+            circle at top,
+            rgba(230, 195, 106, 0.16),
+            rgba(0, 0, 0, 0.96)
+          );
+          border: 1px solid rgba(230, 195, 106, 0.45);
+          box-shadow: 0 0 80px rgba(230, 195, 106, 0.25);
+        }
+
+        .payTitle {
+          color: #e6c36a;
+          font-weight: 800;
+          margin-bottom: 8px;
+          font-size: 18px;
+        }
+
+        .payText {
+          color: #d8d2b6;
+          font-size: 14px;
+          line-height: 1.7;
+          margin-bottom: 16px;
+        }
+
+        .payText span {
+          color: #e6c36a;
+          font-weight: 600;
+        }
+
+        .paySummary {
+          border-radius: 16px;
+          border: 1px solid rgba(230, 195, 106, 0.35);
+          padding: 14px 14px 10px;
+          margin-bottom: 16px;
+          background: rgba(0, 0, 0, 0.75);
+        }
+
+        .payRow {
+          display: flex;
+          justify-content: space-between;
+          font-size: 13px;
+          margin-bottom: 6px;
+        }
+
+        .payLabel {
+          color: #a7a08a;
+        }
+
+        .payValue {
+          color: #f1e7c6;
+          font-weight: 600;
+        }
+
+        .payMethods {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          margin-bottom: 10px;
+        }
+
+        .payBtn {
+          border-radius: 999px;
+          padding: 10px 16px;
+          border: none;
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          background: linear-gradient(135deg, #e6c36a, #b8963f);
+          color: #000;
+        }
+
+        .payBtnGhost {
+          background: transparent;
+          border: 1px solid rgba(230, 195, 106, 0.6);
+          color: #e6c36a;
+        }
+
+        .payNote {
+          font-size: 11px;
+          color: #8f8872;
+          line-height: 1.7;
+        }
+
+        /* MINI LELEFX STYLES */
         .aiFab {
           position: fixed;
           right: 16px;
           bottom: 16px;
           z-index: 9998;
-          background: linear-gradient(135deg, #1a1308, #000000);
-          border: 1px solid rgba(230, 195, 106, 0.5);
-          padding: 10px 14px;
+          background: linear-gradient(135deg, #e6c36a, #8f6b1f);
+          border: none;
+          padding: 12px 16px;
           border-radius: 999px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          box-shadow: 0 0 70px rgba(230, 195, 106, 0.35);
+          font-weight: 900;
+          color: #000;
+          box-shadow: 0 0 70px rgba(230, 195, 106, 0.22);
           cursor: pointer;
         }
 
-        .aiFabBot {
-          position: relative;
-          width: 40px;
-          height: 40px;
-          border-radius: 16px;
-          background: radial-gradient(circle at 30% 20%, #fff7d1, #e6c36a);
-          box-shadow: 0 0 30px rgba(230, 195, 106, 0.7);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          animation: botFloat 3s ease-in-out infinite;
-          overflow: hidden;
-        }
-
-        .aiFabFace {
-          width: 70%;
-          height: 60%;
-          border-radius: 12px;
-          background: rgba(0, 0, 0, 0.85);
-          display: flex;
-          align-items: center;
-          justify-content: space-around;
-          padding: 0 4px;
-        }
-
-        .aiEye {
-          width: 6px;
-          height: 6px;
-          border-radius: 999px;
-          background: #e6c36a;
-        }
-
-        .aiAntenna {
-          position: absolute;
-          top: -8px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 10px;
-          height: 10px;
-          border-radius: 999px;
-          border: 2px solid rgba(0, 0, 0, 0.9);
-          background: #e6c36a;
-          box-shadow: 0 0 16px rgba(230, 195, 106, 0.9);
-        }
-
-        .aiFabSpeech {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-          max-width: 190px;
-        }
-
-        .aiFabLine1 {
-          font-size: 11px;
-          color: #f5e7c4;
-        }
-
-        .aiFabLine2 {
-          font-size: 10px;
-          color: rgba(245, 231, 196, 0.86);
-        }
-
-        @keyframes botFloat {
-          0% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-4px);
-          }
-          100% {
-            transform: translateY(0);
-          }
-        }
-
-        /* MINI LELEFX MODAL STYLES */
         .aiOverlay {
           position: fixed;
           inset: 0;
