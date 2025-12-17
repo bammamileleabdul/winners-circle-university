@@ -5,11 +5,15 @@ import { useState } from "react";
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Waitlist
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState("");
+
   // Interactive reveals
   const [manifestoOpen, setManifestoOpen] = useState(false);
   const [vvipOpen, setVvipOpen] = useState(false);
 
-  // MINI LELEFX
+  // ✅ MINI LELEFX (home overlay)
   const [aiOpen, setAiOpen] = useState(false);
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -20,6 +24,26 @@ export default function Home() {
         "I’m mini lelefx. Calm. Precise. Ask me anything — principles, VVIP, or risk math (capital ÷ 14).",
     },
   ]);
+
+  const handleWaitlistSubmit = async (e) => {
+    e.preventDefault();
+    setStatus("Submitting...");
+
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!res.ok) throw new Error("Failed");
+
+      setStatus("You’re in. Welcome to the Circle.");
+      setEmail("");
+    } catch (err) {
+      setStatus("Something went wrong. Try again.");
+    }
+  };
 
   const sendAi = async (e) => {
     e.preventDefault();
@@ -44,29 +68,19 @@ export default function Home() {
           ...m,
           {
             role: "assistant",
-            content:
-              data?.error ||
-              "mini lelefx hit a connection issue. Re-center, then try again.",
+            content: data?.error || "Something went wrong. Try again.",
           },
         ]);
       } else {
         setAiMessages((m) => [
           ...m,
-          {
-            role: "assistant",
-            content:
-              data.reply ||
-              "I processed that, but didn’t get a clean response. Ask again.",
-          },
+          { role: "assistant", content: data.reply || "…" },
         ]);
       }
     } catch (err) {
       setAiMessages((m) => [
         ...m,
-        {
-          role: "assistant",
-          content: "Network issue. Pause, refresh, and ask again.",
-        },
+        { role: "assistant", content: "Network error. Try again." },
       ]);
     } finally {
       setAiLoading(false);
@@ -113,7 +127,14 @@ export default function Home() {
             <a href="#vvip" onClick={() => setMenuOpen(false)}>
               VVIP Access
             </a>
-            <a href="/client-portal">Client Portal</a>
+
+            {/* ✅ NEW MENU ITEMS */}
+            <a href="/get-started" onClick={() => setMenuOpen(false)}>
+              Get Started
+            </a>
+            <a href="/access-trading" onClick={() => setMenuOpen(false)}>
+              Access & Trading
+            </a>
           </nav>
         </div>
       )}
@@ -130,7 +151,7 @@ export default function Home() {
           modelling with disciplined human execution.
         </p>
 
-        {/* WAITLIST FORM (Formspree) */}
+        {/* WAITLIST FORM (REAL) */}
         <form
           className="waitlistForm"
           action="https://formspree.io/f/xpwveaza"
@@ -143,6 +164,7 @@ export default function Home() {
             placeholder="Enter your email"
             required
           />
+
           <input
             type="hidden"
             name="source"
@@ -161,39 +183,34 @@ export default function Home() {
         </div>
       </section>
 
-      {/* HOW IT WORKS – the 3 cards section that was working before */}
+      {/* HOW IT WORKS (Floating Gold Cards) */}
       <section id="how" className="section">
         <h2>How It Works</h2>
 
         <div className="floatWrap">
-          <div className="floatCard">
-            <div className="floatTitle">Read Structure</div>
-            <div className="floatText">
-              We react to price, not predictions. We wait for confirmation.
+          {[
+            {
+              t: "Read Structure",
+              d: "We react to price, not predictions. We wait for confirmation.",
+            },
+            {
+              t: "Risk First",
+              d: "Capital protection is non-negotiable. Survival compounds.",
+            },
+            {
+              t: "Execute Clean",
+              d: "Precision beats frequency. Rules remove emotion.",
+            },
+          ].map((x) => (
+            <div key={x.t} className="floatCard">
+              <div className="floatTitle">{x.t}</div>
+              <div className="floatText">{x.d}</div>
             </div>
-          </div>
-          <div className="floatCard">
-            <div className="floatTitle">Risk First</div>
-            <div className="floatText">
-              Capital protection is non-negotiable. Survival compounds.
-            </div>
-          </div>
-          <div className="floatCard">
-            <div className="floatTitle">Execute Clean</div>
-            <div className="floatText">
-              Precision beats frequency. Rules remove emotion.
-            </div>
-          </div>
-        </div>
-
-        <div className="ctaRow">
-          <a href="/client-portal" className="ctaBtn">
-            View Client Portal Layout
-          </a>
+          ))}
         </div>
       </section>
 
-      {/* PRINCIPLES */}
+      {/* PRINCIPLES (Luxury Cards) */}
       <section id="principles" className="section">
         <h2>Our Principles</h2>
 
@@ -228,7 +245,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* MANIFESTO */}
+      {/* MANIFESTO (Curtain / Reveal) */}
       <section id="manifesto" className="section">
         <h2>Manifesto</h2>
 
@@ -255,11 +272,10 @@ export default function Home() {
               <p>
                 If you’re here to rush, impress, or gamble — this won’t work.{" "}
                 <br />
-                If you’re here to compound patiently — you’re in the right
-                place.
+                If you’re here to compound patiently — you’re in the right place.
               </p>
 
-              <div className="signature">— lelefx, Founder</div>
+              <div className="signature">— Lelefx, Founder</div>
 
               <button
                 className="ghostBtn"
@@ -272,7 +288,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* VVIP */}
+      {/* VVIP (Button -> Premium Reveal Panel) */}
       <section id="vvip" className="section last">
         <h2>VVIP Access</h2>
 
@@ -302,31 +318,23 @@ export default function Home() {
         )}
       </section>
 
-      {/* FLOATING MINI LELEFX ROBOT BUTTON */}
+      {/* ✅ MINI LELEFX BUTTON / OVERLAY */}
       <button className="aiFab" onClick={() => setAiOpen(true)}>
-        <div className="aiBotAvatar">
-          {/* if you add /mini-bot.png it’ll show, otherwise this emoji shows */}
-          <span className="aiBotEmoji">🤖</span>
-        </div>
-        <div className="aiBotText">
-          <span className="aiLine1">mini lelefx</span>
-          <span className="aiLine2">Ask me anything</span>
-        </div>
+        mini lelefx
       </button>
 
-      {/* MINI LELEFX MODAL */}
       {aiOpen && (
         <div className="aiOverlay" onClick={() => setAiOpen(false)}>
           <div className="aiModal" onClick={(e) => e.stopPropagation()}>
-            <header className="aiHeader">
-              <div className="aiHeaderLeft">
+            <div className="aiHeader">
+              <div>
                 <div className="aiTitle">mini lelefx</div>
                 <div className="aiSub">Calm. Precise. Luxury execution.</div>
               </div>
-              <button className="aiToggle" onClick={() => setAiOpen(false)}>
-                <span className="aiToggleX">✕</span>
+              <button className="aiClose" onClick={() => setAiOpen(false)}>
+                ×
               </button>
-            </header>
+            </div>
 
             <div className="aiBody">
               {aiMessages.map((m, i) => (
@@ -337,9 +345,7 @@ export default function Home() {
                   {m.content}
                 </div>
               ))}
-              {aiLoading && (
-                <div className="aiMsg aiBot">Thinking…</div>
-              )}
+              {aiLoading && <div className="aiMsg aiBot">Thinking…</div>}
             </div>
 
             <form className="aiFooter" onSubmit={sendAi}>
@@ -355,9 +361,7 @@ export default function Home() {
               </button>
             </form>
 
-            <div className="aiNote">
-              Not financial advice. Process only.
-            </div>
+            <div className="aiNote">Not financial advice. Process only.</div>
           </div>
         </div>
       )}
@@ -368,10 +372,6 @@ export default function Home() {
           scroll-behavior: smooth;
         }
 
-        body {
-          margin: 0;
-        }
-
         .header {
           position: sticky;
           top: 0;
@@ -380,17 +380,15 @@ export default function Home() {
           justify-content: space-between;
           align-items: center;
           padding: 16px 18px;
-          background: linear-gradient(
-            180deg,
-            #000000,
-            rgba(0, 0, 0, 0.9),
-            rgba(22, 16, 6, 0.9)
-          );
+          background: rgba(0, 0, 0, 0.82);
           backdrop-filter: blur(10px);
           border-bottom: 1px solid rgba(230, 195, 106, 0.18);
         }
 
         .logo {
+          color: #e6c36a;
+          font-weight: 700;
+          letter-spacing: 0.02em;
           display: flex;
           align-items: center;
         }
@@ -432,7 +430,7 @@ export default function Home() {
         .menuLinks a {
           display: block;
           font-size: 26px;
-          margin-bottom: 26px;
+          margin-bottom: 22px;
           color: #e6c36a;
           text-decoration: none;
           letter-spacing: 0.02em;
@@ -520,6 +518,12 @@ export default function Home() {
           color: #000;
         }
 
+        .status {
+          color: #e6c36a;
+          font-size: 13px;
+          margin: 6px 0 0;
+        }
+
         .hintRow {
           margin-top: 18px;
           position: relative;
@@ -537,11 +541,7 @@ export default function Home() {
         .section {
           padding: 80px 18px;
           text-align: center;
-          background: radial-gradient(
-            circle at top,
-            rgba(230, 195, 106, 0.06),
-            #000
-          );
+          background: radial-gradient(circle at top, rgba(230, 195, 106, 0.06), #000);
         }
 
         .section h2 {
@@ -581,22 +581,6 @@ export default function Home() {
           color: #d7d7d7;
           line-height: 1.6;
           font-size: 14px;
-        }
-
-        .ctaRow {
-          margin-top: 26px;
-        }
-
-        .ctaBtn {
-          display: inline-block;
-          padding: 12px 20px;
-          border-radius: 999px;
-          background: transparent;
-          border: 1px solid rgba(230, 195, 106, 0.5);
-          color: #e6c36a;
-          font-weight: 700;
-          font-size: 14px;
-          text-decoration: none;
         }
 
         .luxGrid {
@@ -742,69 +726,23 @@ export default function Home() {
         }
 
         .last {
-          padding-bottom: 130px;
+          padding-bottom: 110px;
         }
 
-        /* MINI LELEFX FLOATING ROBOT */
+        /* MINI LELEFX STYLES */
         .aiFab {
           position: fixed;
           right: 16px;
           bottom: 16px;
           z-index: 9998;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 10px 16px;
-          border-radius: 999px;
-          border: none;
           background: linear-gradient(135deg, #e6c36a, #8f6b1f);
-          box-shadow: 0 0 70px rgba(230, 195, 106, 0.25);
-          cursor: pointer;
-        }
-
-        .aiBotAvatar {
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          background: radial-gradient(circle at top, #fff6d0, #c9a244);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-          animation: floatBot 2.8s ease-in-out infinite;
-        }
-
-        .aiBotEmoji {
-          font-size: 18px;
-        }
-
-        .aiBotText {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          line-height: 1.1;
-        }
-
-        .aiLine1 {
-          font-size: 13px;
-          font-weight: 800;
+          border: none;
+          padding: 12px 16px;
+          border-radius: 999px;
+          font-weight: 900;
           color: #000;
-        }
-
-        .aiLine2 {
-          font-size: 11px;
-          font-weight: 500;
-          color: rgba(0, 0, 0, 0.8);
-        }
-
-        @keyframes floatBot {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-4px);
-          }
+          box-shadow: 0 0 70px rgba(230, 195, 106, 0.22);
+          cursor: pointer;
         }
 
         .aiOverlay {
@@ -854,28 +792,15 @@ export default function Home() {
           margin-top: 2px;
         }
 
-        .aiToggle {
-          background: #000;
-          border-radius: 999px;
+        .aiClose {
+          background: transparent;
           border: 1px solid rgba(230, 195, 106, 0.35);
-          width: 46px;
-          height: 24px;
-          display: flex;
-          align-items: center;
-          justify-content: flex-end;
-          padding: 2px;
-        }
-
-        .aiToggleX {
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #e6c36a, #b8963f);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 12px;
-          color: #000;
+          color: #e6c36a;
+          width: 34px;
+          height: 34px;
+          border-radius: 999px;
+          font-size: 18px;
+          cursor: pointer;
         }
 
         .aiBody {
@@ -941,24 +866,6 @@ export default function Home() {
           padding: 0 14px 14px;
           color: rgba(167, 160, 138, 0.9);
           font-size: 12px;
-        }
-
-        @media (min-width: 900px) {
-          .hero h1 {
-            font-size: 52px;
-          }
-
-          .section {
-            padding-inline: 40px;
-          }
-
-          .floatWrap {
-            max-width: 720px;
-          }
-
-          .luxGrid {
-            max-width: 900px;
-          }
         }
       `}</style>
     </>
