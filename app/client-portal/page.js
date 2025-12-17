@@ -2,397 +2,330 @@
 
 export default function ClientPortal() {
   return (
-    <div className="portalWrap">
-      {/* TOP BAR */}
-      <header className="cpHeader">
-        <a href="/" className="cpBack">
-          ← Back to Home
-        </a>
+    <>
+      <div className="wrap">
+        {/* TOP BAR */}
+        <header className="header">
+          <a href="/" className="logoRow">
+            <img
+              src="/emblem.jpg"
+              alt="Winners Circle University"
+              className="logoImg"
+            />
+          </a>
 
-        <div className="cpLogoRow">
-          <img src="/emblem.jpg" alt="Winners Circle" className="cpLogo" />
-          <span className="cpTag">Client Interface</span>
-        </div>
-      </header>
+          <nav className="nav">
+            <a href="/" className="navLink">
+              Home
+            </a>
+            <a href="/how" className="navLink">
+              How It Works
+            </a>
+          </nav>
+        </header>
 
-      {/* MAIN */}
-      <main className="cpMain">
-        <h1>Winners Circle Client Portal</h1>
-        <p className="cpIntro">
-          This is a preview of the interface used by funded members inside the
-          Circle. Here you see how your capital is deployed, how performance is
-          tracked, and where your <span>30% performance fee</span> is settled.
-          Nothing here is a promise — it’s structure, not hype.
-        </p>
-
-        {/* RISK + PERFORMANCE GRID */}
-        <section className="cpSection">
-          <h2>Your Risk & Performance Structure</h2>
-          <p className="cpHint">
-            Example run with <span>£500 capital</span>,{" "}
-            <span>capital ÷ 14</span> risk model and a strict{" "}
-            <span>1 : 1 RR</span>.
+        {/* MAIN CONTENT */}
+        <main className="main">
+          <h1>Client Portal</h1>
+          <p className="subtitle">
+            Private area for active clients. We track your performance, calculate
+            profit share, and make paying your 30% simple and transparent.
           </p>
 
-          <div className="perfGrid">
-            {/* LEFT: RISK SETUP */}
-            <div className="perfCard">
-              <div className="perfTag">Risk Setup</div>
+          {/* SUMMARY STRIP */}
+          <div className="summaryRow">
+            <div className="summaryBox">
+              <div className="label">Account Equity</div>
+              <div className="value">£—</div>
+            </div>
+            <div className="summaryBox">
+              <div className="label">This Month %</div>
+              <div className="value">—%</div>
+            </div>
+            <div className="summaryBox">
+              <div className="label">Your 70% Share</div>
+              <div className="value">£—</div>
+            </div>
+          </div>
 
-              <div className="perfRow">
-                <span className="perfLabel">Starting Capital</span>
-                <span className="perfValue">£500</span>
+          {/* DETAILS GRID */}
+          <div className="grid">
+            <div className="card wide">
+              <h2>Performance Breakdown</h2>
+              <p>
+                Here you’ll see your TP / SL history, weekly breakdowns and
+                compounding based on our capital ÷ 14 risk framework.
+              </p>
+              <ul className="list">
+                <li>✅ Running win / loss streak</li>
+                <li>✅ Average RR and risk per trade</li>
+                <li>✅ Monthly % and £ performance</li>
+              </ul>
+            </div>
+
+            <div className="card">
+              <h2>Latest TP / SL</h2>
+              <p className="muted">
+                This will show the last signals executed on your account:
+              </p>
+              <div className="metricRow">
+                <span>Last TP count</span>
+                <span>—</span>
               </div>
-
-              <div className="perfRow">
-                <span className="perfLabel">Risk / Trade (capital ÷ 14)</span>
-                <span className="perfValue">≈ £35.70</span>
+              <div className="metricRow">
+                <span>Last SL count</span>
+                <span>—</span>
               </div>
-
-              <div className="perfRow">
-                <span className="perfLabel">Reward / Trade (1 : 1 RR)</span>
-                <span className="perfValue">£35.70</span>
-              </div>
-
-              <div className="perfDivider" />
-
-              <div className="perfRow">
-                <span className="perfLabel">TP behaviour</span>
-                <span className="perfValue">Pre-defined, no guessing</span>
-              </div>
-
-              <div className="perfRow">
-                <span className="perfLabel">SL placement</span>
-                <span className="perfValue">Based on structure, not vibes</span>
+              <div className="metricRow">
+                <span>Net result</span>
+                <span>—</span>
               </div>
             </div>
 
-            {/* RIGHT: WEEKLY SNAPSHOT */}
-            <div className="perfCard">
-              <div className="perfTag">Weekly Snapshot (Example)</div>
+            <div className="card">
+              <h2>30% Performance Fee</h2>
+              <p className="muted">
+                At the end of each cycle, mini lelefx will calculate the
+                profits and show exactly what 30% looks like before payment.
+              </p>
 
-              <div className="perfRow">
-                <span className="perfLabel">Normal week</span>
-                <span className="perfValue">7–9 clean TPs</span>
+              <div className="metricRow">
+                <span>Profit this cycle</span>
+                <span>£—</span>
+              </div>
+              <div className="metricRow">
+                <span>Your 70%</span>
+                <span>£—</span>
+              </div>
+              <div className="metricRow">
+                <span>Our 30%</span>
+                <span>£—</span>
               </div>
 
-              <div className="perfRow">
-                <span className="perfLabel">Bad week</span>
-                <span className="perfValue">≈ 7 TPs · still green</span>
+              <div className="btnRow">
+                <button className="payBtn" disabled>
+                  Pay with card (soon)
+                </button>
+                <button className="payBtn ghost" disabled>
+                  Pay with crypto (soon)
+                </button>
               </div>
 
-              <div className="perfRow">
-                <span className="perfLabel">Worst realistic week</span>
-                <span className="perfValue">4 TPs left</span>
-              </div>
-
-              <div className="perfDivider" />
-
-              <div className="perfRow">
-                <span className="perfLabel">Profit if 4 TPs land</span>
-                <span className="perfValue">≈ £142</span>
-              </div>
-
-              <div className="perfRow">
-                <span className="perfLabel">Profit if 9 TPs land</span>
-                <span className="perfValue">≈ £321+</span>
-              </div>
-
-              <p className="perfFine">
-                Live numbers will move with your capital, execution and risk
-                profile. The only thing that doesn’t change:{" "}
-                <span>discipline over dopamine</span>.
+              <p className="tiny">
+                Payments are not live yet. This page is a preview of the client
+                experience we’re building.
               </p>
             </div>
           </div>
-        </section>
 
-        {/* PAYMENT BLOCK */}
-        <section className="cpSection">
-          <h2>Settle Your 30% Performance Fee</h2>
-          <p className="cpHint">
-            When you withdraw, you keep <span>70%</span> of net profit. Winners
-            Circle takes <span>30%</span> as a performance fee — only on profit,
-            never on deposits.
-          </p>
-
-          <div className="payCard">
-            <div className="paySummary">
-              <div className="payRow">
-                <span className="payLabel">Example net profit</span>
-                <span className="payValue">£300</span>
-              </div>
-              <div className="payRow">
-                <span className="payLabel">Your 70%</span>
-                <span className="payValue">£210</span>
-              </div>
-              <div className="payRow">
-                <span className="payLabel">Winners Circle 30%</span>
-                <span className="payValue">£90</span>
-              </div>
-            </div>
-
-            <div className="payMethods">
-              <button
-                type="button"
-                className="payBtn"
-                onClick={() =>
-                  alert(
-                    "Card payments coming soon. You’ll only ever pay on realised profit.",
-                  )
-                }
-              >
-                Pay with Card
-              </button>
-
-              <button
-                type="button"
-                className="payBtn payBtnGhost"
-                onClick={() =>
-                  alert(
-                    "Crypto payments coming soon. Settlements are based on profit, not deposits.",
-                  )
-                }
-              >
-                Pay with Crypto
-              </button>
-            </div>
-
-            <p className="payNote">
-              This is a preview of the live portal. Final version connects to
-              verified providers and automatically syncs with your performance
-              data. No lottery, no hype — just structured execution and clear
-              settlements.
-            </p>
+          <div className="backRow">
+            <a href="/" className="backLink">
+              ← Back to main site
+            </a>
           </div>
-        </section>
-      </main>
+        </main>
+      </div>
 
       <style jsx>{`
-        .portalWrap {
+        .wrap {
           min-height: 100vh;
           background: radial-gradient(circle at top, #1a1408, #000);
-          color: #f1e7c6;
+          color: #f9f3dc;
         }
 
-        .cpHeader {
+        .header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 18px 18px;
-          border-bottom: 1px solid rgba(230, 195, 106, 0.2);
-          background: rgba(0, 0, 0, 0.8);
-          backdrop-filter: blur(10px);
+          padding: 16px 18px;
+          border-bottom: 1px solid rgba(230, 195, 106, 0.18);
+          background: rgba(0, 0, 0, 0.9);
           position: sticky;
           top: 0;
           z-index: 40;
         }
 
-        .cpBack {
-          color: #e6c36a;
-          font-size: 13px;
-          text-decoration: none;
-        }
-
-        .cpLogoRow {
+        .logoRow {
           display: flex;
           align-items: center;
-          gap: 8px;
         }
 
-        .cpLogo {
-          height: 32px;
+        .logoImg {
+          height: 40px;
           width: auto;
           object-fit: contain;
-          filter: drop-shadow(0 0 14px rgba(230, 195, 106, 0.45));
         }
 
-        .cpTag {
-          font-size: 11px;
-          letter-spacing: 0.16em;
-          text-transform: uppercase;
-          color: rgba(230, 195, 106, 0.8);
+        .nav {
+          display: flex;
+          gap: 16px;
         }
 
-        .cpMain {
-          padding: 36px 18px 60px;
+        .navLink {
+          color: #e6c36a;
+          text-decoration: none;
+          font-size: 14px;
+          font-weight: 600;
+        }
+
+        .main {
           max-width: 960px;
           margin: 0 auto;
+          padding: 40px 16px 60px;
         }
 
-        .cpMain h1 {
-          font-size: 26px;
-          margin-bottom: 12px;
+        h1 {
+          font-size: 30px;
           color: #e6c36a;
-        }
-
-        .cpIntro {
-          font-size: 14px;
-          line-height: 1.7;
-          color: #d8d2b6;
-          max-width: 640px;
-          margin-bottom: 30px;
-        }
-
-        .cpIntro span {
-          color: #e6c36a;
-          font-weight: 600;
-        }
-
-        .cpSection {
-          margin-bottom: 38px;
-        }
-
-        .cpSection h2 {
-          font-size: 20px;
-          margin-bottom: 8px;
-          color: #e6c36a;
-        }
-
-        .cpHint {
-          font-size: 13px;
-          color: #a7a08a;
-          margin-bottom: 16px;
-        }
-
-        .cpHint span {
-          color: #e6c36a;
-          font-weight: 600;
-        }
-
-        .perfGrid {
-          display: grid;
-          gap: 18px;
-        }
-
-        @media (min-width: 768px) {
-          .perfGrid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-        }
-
-        .perfCard {
-          text-align: left;
-          border-radius: 22px;
-          padding: 22px 20px;
-          background: linear-gradient(
-            180deg,
-            rgba(230, 195, 106, 0.12),
-            rgba(0, 0, 0, 0.92)
-          );
-          border: 1px solid rgba(230, 195, 106, 0.4);
-          box-shadow: 0 0 55px rgba(230, 195, 106, 0.16);
-        }
-
-        .perfTag {
-          font-size: 11px;
-          text-transform: uppercase;
-          letter-spacing: 0.16em;
-          color: rgba(230, 195, 106, 0.9);
-          margin-bottom: 14px;
-        }
-
-        .perfRow {
-          display: flex;
-          justify-content: space-between;
-          font-size: 13px;
-          margin-bottom: 8px;
-          gap: 10px;
-        }
-
-        .perfLabel {
-          color: #a7a08a;
-        }
-
-        .perfValue {
-          color: #f1e7c6;
-          font-weight: 600;
-        }
-
-        .perfDivider {
-          height: 1px;
-          margin: 10px 0 12px;
-          background: rgba(230, 195, 106, 0.28);
-        }
-
-        .perfFine {
-          margin-top: 12px;
-          font-size: 12px;
-          color: #8f8872;
-          line-height: 1.7;
-        }
-
-        .perfFine span {
-          color: #e6c36a;
-        }
-
-        .payCard {
-          text-align: left;
-          border-radius: 26px;
-          padding: 20px 18px;
-          background: radial-gradient(
-            circle at top,
-            rgba(230, 195, 106, 0.16),
-            rgba(0, 0, 0, 0.96)
-          );
-          border: 1px solid rgba(230, 195, 106, 0.45);
-          box-shadow: 0 0 80px rgba(230, 195, 106, 0.25);
-        }
-
-        .paySummary {
-          border-radius: 16px;
-          border: 1px solid rgba(230, 195, 106, 0.35);
-          padding: 14px 14px 10px;
-          margin-bottom: 16px;
-          background: rgba(0, 0, 0, 0.75);
-        }
-
-        .payRow {
-          display: flex;
-          justify-content: space-between;
-          font-size: 13px;
-          margin-bottom: 6px;
-        }
-
-        .payLabel {
-          color: #a7a08a;
-        }
-
-        .payValue {
-          color: #f1e7c6;
-          font-weight: 600;
-        }
-
-        .payMethods {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
           margin-bottom: 10px;
         }
 
-        .payBtn {
-          border-radius: 999px;
-          padding: 10px 16px;
-          border: none;
-          font-size: 13px;
-          font-weight: 700;
-          cursor: pointer;
-          background: linear-gradient(135deg, #e6c36a, #b8963f);
-          color: #000;
+        .subtitle {
+          color: #d8d2b6;
+          max-width: 620px;
+          line-height: 1.7;
+          margin-bottom: 28px;
         }
 
-        .payBtnGhost {
-          background: transparent;
-          border: 1px solid rgba(230, 195, 106, 0.6);
+        .summaryRow {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 10px;
+          margin-bottom: 30px;
+        }
+
+        .summaryBox {
+          padding: 14px 16px;
+          border-radius: 18px;
+          background: radial-gradient(
+            circle at top,
+            rgba(230, 195, 106, 0.18),
+            rgba(0, 0, 0, 0.95)
+          );
+          border: 1px solid rgba(230, 195, 106, 0.25);
+        }
+
+        .label {
+          font-size: 11px;
+          text-transform: uppercase;
+          letter-spacing: 0.12em;
+          color: rgba(216, 210, 182, 0.8);
+          margin-bottom: 4px;
+        }
+
+        .value {
+          font-size: 18px;
+          font-weight: 800;
           color: #e6c36a;
         }
 
-        .payNote {
-          font-size: 11px;
-          color: #8f8872;
+        .grid {
+          display: grid;
+          grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
+          gap: 18px;
+        }
+
+        .card {
+          background: linear-gradient(
+            180deg,
+            rgba(230, 195, 106, 0.08),
+            rgba(0, 0, 0, 0.92)
+          );
+          border-radius: 22px;
+          border: 1px solid rgba(230, 195, 106, 0.3);
+          padding: 20px 18px;
+          box-shadow: 0 0 60px rgba(230, 195, 106, 0.12);
+        }
+
+        .card h2 {
+          font-size: 18px;
+          color: #e6c36a;
+          margin-bottom: 8px;
+        }
+
+        .card p {
+          font-size: 14px;
           line-height: 1.7;
+          color: #d8d2b6;
+        }
+
+        .muted {
+          color: #b3aa8c;
+        }
+
+        .list {
+          margin: 10px 0 0;
+          padding-left: 18px;
+          font-size: 14px;
+          color: #d8d2b6;
+        }
+
+        .metricRow {
+          display: flex;
+          justify-content: space-between;
+          font-size: 14px;
+          color: #d8d2b6;
+          margin-top: 8px;
+        }
+
+        .btnRow {
+          display: flex;
+          gap: 10px;
+          margin-top: 16px;
+          flex-wrap: wrap;
+        }
+
+        .payBtn {
+          flex: 1;
+          min-width: 140px;
+          padding: 10px 14px;
+          border-radius: 999px;
+          border: none;
+          font-weight: 800;
+          font-size: 13px;
+          background: linear-gradient(135deg, #e6c36a, #b8963f);
+          color: #000;
+          opacity: 0.6;
+        }
+
+        .payBtn.ghost {
+          background: transparent;
+          border: 1px solid rgba(230, 195, 106, 0.45);
+          color: #e6c36a;
+        }
+
+        .tiny {
+          margin-top: 10px;
+          font-size: 11px;
+          color: #a7a08a;
+        }
+
+        .backRow {
+          margin-top: 32px;
+        }
+
+        .backLink {
+          color: rgba(230, 195, 106, 0.9);
+          text-decoration: none;
+          font-size: 14px;
+          border-bottom: 1px solid rgba(230, 195, 106, 0.4);
+          padding-bottom: 2px;
+        }
+
+        @media (max-width: 720px) {
+          .summaryRow {
+            grid-template-columns: 1fr;
+          }
+
+          .grid {
+            grid-template-columns: 1fr;
+          }
+
+          .nav {
+            display: none;
+          }
         }
       `}</style>
-    </div>
+    </>
   );
 }
