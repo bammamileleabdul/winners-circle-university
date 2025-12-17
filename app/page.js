@@ -13,6 +13,18 @@ export default function Home() {
   const [manifestoOpen, setManifestoOpen] = useState(false);
   const [vvipOpen, setVvipOpen] = useState(false);
 
+  // mini lelefx
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiInput, setAiInput] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiMessages, setAiMessages] = useState([
+    {
+      role: "assistant",
+      content:
+        "I’m mini lelefx. Calm. Precise. Ask me anything — principles, VVIP, or risk math (capital ÷ 14).",
+    },
+  ]);
+
   const handleWaitlistSubmit = async (e) => {
     e.preventDefault();
     setStatus("Submitting...");
@@ -32,18 +44,6 @@ export default function Home() {
       setStatus("Something went wrong. Try again.");
     }
   };
-
-  // MINI LELEFX STATE
-  const [aiOpen, setAiOpen] = useState(false);
-  const [aiInput, setAiInput] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiMessages, setAiMessages] = useState([
-    {
-      role: "assistant",
-      content:
-        "I’m mini lelefx. Calm. Precise. Ask me anything — principles, VVIP, or risk math (capital ÷ 14).",
-    },
-  ]);
 
   const sendAi = async (e) => {
     e.preventDefault();
@@ -68,7 +68,9 @@ export default function Home() {
           ...m,
           {
             role: "assistant",
-            content: data?.error || "Something went wrong. Try again.",
+            content:
+              data?.error ||
+              "mini lelefx hit a connection issue. Re-center, then try again in a moment.",
           },
         ]);
       } else {
@@ -80,7 +82,11 @@ export default function Home() {
     } catch (err) {
       setAiMessages((m) => [
         ...m,
-        { role: "assistant", content: "Network error. Try again." },
+        {
+          role: "assistant",
+          content:
+            "Network issue. Breathe, refresh the page, and try again.",
+        },
       ]);
     } finally {
       setAiLoading(false);
@@ -127,7 +133,7 @@ export default function Home() {
             <a href="#vvip" onClick={() => setMenuOpen(false)}>
               VVIP Access
             </a>
-            <a href="/client-portal" onClick={() => setMenuOpen(false)}>
+            <a href="/portal" onClick={() => setMenuOpen(false)}>
               Client Portal
             </a>
           </nav>
@@ -146,29 +152,23 @@ export default function Home() {
           modelling with disciplined human execution.
         </p>
 
-        {/* WAITLIST FORM (FORMSPREE) */}
-        <form
-          className="waitlistForm"
-          action="https://formspree.io/f/xpwveaza"
-          method="POST"
-        >
+        {/* WAITLIST FORM (REAL) */}
+        <form className="waitlistForm" onSubmit={handleWaitlistSubmit}>
           <input
             className="waitlistInput"
             type="email"
             name="email"
             placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
-          />
-
-          <input
-            type="hidden"
-            name="source"
-            value="Winners Circle Landing Page"
           />
 
           <button className="goldBtn" type="submit">
             Join the Waitlist
           </button>
+
+          {status && <p className="status">{status}</p>}
         </form>
 
         <div className="hintRow">
@@ -202,44 +202,6 @@ export default function Home() {
               <div className="floatText">{x.d}</div>
             </div>
           ))}
-        </div>
-
-        {/* HOW IT WORKS EXPLANATION BLOCK */}
-        <div className="howExplainer">
-          <h3>How the numbers play out</h3>
-          <p>
-            Example capital: <strong>£500</strong>. We don&apos;t gamble the
-            full amount. We break it into <strong>14 equal risk units</strong>.
-          </p>
-          <p>
-            That means each position risks around{" "}
-            <strong>£35.7 per trade</strong> with a <strong>1:1 RR</strong> —
-            risking £35.7 to make £35.7 when price reaches our TP.
-          </p>
-          <p>
-            An average week after both wins and losses leaves{" "}
-            <strong>7–9 clean TPs</strong> on the table:
-          </p>
-          <ul>
-            <li>
-              <strong>Normal week:</strong> 9 TPs ≈ <strong>£321</strong> profit
-            </li>
-            <li>
-              <strong>Bad week:</strong> 7 TPs ≈ <strong>£250</strong> profit
-            </li>
-            <li>
-              <strong>Worst-case clean week:</strong> 4 TPs ≈{" "}
-              <strong>£142</strong> profit
-            </li>
-          </ul>
-          <p>
-            You keep <strong>70%</strong> of performance, we receive{" "}
-            <strong>30%</strong> as our fee — only when you&apos;re in profit.
-          </p>
-          <p className="howNote">
-            The focus is consistency over hype. When risk is fixed and rules
-            are clear, the maths stays on your side.
-          </p>
         </div>
       </section>
 
@@ -305,8 +267,7 @@ export default function Home() {
               <p>
                 If you’re here to rush, impress, or gamble — this won’t work.{" "}
                 <br />
-                If you’re here to compound patiently — you’re in the right
-                place.
+                If you’re here to compound patiently — you’re in the right place.
               </p>
 
               <div className="signature">— Lelefx, Founder</div>
@@ -352,11 +313,12 @@ export default function Home() {
         )}
       </section>
 
-      {/* MINI LELEFX BUTTON + MODAL */}
+      {/* mini lelefx FAB */}
       <button className="aiFab" onClick={() => setAiOpen(true)}>
-        🤖 mini lelefx
+        mini lelefx
       </button>
 
+      {/* mini lelefx MODAL */}
       {aiOpen && (
         <div className="aiOverlay" onClick={() => setAiOpen(false)}>
           <div className="aiModal" onClick={(e) => e.stopPropagation()}>
@@ -365,7 +327,11 @@ export default function Home() {
                 <div className="aiTitle">mini lelefx</div>
                 <div className="aiSub">Calm. Precise. Luxury execution.</div>
               </div>
-              <button className="aiClose" onClick={() => setAiOpen(false)}>
+              <button
+                className="aiClose"
+                type="button"
+                onClick={() => setAiOpen(false)}
+              >
                 ×
               </button>
             </div>
@@ -418,9 +384,15 @@ export default function Home() {
           justify-content: space-between;
           align-items: center;
           padding: 16px 18px;
-          background: rgba(0, 0, 0, 0.82);
+          /* 🔥 warmer top bar to match page */
+          background: linear-gradient(
+            180deg,
+            rgba(42, 31, 15, 0.98),
+            rgba(0, 0, 0, 0.9)
+          );
           backdrop-filter: blur(10px);
           border-bottom: 1px solid rgba(230, 195, 106, 0.18);
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
         }
 
         .logo {
@@ -621,52 +593,6 @@ export default function Home() {
           font-size: 14px;
         }
 
-        .howExplainer {
-          margin: 36px auto 0;
-          max-width: 640px;
-          text-align: left;
-          background: linear-gradient(
-            180deg,
-            rgba(230, 195, 106, 0.1),
-            rgba(0, 0, 0, 0.9)
-          );
-          border-radius: 22px;
-          border: 1px solid rgba(230, 195, 106, 0.32);
-          padding: 24px 20px;
-          box-shadow: 0 0 40px rgba(230, 195, 106, 0.14);
-        }
-
-        .howExplainer h3 {
-          color: #e6c36a;
-          font-size: 18px;
-          margin-bottom: 10px;
-        }
-
-        .howExplainer p {
-          color: #d8d2b6;
-          font-size: 14px;
-          line-height: 1.7;
-          margin-bottom: 8px;
-        }
-
-        .howExplainer ul {
-          padding-left: 20px;
-          margin: 8px 0 10px;
-        }
-
-        .howExplainer li {
-          color: #d8d2b6;
-          font-size: 14px;
-          line-height: 1.7;
-          margin-bottom: 4px;
-        }
-
-        .howNote {
-          margin-top: 8px;
-          font-size: 13px;
-          color: #a7a08a;
-        }
-
         .luxGrid {
           display: grid;
           gap: 14px;
@@ -813,7 +739,7 @@ export default function Home() {
           padding-bottom: 110px;
         }
 
-        /* MINI LELEFX STYLES */
+        /* mini lelefx FAB + modal */
         .aiFab {
           position: fixed;
           right: 16px;
@@ -880,10 +806,14 @@ export default function Home() {
           background: transparent;
           border: 1px solid rgba(230, 195, 106, 0.35);
           color: #e6c36a;
-          width: 34px;
-          height: 34px;
+          width: 44px;
+          height: 26px;
           border-radius: 999px;
           font-size: 18px;
+          display: flex;
+          align-items: center;
+          justify-content: center; /* ✅ centers the “×” */
+          padding: 0;
           cursor: pointer;
         }
 
