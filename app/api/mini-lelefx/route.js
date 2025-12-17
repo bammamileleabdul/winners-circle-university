@@ -1,119 +1,99 @@
-// app/api/mini-lelefx/route.js
-import { NextResponse } from "next/server";
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const SYSTEM_PROMPT = `
+You are mini lelefx — an assistant for Winners Circle University.
+
+Tone:
+- Calm, precise, no hype.
+- Short, clear answers. No essays unless the user asks.
+- Always remind them this is process and probability, not prediction or signals.
+
+Core framework (MUST remember):
+- Pair: XAUUSD (gold), intraday framework.
+- Risk per trade is calculated as: capital ÷ 14.
+- Default RR: 1:1 (risk £X to make £X).
+- Over a 14-trade "cycle":
+  - Normal / good week: 7–9 wins out of 14.
+  - Tough week: maybe only 4 wins; still green if risk is controlled.
+- You do NOT promise results. You show examples and say "example" and "not guaranteed".
+
+When user gives a capital (e.g. £500):
+- Step 1: Calculate risk per trade = capital ÷ 14.
+- Step 2: Show example outcomes:
+  - 7 wins, 7 losses (balanced week).
+  - 9 wins, 5 losses (strong week).
+  - 4 wins, 10 losses (tough week).
+- Explain everything in simple numbers, in £ if they used £, or same currency they used.
+
+Example for £500:
+- Risk per trade ≈ £35.7.
+- 7 wins, 7 losses → about £0 net (before costs).
+- 9 wins, 5 losses → about 4 * 35.7 ≈ £142 profit.
+- 4 wins, 10 losses → about -6 * 35.7 ≈ -£214 loss.
+
+But ALWAYS:
+- Make it clear these are just examples, not a guarantee.
+- Emphasise survival, discipline, risk before reward.
+
+If they ask about:
+- VVIP: explain it's earned through consistency and alignment, not bought.
+- Waitlist: tell them to join via the form on the homepage.
+- Strategy / signals: you DO NOT give specific live entries or signals.
+  Instead, stay high-level, talk about process and mindset.
+
+If they ask personal / random stuff:
+- You can answer normally but keep the same calm, sharp tone.
+
+End some answers with subtle lines like:
+- "Remember: capital ÷ 14. Survive first, then scale."
+- "No rush. Precision over dopamine."
+`.trim();
 
 export async function POST(req) {
   try {
-    const body = await req.json();
-    const message = typeof body.message === "string" ? body.message.trim() : "";
+    const { message } = await req.json();
 
-    if (!message) {
-      return NextResponse.json({
-        reply:
-          "I didn’t receive a clear question. Ask me one thing at a time — for example: ‘Explain capital ÷ 14 risk with $1400.’",
-      });
+    if (!message || typeof message !== "string") {
+      return new Response(
+        JSON.stringify({ error: "Message is required." }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
 
-    const lower = message.toLowerCase();
+    const completion = await client.chat.completions.create({
+      model: "gpt-4.1-mini",
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: message },
+      ],
+      temperature: 0.3,
+      max_tokens: 400,
+    });
 
-    // --- 1) Detect a capital amount like 1400, 1,400, 1400.50 ---
-    const numMatch = message.match(/(\d[\d,]*(?:\.\d+)?)/);
-    let capital = null;
-    if (numMatch) {
-      capital = parseFloat(numMatch[1].replace(/,/g, ""));
-    }
+    const reply = completion.choices?.[0]?.message?.content || "…";
 
-    // helper to format dollars
-    const fmt = (n) =>
-      n.toLocaleString("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
-
-    // --- 2) Capital ÷ 14 risk logic ---
-    if (
-      capital &&
-      (lower.includes("÷ 14") ||
-        lower.includes("/ 14") ||
-        lower.includes("divide") ||
-        lower.includes("risk per trade") ||
-        lower.includes("risk with"))
-    ) {
-      const riskPerTrade = capital / 14;
-
-      const reply = [
-        "Here’s your capital ÷ 14 breakdown:",
-        "",
-        `• Starting capital: $${fmt(capital)}`,
-        "• Risk rule: capital ÷ 14",
-        `• Risk per trade: ~ $${fmt(riskPerTrade)}`,
-        "",
-        "This is the **maximum you’re prepared to lose per full stop-loss**, not your lot size.",
-        "You still size the lot so that if SL is hit, the loss ≈ that risk amount.",
-        "",
-        "Remember: this is process, not financial advice."
-      ].join("\n");
-
-      return NextResponse.json({ reply });
-    }
-
-    // --- 3) VVIP questions ---
-    if (lower.includes("vvip")) {
-      const reply = [
-        "VVIP in Winners Circle is not something you buy.",
-        "",
-        "It’s earned through:",
-        "• Consistent execution of the framework",
-        "• Respecting the capital ÷ 14 risk rule",
-        "• Demonstrated discipline over dopamine",
-        "• Showing up over time, not just during hype phases",
-        "",
-        "Some traders may be contacted quietly for deeper access when their behaviour matches the standard.",
-      ].join("\n");
-
-      return NextResponse.json({ reply });
-    }
-
-    // --- 4) Principles / rules questions ---
-    if (
-      lower.includes("principles") ||
-      lower.includes("rules") ||
-      lower.includes("framework")
-    ) {
-      const reply = [
-        "Core Winners Circle principles:",
-        "",
-        "1) Discipline over dopamine – calm execution beats emotional clicks.",
-        "2) Risk before reward – if protection isn’t clear, the trade doesn’t exist.",
-        "3) Process over outcomes – judge decisions, not one single result.",
-        "4) Patience compounds – fewer, higher-quality trades over noise.",
-        "5) Consistency creates inevitability – repeat what works, cut what doesn’t.",
-        "",
-        "Mini lelefx exists to keep you inside this structure every time you ask something.",
-      ].join("\n");
-
-      return NextResponse.json({ reply });
-    }
-
-    // --- 5) Generic coaching reply (fallback) ---
-    const reply = [
-      "I’ve read your message:",
-      `"${message}"`,
-      "",
-      "Here’s how to keep it inside Winners Circle process:",
-      "• Stay inside the capital ÷ 14 risk rule.",
-      "• Only act when structure + confirmation are clear.",
-      "• Write your idea as a simple plan: entry, SL, TP, reason.",
-      "",
-      "If you want a calculation, ask like:",
-      "“Explain capital ÷ 14 risk with $1000.”",
-    ].join("\n");
-
-    return NextResponse.json({ reply });
+    return new Response(JSON.stringify({ reply }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (err) {
     console.error("mini-lelefx error:", err);
-    return NextResponse.json({
-      reply:
-        "Backend issue. Pause, refresh, and try again. If it keeps happening, come back later — process first, tech second.",
-    });
+    return new Response(
+      JSON.stringify({
+        error:
+          "mini lelefx hit a connection issue. Re-center, then try again in a moment.",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   }
 }
