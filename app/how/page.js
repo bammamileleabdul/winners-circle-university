@@ -4,7 +4,6 @@ export default function HowPage() {
   return (
     <>
       <div className="wrap">
-        {/* TOP BAR */}
         <header className="header">
           <a href="/" className="logoRow">
             <img
@@ -24,39 +23,64 @@ export default function HowPage() {
           </nav>
         </header>
 
-        {/* MAIN CONTENT */}
         <main className="main">
           <h1>How It Works</h1>
           <p className="subtitle">
-            We don’t sell dreams. We run a clean, rule-based framework:
-            capital ÷ 14 risk, defined TP / SL and strict execution.
+            One framework. Clear risk. No gambling. Your capital is split into
+            14 controlled pieces and every decision is rule-based.
           </p>
 
           <div className="cards">
             <div className="card">
-              <h2>Read Structure</h2>
+              <h2>1. Read Structure</h2>
               <p>
-                We react to price, not predictions. We wait for clean structure
-                and confirmation before committing capital.
+                We react to price, not predictions. No random entries. We wait
+                for clean structure and confirmation before touching capital.
               </p>
             </div>
-
             <div className="card">
-              <h2>Risk First</h2>
+              <h2>2. Risk First</h2>
               <p>
-                Capital protection is non-negotiable. Survival and consistency
-                matter more than any single trade.
+                Capital protection is non-negotiable. We size positions from
+                risk backwards, not from greed forwards.
               </p>
             </div>
-
             <div className="card">
-              <h2>Execute Clean</h2>
+              <h2>3. Execute Clean</h2>
               <p>
                 Precision beats frequency. Rules remove emotion so execution
-                feels calm, predictable and repeatable.
+                feels calm, repeatable and professional.
               </p>
             </div>
           </div>
+
+          <section className="example">
+            <h2>Example · £500 account</h2>
+            <p>
+              Imagine you fund with <strong>£500</strong>. We don’t throw the
+              whole balance at one setup. We divide the account into{" "}
+              <strong>14 equal risk slices</strong>.
+            </p>
+            <p>
+              That gives a risk of about <strong>£35.70 per trade</strong>.
+              Each position is built as roughly <strong>1:1 RR</strong> — risk{" "}
+              £35.7 to make £35.7 when price reaches TP.
+            </p>
+            <p>
+              On a <strong>normal week</strong>, after stop-losses, we target{" "}
+              around <strong>7–9 clean TPs left</strong>. That’s roughly{" "}
+              <strong>£250 – £321</strong> net profit.
+            </p>
+            <p>
+              On a tougher week, with only <strong>4 TPs left</strong>, you’d
+              still be looking at about <strong>£142</strong> in profit. No wild
+              promises — just structured, controlled compounding.
+            </p>
+            <p className="disclaimer">
+              Numbers above are examples, not guarantees. Markets carry risk;
+              capital is always at risk.
+            </p>
+          </section>
 
           <div className="backRow">
             <a href="/" className="backBtn">
@@ -122,14 +146,15 @@ export default function HowPage() {
 
         .subtitle {
           color: #d8d2b6;
-          max-width: 640px;
+          max-width: 620px;
           line-height: 1.7;
-          margin-bottom: 30px;
+          margin-bottom: 28px;
         }
 
         .cards {
           display: grid;
           gap: 18px;
+          margin-bottom: 32px;
         }
 
         .card {
@@ -146,8 +171,8 @@ export default function HowPage() {
 
         .card h2 {
           color: #e6c36a;
-          font-size: 20px;
-          margin-bottom: 8px;
+          font-size: 18px;
+          margin-bottom: 6px;
         }
 
         .card p {
@@ -156,8 +181,39 @@ export default function HowPage() {
           color: #d8d2b6;
         }
 
+        .example {
+          margin-top: 10px;
+          padding: 22px 20px;
+          border-radius: 26px;
+          border: 1px solid rgba(230, 195, 106, 0.4);
+          background: linear-gradient(
+            180deg,
+            rgba(230, 195, 106, 0.12),
+            rgba(0, 0, 0, 0.94)
+          );
+          box-shadow: 0 0 90px rgba(230, 195, 106, 0.22);
+        }
+
+        .example h2 {
+          color: #e6c36a;
+          font-size: 20px;
+          margin-bottom: 10px;
+        }
+
+        .example p {
+          font-size: 14px;
+          line-height: 1.8;
+          color: #d8d2b6;
+          margin-bottom: 10px;
+        }
+
+        .disclaimer {
+          font-size: 11px;
+          color: #a7a08a;
+        }
+
         .backRow {
-          margin-top: 30px;
+          margin-top: 32px;
         }
 
         .backBtn {
