@@ -1,235 +1,136 @@
 "use client";
 
-export default function HowPage() {
+export default function How() {
   return (
     <>
       <div className="wrap">
         <header className="header">
-          <a href="/" className="logoRow">
+          <a href="/" className="logoBlock">
             <img
               src="/emblem.jpg"
               alt="Winners Circle University"
               className="logoImg"
             />
+            <span className="logoText">Back to main site</span>
           </a>
-
-          <nav className="nav">
-            <a href="/" className="navLink">
-              Home
-            </a>
-            <a href="/client" className="navLink">
-              Client Portal
-            </a>
-          </nav>
         </header>
 
         <main className="main">
-          <h1>How It Works</h1>
-          <p className="subtitle">
-            One framework. Clear risk. No gambling. Your capital is split into
-            14 controlled pieces and every decision is rule-based.
+          <h1>How It Works – In Practice</h1>
+          <p>
+            We operate on a simple idea: protect capital first, then let
+            consistency compound. Every decision starts with risk.
           </p>
 
-          <div className="cards">
-            <div className="card">
-              <h2>1. Read Structure</h2>
-              <p>
-                We react to price, not predictions. No random entries. We wait
-                for clean structure and confirmation before touching capital.
-              </p>
-            </div>
-            <div className="card">
-              <h2>2. Risk First</h2>
-              <p>
-                Capital protection is non-negotiable. We size positions from
-                risk backwards, not from greed forwards.
-              </p>
-            </div>
-            <div className="card">
-              <h2>3. Execute Clean</h2>
-              <p>
-                Precision beats frequency. Rules remove emotion so execution
-                feels calm, repeatable and professional.
-              </p>
-            </div>
-          </div>
+          <h2>1. Capital and Risk</h2>
+          <p>
+            Example: you start with <strong>£500</strong>. We divide this into{" "}
+            <strong>14 buckets</strong>. That gives around{" "}
+            <strong>£35.70</strong> risk per position. Each position targets{" "}
+            <strong>1:1 R:R</strong> – risk £35.70 to make £35.70.
+          </p>
 
-          <section className="example">
-            <h2>Example · £500 account</h2>
-            <p>
-              Imagine you fund with <strong>£500</strong>. We don’t throw the
-              whole balance at one setup. We divide the account into{" "}
-              <strong>14 equal risk slices</strong>.
-            </p>
-            <p>
-              That gives a risk of about <strong>£35.70 per trade</strong>.
-              Each position is built as roughly <strong>1:1 RR</strong> — risk{" "}
-              £35.7 to make £35.7 when price reaches TP.
-            </p>
-            <p>
-              On a <strong>normal week</strong>, after stop-losses, we target{" "}
-              around <strong>7–9 clean TPs left</strong>. That’s roughly{" "}
-              <strong>£250 – £321</strong> net profit.
-            </p>
-            <p>
-              On a tougher week, with only <strong>4 TPs left</strong>, you’d
-              still be looking at about <strong>£142</strong> in profit. No wild
-              promises — just structured, controlled compounding.
-            </p>
-            <p className="disclaimer">
-              Numbers above are examples, not guarantees. Markets carry risk;
-              capital is always at risk.
-            </p>
-          </section>
+          <h2>2. A Normal Week</h2>
+          <p>
+            Most weeks finish in the range of <strong>7–9 clean TPs left</strong>{" "}
+            after SLs. That’s roughly <strong>+£250 to +£321</strong> on this
+            example capital.
+          </p>
 
-          <div className="backRow">
-            <a href="/" className="backBtn">
-              ← Back to main page
-            </a>
-          </div>
+          <h2>3. Bad and Worst Weeks</h2>
+          <p>
+            On a bad week we still aim to close with around{" "}
+            <strong>7 TPs left</strong>. On a worst-case week we work with about{" "}
+            <strong>4 TPs left</strong>, which is still around{" "}
+            <strong>+£142 profit</strong> at the same risk.
+          </p>
+
+          <h2>4. The Split</h2>
+          <p>
+            From realised profit, you keep <strong>70%</strong> and Winners
+            Circle receives <strong>30%</strong>. No profit = no fee. You are
+            always in full control of your capital.
+          </p>
+
+          <p className="disclaimer">
+            This is not a guarantee or promise of returns. It’s a transparent
+            explanation of the framework we work from, so you know exactly what
+            we’re aiming for before you join.
+          </p>
         </main>
       </div>
 
       <style jsx>{`
         .wrap {
           min-height: 100vh;
-          background: radial-gradient(circle at top, #1a1408, #000);
-          color: #f9f3dc;
+          background: radial-gradient(circle at top, #2a1f0f, #000);
+          padding: 18px 14px 40px;
+          color: #f7f0d0;
         }
 
         .header {
           display: flex;
-          justify-content: space-between;
           align-items: center;
-          padding: 16px 18px;
-          border-bottom: 1px solid rgba(230, 195, 106, 0.18);
-          background: rgba(0, 0, 0, 0.9);
-          position: sticky;
-          top: 0;
-          z-index: 40;
+          margin-bottom: 24px;
         }
 
-        .logoRow {
+        .logoBlock {
           display: flex;
           align-items: center;
+          gap: 10px;
+          text-decoration: none;
         }
 
         .logoImg {
+          width: 40px;
           height: 40px;
-          width: auto;
+          border-radius: 10px;
           object-fit: contain;
+          box-shadow: 0 0 24px rgba(230, 195, 106, 0.5);
         }
 
-        .nav {
-          display: flex;
-          gap: 16px;
-        }
-
-        .navLink {
+        .logoText {
+          font-size: 13px;
           color: #e6c36a;
-          text-decoration: none;
-          font-size: 14px;
-          font-weight: 600;
         }
 
         .main {
-          max-width: 960px;
+          max-width: 720px;
           margin: 0 auto;
-          padding: 40px 16px 60px;
         }
 
         h1 {
-          font-size: 30px;
+          font-size: 26px;
+          margin-bottom: 12px;
           color: #e6c36a;
-          margin-bottom: 10px;
         }
 
-        .subtitle {
-          color: #d8d2b6;
-          max-width: 620px;
-          line-height: 1.7;
-          margin-bottom: 28px;
-        }
-
-        .cards {
-          display: grid;
-          gap: 18px;
-          margin-bottom: 32px;
-        }
-
-        .card {
-          background: radial-gradient(
-            circle at top,
-            rgba(230, 195, 106, 0.22),
-            rgba(0, 0, 0, 0.95)
-          );
-          border-radius: 26px;
-          border: 1px solid rgba(230, 195, 106, 0.32);
-          padding: 22px 20px;
-          box-shadow: 0 0 70px rgba(230, 195, 106, 0.18);
-        }
-
-        .card h2 {
-          color: #e6c36a;
-          font-size: 18px;
+        h2 {
+          margin-top: 22px;
           margin-bottom: 6px;
+          font-size: 18px;
+          color: #f4d47c;
         }
 
-        .card p {
-          font-size: 14px;
+        p {
           line-height: 1.7;
-          color: #d8d2b6;
-        }
-
-        .example {
-          margin-top: 10px;
-          padding: 22px 20px;
-          border-radius: 26px;
-          border: 1px solid rgba(230, 195, 106, 0.4);
-          background: linear-gradient(
-            180deg,
-            rgba(230, 195, 106, 0.12),
-            rgba(0, 0, 0, 0.94)
-          );
-          box-shadow: 0 0 90px rgba(230, 195, 106, 0.22);
-        }
-
-        .example h2 {
-          color: #e6c36a;
-          font-size: 20px;
-          margin-bottom: 10px;
-        }
-
-        .example p {
+          color: #c8c2aa;
           font-size: 14px;
-          line-height: 1.8;
-          color: #d8d2b6;
-          margin-bottom: 10px;
         }
 
         .disclaimer {
-          font-size: 11px;
-          color: #a7a08a;
+          margin-top: 20px;
+          font-size: 12px;
+          color: #9c9478;
         }
 
-        .backRow {
-          margin-top: 32px;
-        }
+        @media (min-width: 900px) {
+          .wrap {
+            padding: 28px 40px 40px;
+          }
 
-        .backBtn {
-          display: inline-block;
-          padding: 10px 16px;
-          border-radius: 999px;
-          border: 1px solid rgba(230, 195, 106, 0.4);
-          color: #e6c36a;
-          text-decoration: none;
-          font-size: 14px;
-          font-weight: 700;
-        }
-
-        @media (max-width: 720px) {
-          .nav {
-            display: none;
+          h1 {
+            font-size: 30px;
           }
         }
       `}</style>
