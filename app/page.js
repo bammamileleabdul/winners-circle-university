@@ -33,7 +33,7 @@ export default function Home() {
     }
   };
 
-  // ✅ MINI LELEFX (ONLY ADD)
+  // MINI LELEFX
   const [aiOpen, setAiOpen] = useState(false);
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -68,7 +68,8 @@ export default function Home() {
           ...m,
           {
             role: "assistant",
-            content: data?.error || "Something went wrong. Try again.",
+            content:
+              data?.error || "Something went wrong. Try again.",
           },
         ]);
       } else {
@@ -91,7 +92,11 @@ export default function Home() {
     <>
       {/* HEADER */}
       <header className="header">
-        {/* ✅ ONLY CHANGE: logo text replaced by emblem image */}
+        {/* 🔁 SWAPPED: menu on the left, emblem on the right */}
+        <button className="menuBtn" onClick={() => setMenuOpen(true)}>
+          ☰
+        </button>
+
         <div className="logo">
           <img
             src="/emblem.jpg"
@@ -99,42 +104,47 @@ export default function Home() {
             className="logoImg"
           />
         </div>
-
-        <button className="menuBtn" onClick={() => setMenuOpen(true)}>
-          ☰
-        </button>
       </header>
 
       {/* MOBILE MENU */}
       {menuOpen && (
-        <div className="menuOverlay">
-          <button className="menuClose" onClick={() => setMenuOpen(false)}>
-            × Close
-          </button>
+        <div className="menuOverlay" onClick={() => setMenuOpen(false)}>
+          {/* golden card container */}
+          <div
+            className="menuCard"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="menuClose"
+              onClick={() => setMenuOpen(false)}
+            >
+              × Close
+            </button>
 
-          <nav className="menuLinks">
-            <a href="#overview" onClick={() => setMenuOpen(false)}>
-              Overview
-            </a>
-            <a href="#how" onClick={() => setMenuOpen(false)}>
-              How It Works
-            </a>
-            <a href="#principles" onClick={() => setMenuOpen(false)}>
-              Principles
-            </a>
-            <a href="#manifesto" onClick={() => setMenuOpen(false)}>
-              Manifesto
-            </a>
-            <a href="#vvip" onClick={() => setMenuOpen(false)}>
-              VVIP Access
-            </a>
-          </nav>
+            <nav className="menuLinks">
+              <a href="#overview" onClick={() => setMenuOpen(false)}>
+                Overview
+              </a>
+              <a href="#how" onClick={() => setMenuOpen(false)}>
+                How It Works
+              </a>
+              <a href="#principles" onClick={() => setMenuOpen(false)}>
+                Principles
+              </a>
+              <a href="#manifesto" onClick={() => setMenuOpen(false)}>
+                Manifesto
+              </a>
+              <a href="#vvip" onClick={() => setMenuOpen(false)}>
+                VVIP Access
+              </a>
+            </nav>
+          </div>
         </div>
       )}
 
       {/* HERO */}
       <section id="overview" className="hero">
-        {/* ✅ ONLY ADD: faded hero watermark emblem */}
+        {/* faded hero watermark emblem */}
         <img src="/emblem.jpg" alt="" className="heroEmblem" />
 
         <div className="pill">EARLY ACCESS · LIMITED ONBOARDING</div>
@@ -145,7 +155,7 @@ export default function Home() {
           modelling with disciplined human execution.
         </p>
 
-        {/* WAITLIST FORM (REAL) */}
+        {/* WAITLIST FORM (FORMSPREE) */}
         <form
           className="waitlistForm"
           action="https://formspree.io/f/xpwveaza"
@@ -244,7 +254,10 @@ export default function Home() {
         <h2>Manifesto</h2>
 
         {!manifestoOpen ? (
-          <button className="curtainBtn" onClick={() => setManifestoOpen(true)}>
+          <button
+            className="curtainBtn"
+            onClick={() => setManifestoOpen(true)}
+          >
             This was not written for everyone
           </button>
         ) : (
@@ -264,9 +277,10 @@ export default function Home() {
                 replacing them with structure, risk awareness, and clarity.
               </p>
               <p>
-                If you’re here to rush, impress, or gamble — this won’t work.{" "}
-                <br />
-                If you’re here to compound patiently — you’re in the right place.
+                If you’re here to rush, impress, or gamble — this won’t
+                work. <br />
+                If you’re here to compound patiently — you’re in the right
+                place.
               </p>
 
               <div className="signature">— Lelefx, Founder</div>
@@ -312,7 +326,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* ✅ MINI LELEFX UI (ONLY ADD) */}
+      {/* MINI LELEFX FLOATING BUTTON + MODAL */}
       <button className="aiFab" onClick={() => setAiOpen(true)}>
         mini lelefx
       </button>
@@ -323,9 +337,14 @@ export default function Home() {
             <div className="aiHeader">
               <div>
                 <div className="aiTitle">mini lelefx</div>
-                <div className="aiSub">Calm. Precise. Luxury execution.</div>
+                <div className="aiSub">
+                  Calm. Precise. Luxury execution.
+                </div>
               </div>
-              <button className="aiClose" onClick={() => setAiOpen(false)}>
+              <button
+                className="aiClose"
+                onClick={() => setAiOpen(false)}
+              >
                 ×
               </button>
             </div>
@@ -334,7 +353,9 @@ export default function Home() {
               {aiMessages.map((m, i) => (
                 <div
                   key={i}
-                  className={`aiMsg ${m.role === "user" ? "aiUser" : "aiBot"}`}
+                  className={`aiMsg ${
+                    m.role === "user" ? "aiUser" : "aiBot"
+                  }`}
                 >
                   {m.content}
                 </div>
@@ -391,7 +412,6 @@ export default function Home() {
           align-items: center;
         }
 
-        /* ✅ ONLY ADD: emblem image styling */
         .logoImg {
           height: 40px;
           width: auto;
@@ -411,25 +431,45 @@ export default function Home() {
           position: fixed;
           inset: 0;
           z-index: 1000;
-          padding: 30px;
+          padding: 24px;
           background: radial-gradient(circle at top, #1a1408, #000);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+
+        /* gold card around menu items */
+        .menuCard {
+          width: 100%;
+          max-width: 420px;
+          border-radius: 28px;
+          padding: 24px 22px 28px;
+          background: radial-gradient(
+            circle at top left,
+            rgba(230, 195, 106, 0.12),
+            rgba(0, 0, 0, 0.96)
+          );
+          border: 1px solid rgba(230, 195, 106, 0.4);
+          box-shadow: 0 0 80px rgba(230, 195, 106, 0.22);
+          display: flex;
+          flex-direction: column;
+          gap: 22px;
         }
 
         .menuClose {
+          align-self: flex-end;
           background: linear-gradient(135deg, #e6c36a, #b8963f);
           border: none;
           padding: 10px 18px;
           border-radius: 14px;
           font-weight: 700;
           color: #000;
-          margin-bottom: 40px;
-          float: right;
         }
 
         .menuLinks a {
           display: block;
           font-size: 26px;
-          margin-bottom: 26px;
+          margin-bottom: 18px;
           color: #e6c36a;
           text-decoration: none;
           letter-spacing: 0.02em;
@@ -540,7 +580,11 @@ export default function Home() {
         .section {
           padding: 80px 18px;
           text-align: center;
-          background: radial-gradient(circle at top, rgba(230, 195, 106, 0.06), #000);
+          background: radial-gradient(
+            circle at top,
+            rgba(230, 195, 106, 0.06),
+            #000
+          );
         }
 
         .section h2 {
@@ -728,7 +772,8 @@ export default function Home() {
           padding-bottom: 110px;
         }
 
-        /* ✅ MINI LELEFX STYLES (ONLY ADD) */
+        /* MINI LELEFX STYLES */
+
         .aiFab {
           position: fixed;
           right: 16px;
