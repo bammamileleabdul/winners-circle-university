@@ -4,6 +4,7 @@ export default function HowPage() {
   return (
     <>
       <div className="wrap">
+        {/* TOP BAR */}
         <header className="header">
           <a href="/" className="logoRow">
             <img
@@ -23,19 +24,20 @@ export default function HowPage() {
           </nav>
         </header>
 
+        {/* MAIN CONTENT */}
         <main className="main">
           <h1>How It Works</h1>
           <p className="subtitle">
-            We don’t promise magic. We promise a clean, rule-based framework:
-            capital ÷ 14 risk, clear TP / SL, and disciplined execution.
+            We don’t sell dreams. We run a clean, rule-based framework:
+            capital ÷ 14 risk, defined TP / SL and strict execution.
           </p>
 
           <div className="cards">
             <div className="card">
               <h2>Read Structure</h2>
               <p>
-                We react to price, not predictions. We wait for confirmation
-                before committing capital.
+                We react to price, not predictions. We wait for clean structure
+                and confirmation before committing capital.
               </p>
             </div>
 
@@ -43,22 +45,22 @@ export default function HowPage() {
               <h2>Risk First</h2>
               <p>
                 Capital protection is non-negotiable. Survival and consistency
-                come before any single trade.
+                matter more than any single trade.
               </p>
             </div>
 
             <div className="card">
               <h2>Execute Clean</h2>
               <p>
-                Precision beats frequency. Rules remove emotion so you can
-                execute calmly, like a pro.
+                Precision beats frequency. Rules remove emotion so execution
+                feels calm, predictable and repeatable.
               </p>
             </div>
           </div>
 
           <div className="backRow">
-            <a href="/" className="backLink">
-              ← Back to main site
+            <a href="/" className="backBtn">
+              ← Back to main page
             </a>
           </div>
         </main>
@@ -110,7 +112,6 @@ export default function HowPage() {
           max-width: 960px;
           margin: 0 auto;
           padding: 40px 16px 60px;
-          text-align: left;
         }
 
         h1 {
@@ -159,12 +160,15 @@ export default function HowPage() {
           margin-top: 30px;
         }
 
-        .backLink {
-          color: rgba(230, 195, 106, 0.9);
+        .backBtn {
+          display: inline-block;
+          padding: 10px 16px;
+          border-radius: 999px;
+          border: 1px solid rgba(230, 195, 106, 0.4);
+          color: #e6c36a;
           text-decoration: none;
           font-size: 14px;
-          border-bottom: 1px solid rgba(230, 195, 106, 0.4);
-          padding-bottom: 2px;
+          font-weight: 700;
         }
 
         @media (max-width: 720px) {
