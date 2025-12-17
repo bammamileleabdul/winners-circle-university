@@ -33,7 +33,7 @@ export default function Home() {
     }
   };
 
-  // ✅ MINI LELEFX (ONLY ADD)
+  // MINI LELEFX
   const [aiOpen, setAiOpen] = useState(false);
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -87,16 +87,17 @@ export default function Home() {
     }
   };
 
-  // simple placeholder click handler for pay buttons (UI ONLY)
+  // placeholder for pay buttons (UI ONLY)
   const handlePayClick = (method) => {
-    alert(`Payment via ${method} coming soon. You’ll settle 30% of your net profit, not deposits.`);
+    alert(
+      `Payment via ${method} coming soon. You’ll settle 30% of your net profit, not deposits.`,
+    );
   };
 
   return (
     <>
       {/* HEADER */}
       <header className="header">
-        {/* emblem logo */}
         <div className="logo">
           <img
             src="/emblem.jpg"
@@ -127,8 +128,8 @@ export default function Home() {
             <a href="#principles" onClick={() => setMenuOpen(false)}>
               Principles
             </a>
-            <a href="#performance" onClick={() => setMenuOpen(false)}>
-              Performance
+            <a href="#client-portal" onClick={() => setMenuOpen(false)}>
+              Client Portal
             </a>
             <a href="#manifesto" onClick={() => setMenuOpen(false)}>
               Manifesto
@@ -142,7 +143,6 @@ export default function Home() {
 
       {/* HERO */}
       <section id="overview" className="hero">
-        {/* faded hero watermark emblem */}
         <img src="/emblem.jpg" alt="" className="heroEmblem" />
 
         <div className="pill">EARLY ACCESS · LIMITED ONBOARDING</div>
@@ -185,7 +185,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* HOW IT WORKS (Floating Gold Cards) */}
+      {/* HOW IT WORKS */}
       <section id="how" className="section">
         <h2>How It Works</h2>
 
@@ -212,7 +212,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PRINCIPLES (Luxury Cards) */}
+      {/* PRINCIPLES */}
       <section id="principles" className="section">
         <h2>Our Principles</h2>
 
@@ -247,19 +247,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ✅ PERFORMANCE & PROFIT SHARE SECTION (NEW UI) */}
-      <section id="performance" className="section">
-        <h2>Performance & Profit Share</h2>
+      {/* 🔐 CLIENT PORTAL (FOR PEOPLE INSIDE THE CIRCLE) */}
+      <section id="client-portal" className="section">
+        <h2>Your Winners Circle Interface</h2>
         <p className="perfIntro">
-          Example based on a <span>£500</span> starting capital using our{" "}
-          <span>capital ÷ 14</span> risk model. Numbers are illustrative, not
-          guaranteed. We operate on structure, not promises.
+          Once you are onboarded, this is the control panel you use to track
+          your performance, understand how your capital is deployed and settle
+          your <span>30% performance fee</span>. All numbers below assume a{" "}
+          <span>£500</span> starting capital with our{" "}
+          <span>capital ÷ 14</span> risk model and a clean{" "}
+          <span>1 : 1 RR</span>.
         </p>
 
         <div className="perfGrid">
-          {/* LEFT: WEEK SNAPSHOT */}
+          {/* LEFT: YOUR RISK SETUP */}
           <div className="perfCard">
-            <div className="perfTag">Trade Structure</div>
+            <div className="perfTag">Your Risk Structure</div>
             <div className="perfRow">
               <span className="perfLabel">Starting Capital</span>
               <span className="perfValue">£500</span>
@@ -274,8 +277,8 @@ export default function Home() {
             </div>
             <div className="perfDivider" />
             <div className="perfRow">
-              <span className="perfLabel">TP targets</span>
-              <span className="perfValue">Fixed & pre-defined</span>
+              <span className="perfLabel">TP behaviour</span>
+              <span className="perfValue">Pre-defined & mechanical</span>
             </div>
             <div className="perfRow">
               <span className="perfLabel">SL placement</span>
@@ -283,16 +286,16 @@ export default function Home() {
             </div>
           </div>
 
-          {/* RIGHT: WEEK PROJECTION */}
+          {/* RIGHT: YOUR WEEKLY SNAPSHOT */}
           <div className="perfCard">
-            <div className="perfTag">Example Weekly Outcomes</div>
+            <div className="perfTag">Weekly Snapshot (Example)</div>
             <div className="perfRow">
               <span className="perfLabel">Normal week</span>
               <span className="perfValue">7–9 clean TPs</span>
             </div>
             <div className="perfRow">
               <span className="perfLabel">Bad week</span>
-              <span className="perfValue">~7 TPs · still green</span>
+              <span className="perfValue">≈ 7 TPs · still green</span>
             </div>
             <div className="perfRow">
               <span className="perfLabel">Worst realistic week</span>
@@ -300,16 +303,17 @@ export default function Home() {
             </div>
             <div className="perfDivider" />
             <div className="perfRow">
-              <span className="perfLabel">Example profit (4 TPs)</span>
+              <span className="perfLabel">Profit if 4 TPs land</span>
               <span className="perfValue">≈ £142</span>
             </div>
             <div className="perfRow">
-              <span className="perfLabel">Example profit (9 TPs)</span>
+              <span className="perfLabel">Profit if 9 TPs land</span>
               <span className="perfValue">≈ £321+</span>
             </div>
             <p className="perfFine">
-              All scenarios assume strict risk rules and 1:1 execution. No
-              compounding or overleveraging.
+              This is a preview. Live numbers update with your capital, fills
+              and execution quality. We do not promise outcomes — we enforce
+              structure.
             </p>
           </div>
         </div>
@@ -318,9 +322,9 @@ export default function Home() {
         <div className="payCard">
           <div className="payTitle">Settle Your 30% Performance Fee</div>
           <p className="payText">
-            You keep <span>70%</span> of net profit. Winners Circle takes{" "}
-            <span>30%</span> as a performance fee — only on profit, never on
-            deposits.
+            When you withdraw, you keep <span>70%</span> of net profit. Winners
+            Circle takes <span>30%</span> as a performance fee — only on profit,
+            never on deposits.
           </p>
 
           <div className="paySummary">
@@ -356,14 +360,14 @@ export default function Home() {
           </div>
 
           <div className="payNote">
-            Payment rail is processed securely via third-party providers. No
-            funds are ever held in-platform. This is a performance settlement,
-            not a deposit request.
+            This is your client-side interface preview. Live version connects to
+            verified payment providers and only ever charges against realised
+            profit — not deposits, not top-ups.
           </div>
         </div>
       </section>
 
-      {/* MANIFESTO (Curtain / Reveal) */}
+      {/* MANIFESTO */}
       <section id="manifesto" className="section">
         <h2>Manifesto</h2>
 
@@ -390,7 +394,8 @@ export default function Home() {
               <p>
                 If you’re here to rush, impress, or gamble — this won’t work.{" "}
                 <br />
-                If you’re here to compound patiently — you’re in the right place.
+                If you’re here to compound patiently — you’re in the right
+                place.
               </p>
 
               <div className="signature">— Lelefx, Founder</div>
@@ -406,7 +411,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* VVIP (Button -> Premium Reveal Panel) */}
+      {/* VVIP */}
       <section id="vvip" className="section last">
         <h2>VVIP Access</h2>
 
@@ -436,7 +441,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* MINI LELEFX FLOATING BUTTON + MODAL */}
+      {/* MINI LELEFX BUTTON + MODAL */}
       <button className="aiFab" onClick={() => setAiOpen(true)}>
         mini lelefx
       </button>
@@ -449,7 +454,7 @@ export default function Home() {
                 <div className="aiTitle">mini lelefx</div>
                 <div className="aiSub">Calm. Precise. Luxury execution.</div>
               </div>
-              <button className="aiClose" onClick={() => setAiOpen(false)}>
+            <button className="aiClose" onClick={() => setAiOpen(false)}>
                 ×
               </button>
             </div>
@@ -847,7 +852,7 @@ export default function Home() {
           padding-bottom: 110px;
         }
 
-        /* PERFORMANCE SECTION STYLES */
+        /* CLIENT PORTAL / PERFORMANCE STYLES */
         .perfIntro {
           max-width: 640px;
           margin: 0 auto 28px;
@@ -1013,7 +1018,7 @@ export default function Home() {
           line-height: 1.7;
         }
 
-        /* MINI LELEFX STYLES */
+        /* MINI LELEFX */
         .aiFab {
           position: fixed;
           right: 16px;
