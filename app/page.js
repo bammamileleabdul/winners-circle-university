@@ -13,18 +13,6 @@ export default function Home() {
   const [manifestoOpen, setManifestoOpen] = useState(false);
   const [vvipOpen, setVvipOpen] = useState(false);
 
-  // MINI LELEFX STATE
-  const [aiOpen, setAiOpen] = useState(false);
-  const [aiInput, setAiInput] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiMessages, setAiMessages] = useState([
-    {
-      role: "assistant",
-      content:
-        "I’m mini lelefx. Calm. Precise. Ask me anything — principles, VVIP, or risk math (capital ÷ 14).",
-    },
-  ]);
-
   const handleWaitlistSubmit = async (e) => {
     e.preventDefault();
     setStatus("Submitting...");
@@ -45,7 +33,18 @@ export default function Home() {
     }
   };
 
-  // MINI LELEFX SEND FUNCTION
+  // ✅ MINI LELEFX STATE
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiInput, setAiInput] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiMessages, setAiMessages] = useState([
+    {
+      role: "assistant",
+      content:
+        "I’m mini lelefx. Calm. Precise. Ask me anything — principles, VVIP, or risk math (capital ÷ 14).",
+    },
+  ]);
+
   const sendAi = async (e) => {
     e.preventDefault();
     if (!aiInput.trim() || aiLoading) return;
@@ -92,6 +91,7 @@ export default function Home() {
     <>
       {/* HEADER */}
       <header className="header">
+        {/* emblem logo */}
         <div className="logo">
           <img
             src="/emblem.jpg"
@@ -116,7 +116,6 @@ export default function Home() {
             <a href="#overview" onClick={() => setMenuOpen(false)}>
               Overview
             </a>
-            {/* 🔁 CHANGED: now links to /how page */}
             <a href="/how" onClick={() => setMenuOpen(false)}>
               How It Works
             </a>
@@ -135,6 +134,7 @@ export default function Home() {
 
       {/* HERO */}
       <section id="overview" className="hero">
+        {/* faded hero watermark emblem */}
         <img src="/emblem.jpg" alt="" className="heroEmblem" />
 
         <div className="pill">EARLY ACCESS · LIMITED ONBOARDING</div>
@@ -145,17 +145,20 @@ export default function Home() {
           modelling with disciplined human execution.
         </p>
 
-        {/* WAITLIST FORM (FORMSPREE) */}
+        {/* WAITLIST FORM (REAL) */}
         <form
           className="waitlistForm"
           action="https://formspree.io/f/xpwveaza"
           method="POST"
+          onSubmit={handleWaitlistSubmit}
         >
           <input
             className="waitlistInput"
             type="email"
             name="email"
             placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
 
@@ -168,17 +171,18 @@ export default function Home() {
           <button className="goldBtn" type="submit">
             Join the Waitlist
           </button>
+
+          {status && <p className="status">{status}</p>}
         </form>
 
         <div className="hintRow">
-          {/* 🔁 CHANGED: this now goes to /how page */}
           <a className="ghostLink" href="/how">
-            See How It Works →
+            See Exactly How It Works →
           </a>
         </div>
       </section>
 
-      {/* HOW IT WORKS (on homepage – high level) */}
+      {/* HOW IT WORKS (Floating Gold Cards) */}
       <section id="how" className="section">
         <h2>How It Works</h2>
 
@@ -203,23 +207,9 @@ export default function Home() {
             </div>
           ))}
         </div>
-
-        {/* SECTION CTA: JOIN + ASK MINI LELEFX */}
-        <div className="sectionCta">
-          <a className="sectionCtaPrimary" href="#overview">
-            Join the Waitlist
-          </a>
-          <button
-            type="button"
-            className="sectionCtaSecondary"
-            onClick={() => setAiOpen(true)}
-          >
-            Ask mini lelefx
-          </button>
-        </div>
       </section>
 
-      {/* PRINCIPLES */}
+      {/* PRINCIPLES (Luxury Cards) */}
       <section id="principles" className="section">
         <h2>Our Principles</h2>
 
@@ -254,7 +244,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* MANIFESTO */}
+      {/* MANIFESTO (Curtain / Reveal) */}
       <section id="manifesto" className="section">
         <h2>Manifesto</h2>
 
@@ -297,7 +287,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* VVIP */}
+      {/* VVIP (Button -> Premium Reveal Panel) */}
       <section id="vvip" className="section last">
         <h2>VVIP Access</h2>
 
@@ -327,19 +317,19 @@ export default function Home() {
         )}
       </section>
 
-      {/* BOTTOM CTA STRIP */}
-      <section className="ctaStrip">
-        <div className="ctaStripText">
-          mini lelefx is live. Ask how the framework would treat your capital.
-        </div>
-        <button className="ctaStripBtn" onClick={() => setAiOpen(true)}>
-          Open mini lelefx
-        </button>
-      </section>
-
-      {/* MINI LELEFX FLOATING BUTTON */}
+      {/* ✅ MINI LELEFX ROBOT BUTTON */}
       <button className="aiFab" onClick={() => setAiOpen(true)}>
-        mini lelefx
+        <div className="aiFabBot">
+          <div className="aiFabFace">
+            <span className="aiEye left" />
+            <span className="aiEye right" />
+          </div>
+          <div className="aiAntenna" />
+        </div>
+        <div className="aiFabSpeech">
+          <div className="aiFabLine1">Hey, welcome to Winners.</div>
+          <div className="aiFabLine2">What can I help you with today?</div>
+        </div>
       </button>
 
       {/* MINI LELEFX MODAL */}
@@ -360,9 +350,7 @@ export default function Home() {
               {aiMessages.map((m, i) => (
                 <div
                   key={i}
-                  className={`aiMsg ${
-                    m.role === "user" ? "aiUser" : "aiBot"
-                  }`}
+                  className={`aiMsg ${m.role === "user" ? "aiUser" : "aiBot"}`}
                 >
                   {m.content}
                 </div>
@@ -755,101 +743,98 @@ export default function Home() {
           padding-bottom: 110px;
         }
 
-        /* SECTION CTA UNDER "HOW IT WORKS" */
-        .sectionCta {
-          margin-top: 32px;
-          display: flex;
-          justify-content: center;
-          gap: 12px;
-          flex-wrap: wrap;
-        }
-
-        .sectionCtaPrimary {
-          background: linear-gradient(135deg, #e6c36a, #b8963f);
-          border-radius: 999px;
-          padding: 10px 20px;
-          font-weight: 800;
-          color: #000;
-          text-decoration: none;
-          font-size: 14px;
-          box-shadow: 0 0 40px rgba(230, 195, 106, 0.2);
-        }
-
-        .sectionCtaSecondary {
-          background: transparent;
-          border-radius: 999px;
-          padding: 10px 18px;
-          border: 1px solid rgba(230, 195, 106, 0.4);
-          font-weight: 700;
-          color: #e6c36a;
-          font-size: 14px;
-          cursor: pointer;
-        }
-
-        /* BOTTOM CTA STRIP */
-        .ctaStrip {
-          padding: 16px 18px;
-          border-top: 1px solid rgba(230, 195, 106, 0.25);
-          border-bottom: 1px solid rgba(230, 195, 106, 0.15);
-          background: radial-gradient(
-            circle at top,
-            rgba(230, 195, 106, 0.06),
-            #000
-          );
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          position: relative;
-          z-index: 5;
-        }
-
-        .ctaStripText {
-          color: #d8d2b6;
-          font-size: 13px;
-          line-height: 1.5;
-        }
-
-        .ctaStripBtn {
-          background: transparent;
-          border-radius: 999px;
-          padding: 8px 14px;
-          border: 1px solid rgba(230, 195, 106, 0.5);
-          font-weight: 700;
-          color: #e6c36a;
-          font-size: 13px;
-          cursor: pointer;
-          white-space: nowrap;
-        }
-
-        @media (max-width: 480px) {
-          .ctaStrip {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-
-          .ctaStripBtn {
-            width: 100%;
-            text-align: center;
-          }
-        }
-
-        /* MINI LELEFX STYLES */
+        /* MINI LELEFX ROBOT BUTTON */
         .aiFab {
           position: fixed;
           right: 16px;
           bottom: 16px;
           z-index: 9998;
-          background: linear-gradient(135deg, #e6c36a, #8f6b1f);
-          border: none;
-          padding: 12px 16px;
+          background: linear-gradient(135deg, #1a1308, #000000);
+          border: 1px solid rgba(230, 195, 106, 0.5);
+          padding: 10px 14px;
           border-radius: 999px;
-          font-weight: 900;
-          color: #000;
-          box-shadow: 0 0 70px rgba(230, 195, 106, 0.22);
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          box-shadow: 0 0 70px rgba(230, 195, 106, 0.35);
           cursor: pointer;
         }
 
+        .aiFabBot {
+          position: relative;
+          width: 40px;
+          height: 40px;
+          border-radius: 16px;
+          background: radial-gradient(circle at 30% 20%, #fff7d1, #e6c36a);
+          box-shadow: 0 0 30px rgba(230, 195, 106, 0.7);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: botFloat 3s ease-in-out infinite;
+          overflow: hidden;
+        }
+
+        .aiFabFace {
+          width: 70%;
+          height: 60%;
+          border-radius: 12px;
+          background: rgba(0, 0, 0, 0.85);
+          display: flex;
+          align-items: center;
+          justify-content: space-around;
+          padding: 0 4px;
+        }
+
+        .aiEye {
+          width: 6px;
+          height: 6px;
+          border-radius: 999px;
+          background: #e6c36a;
+        }
+
+        .aiAntenna {
+          position: absolute;
+          top: -8px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 10px;
+          height: 10px;
+          border-radius: 999px;
+          border: 2px solid rgba(0, 0, 0, 0.9);
+          background: #e6c36a;
+          box-shadow: 0 0 16px rgba(230, 195, 106, 0.9);
+        }
+
+        .aiFabSpeech {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          max-width: 190px;
+        }
+
+        .aiFabLine1 {
+          font-size: 11px;
+          color: #f5e7c4;
+        }
+
+        .aiFabLine2 {
+          font-size: 10px;
+          color: rgba(245, 231, 196, 0.86);
+        }
+
+        @keyframes botFloat {
+          0% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-4px);
+          }
+          100% {
+            transform: translateY(0);
+          }
+        }
+
+        /* MINI LELEFX MODAL STYLES */
         .aiOverlay {
           position: fixed;
           inset: 0;
