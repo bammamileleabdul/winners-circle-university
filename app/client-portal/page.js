@@ -28,8 +28,8 @@ export default function ClientPortal() {
         <main className="main">
           <h1>Client Portal</h1>
           <p className="subtitle">
-            Private area for active clients. We track your performance, calculate
-            profit share, and make paying your 30% simple and transparent.
+            Private preview area for funded clients. Performance, profit share
+            and payments will all live here once we go live.
           </p>
 
           {/* SUMMARY STRIP */}
@@ -53,8 +53,8 @@ export default function ClientPortal() {
             <div className="card wide">
               <h2>Performance Breakdown</h2>
               <p>
-                Here you’ll see your TP / SL history, weekly breakdowns and
-                compounding based on our capital ÷ 14 risk framework.
+                This section will show your TP / SL history, weekly breakdowns
+                and compounding based on the capital ÷ 14 risk framework.
               </p>
               <ul className="list">
                 <li>✅ Running win / loss streak</li>
@@ -66,7 +66,7 @@ export default function ClientPortal() {
             <div className="card">
               <h2>Latest TP / SL</h2>
               <p className="muted">
-                This will show the last signals executed on your account:
+                Snapshot of the most recent trades executed on your account:
               </p>
               <div className="metricRow">
                 <span>Last TP count</span>
@@ -85,8 +85,8 @@ export default function ClientPortal() {
             <div className="card">
               <h2>30% Performance Fee</h2>
               <p className="muted">
-                At the end of each cycle, mini lelefx will calculate the
-                profits and show exactly what 30% looks like before payment.
+                At the end of each cycle, we calculate profits. You keep 70%.
+                Our 30% only applies on net gains, never on deposits.
               </p>
 
               <div className="metricRow">
@@ -104,23 +104,22 @@ export default function ClientPortal() {
 
               <div className="btnRow">
                 <button className="payBtn" disabled>
-                  Pay with card (soon)
+                  Pay with card (coming soon)
                 </button>
                 <button className="payBtn ghost" disabled>
-                  Pay with crypto (soon)
+                  Pay with crypto (coming soon)
                 </button>
               </div>
 
               <p className="tiny">
-                Payments are not live yet. This page is a preview of the client
-                experience we’re building.
+                This is a preview only. No real payments are processed here yet.
               </p>
             </div>
           </div>
 
           <div className="backRow">
             <a href="/" className="backLink">
-              ← Back to main site
+              ← Back to main page
             </a>
           </div>
         </main>
