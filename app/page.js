@@ -5,7 +5,7 @@ import { useState } from "react";
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Waitlist
+  // Waitlist (we still keep state even though Formspree handles submit)
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState("");
 
@@ -13,7 +13,7 @@ export default function Home() {
   const [manifestoOpen, setManifestoOpen] = useState(false);
   const [vvipOpen, setVvipOpen] = useState(false);
 
-  // ✅ MINI LELEFX (home overlay)
+  // MINI LELEFX
   const [aiOpen, setAiOpen] = useState(false);
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -24,26 +24,6 @@ export default function Home() {
         "I’m mini lelefx. Calm. Precise. Ask me anything — principles, VVIP, or risk math (capital ÷ 14).",
     },
   ]);
-
-  const handleWaitlistSubmit = async (e) => {
-    e.preventDefault();
-    setStatus("Submitting...");
-
-    try {
-      const res = await fetch("/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      if (!res.ok) throw new Error("Failed");
-
-      setStatus("You’re in. Welcome to the Circle.");
-      setEmail("");
-    } catch (err) {
-      setStatus("Something went wrong. Try again.");
-    }
-  };
 
   const sendAi = async (e) => {
     e.preventDefault();
@@ -68,19 +48,28 @@ export default function Home() {
           ...m,
           {
             role: "assistant",
-            content: data?.error || "Something went wrong. Try again.",
+            content:
+              data?.error ||
+              "mini lelefx hit a connection issue. Re-center, then try again in a moment.",
           },
         ]);
       } else {
         setAiMessages((m) => [
           ...m,
-          { role: "assistant", content: data.reply || "…" },
+          {
+            role: "assistant",
+            content: data.reply || "…",
+          },
         ]);
       }
     } catch (err) {
       setAiMessages((m) => [
         ...m,
-        { role: "assistant", content: "Network error. Try again." },
+        {
+          role: "assistant",
+          content:
+            "mini lelefx hit a connection issue. Re-center, then try again in a moment.",
+        },
       ]);
     } finally {
       setAiLoading(false);
@@ -127,13 +116,9 @@ export default function Home() {
             <a href="#vvip" onClick={() => setMenuOpen(false)}>
               VVIP Access
             </a>
-
-            {/* ✅ NEW MENU ITEMS */}
-            <a href="/get-started" onClick={() => setMenuOpen(false)}>
-              Get Started
-            </a>
-            <a href="/access-trading" onClick={() => setMenuOpen(false)}>
-              Access & Trading
+            {/* NEW: client portal link */}
+            <a href="/client-portal" onClick={() => setMenuOpen(false)}>
+              Client Portal
             </a>
           </nav>
         </div>
@@ -151,7 +136,7 @@ export default function Home() {
           modelling with disciplined human execution.
         </p>
 
-        {/* WAITLIST FORM (REAL) */}
+        {/* WAITLIST FORM via Formspree */}
         <form
           className="waitlistForm"
           action="https://formspree.io/f/xpwveaza"
@@ -183,7 +168,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* HOW IT WORKS (Floating Gold Cards) */}
+      {/* HOW IT WORKS */}
       <section id="how" className="section">
         <h2>How It Works</h2>
 
@@ -210,7 +195,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PRINCIPLES (Luxury Cards) */}
+      {/* PRINCIPLES */}
       <section id="principles" className="section">
         <h2>Our Principles</h2>
 
@@ -245,7 +230,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* MANIFESTO (Curtain / Reveal) */}
+      {/* MANIFESTO */}
       <section id="manifesto" className="section">
         <h2>Manifesto</h2>
 
@@ -288,7 +273,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* VVIP (Button -> Premium Reveal Panel) */}
+      {/* VVIP */}
       <section id="vvip" className="section last">
         <h2>VVIP Access</h2>
 
@@ -318,7 +303,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* ✅ MINI LELEFX BUTTON / OVERLAY */}
+      {/* MINI LELEFX ROBOT BUTTON */}
       <button className="aiFab" onClick={() => setAiOpen(true)}>
         mini lelefx
       </button>
@@ -327,9 +312,17 @@ export default function Home() {
         <div className="aiOverlay" onClick={() => setAiOpen(false)}>
           <div className="aiModal" onClick={(e) => e.stopPropagation()}>
             <div className="aiHeader">
-              <div>
-                <div className="aiTitle">mini lelefx</div>
-                <div className="aiSub">Calm. Precise. Luxury execution.</div>
+              <div className="aiHeaderLeft">
+                <div className="aiRobot">
+                  <div className="aiRobotFace" />
+                  <div className="aiRobotGlow" />
+                </div>
+                <div>
+                  <div className="aiTitle">mini lelefx</div>
+                  <div className="aiSub">
+                    Calm. Precise. Luxury execution.
+                  </div>
+                </div>
               </div>
               <button className="aiClose" onClick={() => setAiOpen(false)}>
                 ×
@@ -345,7 +338,9 @@ export default function Home() {
                   {m.content}
                 </div>
               ))}
-              {aiLoading && <div className="aiMsg aiBot">Thinking…</div>}
+              {aiLoading && (
+                <div className="aiMsg aiBot">Thinking…</div>
+              )}
             </div>
 
             <form className="aiFooter" onSubmit={sendAi}>
@@ -361,7 +356,9 @@ export default function Home() {
               </button>
             </form>
 
-            <div className="aiNote">Not financial advice. Process only.</div>
+            <div className="aiNote">
+              Not financial advice. Process only.
+            </div>
           </div>
         </div>
       )}
@@ -386,9 +383,6 @@ export default function Home() {
         }
 
         .logo {
-          color: #e6c36a;
-          font-weight: 700;
-          letter-spacing: 0.02em;
           display: flex;
           align-items: center;
         }
@@ -430,7 +424,7 @@ export default function Home() {
         .menuLinks a {
           display: block;
           font-size: 26px;
-          margin-bottom: 22px;
+          margin-bottom: 26px;
           color: #e6c36a;
           text-decoration: none;
           letter-spacing: 0.02em;
@@ -541,7 +535,11 @@ export default function Home() {
         .section {
           padding: 80px 18px;
           text-align: center;
-          background: radial-gradient(circle at top, rgba(230, 195, 106, 0.06), #000);
+          background: radial-gradient(
+            circle at top,
+            rgba(230, 195, 106, 0.06),
+            #000
+          );
         }
 
         .section h2 {
@@ -729,7 +727,7 @@ export default function Home() {
           padding-bottom: 110px;
         }
 
-        /* MINI LELEFX STYLES */
+        /* MINI LELEFX ROBOT BUTTON + MODAL */
         .aiFab {
           position: fixed;
           right: 16px;
@@ -775,8 +773,46 @@ export default function Home() {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 16px 16px;
+          padding: 14px 16px;
           border-bottom: 1px solid rgba(230, 195, 106, 0.18);
+        }
+
+        .aiHeaderLeft {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .aiRobot {
+          position: relative;
+          width: 32px;
+          height: 32px;
+          border-radius: 12px;
+          background: radial-gradient(
+            circle at top,
+            rgba(230, 195, 106, 0.5),
+            #120d05
+          );
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        }
+
+        .aiRobotFace {
+          width: 18px;
+          height: 18px;
+          border-radius: 6px;
+          border: 1px solid rgba(0, 0, 0, 0.8);
+          background: radial-gradient(circle at top, #fff7d1, #c6a858);
+        }
+
+        .aiRobotGlow {
+          position: absolute;
+          inset: -12px;
+          border-radius: inherit;
+          box-shadow: 0 0 24px rgba(230, 195, 106, 0.7);
+          opacity: 0.3;
         }
 
         .aiTitle {
@@ -800,6 +836,10 @@ export default function Home() {
           height: 34px;
           border-radius: 999px;
           font-size: 18px;
+          line-height: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           cursor: pointer;
         }
 
