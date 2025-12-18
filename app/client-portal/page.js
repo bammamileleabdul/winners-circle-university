@@ -2,413 +2,464 @@
 
 export default function ClientPortal() {
   return (
-    <>
-      <div className="wrap">
-        {/* TOP BAR */}
-        <header className="header">
-          <a href="/" className="logoBlock">
-            <img
-              src="/emblem.jpg"
-              alt="Winners Circle University"
-              className="logoImg"
-            />
-            <span className="logoText">Back to main site</span>
-          </a>
+    <div className="wrap">
+      {/* TOP BAR */}
+      <header className="topBar">
+        <a href="/" className="backLink">
+          <img
+            src="/emblem.jpg"
+            alt="Winners Circle University"
+            className="logoImg"
+          />
+          <span>Back to main site</span>
+        </a>
 
-          <div className="tag">Live Client Portal · 70/30 Split</div>
-        </header>
+        <div className="liveBadge">
+          <span>LIVE CLIENT PORTAL · 70/30 SPLIT</span>
+        </div>
+      </header>
 
-        {/* MAIN CONTENT */}
-        <main className="main">
-          {/* SUMMARY */}
-          <section className="card summary">
-            <h1>Client Performance Overview</h1>
-            <p className="muted">
-              This portal is for active clients only. Numbers here are example
-              figures. Final payouts are always confirmed privately after each
-              cycle.
+      {/* MAIN CONTENT */}
+      <main className="main">
+        {/* OVERVIEW CARD */}
+        <section className="card heroCard">
+          <h1 className="cardTitle">Client Performance Overview</h1>
+          <p className="cardLead">
+            This portal is for active clients only. Numbers here are example
+            figures. Final payouts are always confirmed privately after each
+            cycle.
+          </p>
+
+          <div className="statsGrid">
+            {/* CAPITAL */}
+            <div className="statBox">
+              <div className="statLabel">Capital (example)</div>
+              <div className="statValue">£500</div>
+              <p className="statText">
+                You keep capital in your own account. We work on profit share
+                only.
+              </p>
+            </div>
+
+            {/* FRAMEWORK RISK */}
+            <div className="statBox">
+              <div className="statLabel">Framework risk</div>
+              <div className="statValue">Capital ÷ 14</div>
+              <p className="statText">
+                Around £35.70 risk per trade at £500 starting balance.
+              </p>
+            </div>
+
+            {/* TARGET SPLIT */}
+            <div className="statBox">
+              <div className="statLabel">Target split</div>
+              <div className="statValue">70% / 30%</div>
+              <p className="statText">
+                70% of realised profits to you, 30% to Winners Circle.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* EXAMPLE SESSION SNAPSHOT */}
+        <section className="card sessionCard">
+          <h2 className="sectionTitle">Example Session Snapshot</h2>
+          <p className="sectionText">
+            A simple view of how TP / SL and performance can be shown.
+          </p>
+
+          <div className="table">
+            <div className="row rowHead">
+              <div>Date</div>
+              <div>Pair</div>
+              <div>TP / SL</div>
+              <div className="right">Result</div>
+            </div>
+
+            <div className="row">
+              <div>Mon</div>
+              <div>XAUUSD</div>
+              <div>TP hit</div>
+              <div className="right pos">+1R</div>
+            </div>
+            <div className="row">
+              <div>Tue</div>
+              <div>XAUUSD</div>
+              <div>SL hit</div>
+              <div className="right neg">-1R</div>
+            </div>
+            <div className="row">
+              <div>Wed</div>
+              <div>XAUUSD</div>
+              <div>TP hit</div>
+              <div className="right pos">+1R</div>
+            </div>
+            <div className="row">
+              <div>Thu</div>
+              <div>XAUUSD</div>
+              <div>TP hit</div>
+              <div className="right pos">+1R</div>
+            </div>
+            <div className="row">
+              <div>Fri</div>
+              <div>XAUUSD</div>
+              <div>TP hit</div>
+              <div className="right pos">+1R</div>
+            </div>
+          </div>
+
+          <div className="weekResult">
+            <div className="weekLabel">Illustrative week result</div>
+            <div className="weekR">+4R</div>
+            <p className="weekText">
+              At £35.70 per R, that’s around £142 profit.
             </p>
 
-            <div className="statsGrid">
-              <div className="statBox">
-                <div className="label">Capital (example)</div>
-                <div className="value">£500</div>
-                <div className="hint">
-                  You keep capital in your own account. We work on profit share
-                  only.
-                </div>
-              </div>
-
-              <div className="statBox">
-                <div className="label">Framework Risk</div>
-                <div className="value">Capital ÷ 14</div>
-                <div className="hint">
-                  Around £35.70 risk per trade at £500 starting balance.
-                </div>
-              </div>
-
-              <div className="statBox">
-                <div className="label">Target Split</div>
-                <div className="value">70% / 30%</div>
-                <div className="hint">
-                  70% of realised profits to you, 30% to Winners Circle.
-                </div>
-              </div>
-            </div>
-
-            <div className="note">
-              None of this is financial advice. It simply shows how our
-              framework, risk and split are structured when you are onboarded.
-            </div>
-          </section>
-
-          {/* TRADE & PAYOUT VIEW */}
-          <section className="card trades">
-            <h2>Example Session Snapshot</h2>
-            <p className="muted small">
-              A simple view of how TP / SL and performance can be shown.
-            </p>
-
-            <div className="table">
-              <div className="row head">
-                <span>Date</span>
-                <span>Pair</span>
-                <span>TP / SL</span>
-                <span>Result</span>
-              </div>
-
-              <div className="row">
-                <span>Mon</span>
-                <span>XAUUSD</span>
-                <span>TP hit</span>
-                <span className="pos">+1R</span>
-              </div>
-              <div className="row">
-                <span>Tue</span>
-                <span>XAUUSD</span>
-                <span>SL hit</span>
-                <span className="neg">-1R</span>
-              </div>
-              <div className="row">
-                <span>Wed</span>
-                <span>XAUUSD</span>
-                <span>TP hit</span>
-                <span className="pos">+1R</span>
-              </div>
-              <div className="row">
-                <span>Thu</span>
-                <span>XAUUSD</span>
-                <span>TP hit</span>
-                <span className="pos">+1R</span>
-              </div>
-              <div className="row">
-                <span>Fri</span>
-                <span>XAUUSD</span>
-                <span>TP hit</span>
-                <span className="pos">+1R</span>
-              </div>
-            </div>
-
-            <div className="weekBox">
+            <div className="splitGrid">
               <div>
-                <div className="label">Illustrative Week Result</div>
-                <div className="value">+4R</div>
-                <div className="hint">
-                  At £35.70 per R, that’s around £142 profit.
-                </div>
+                <div className="splitLabel">70% to you</div>
+                <div className="splitValue">£99.40</div>
               </div>
-              <div className="split">
-                <div>
-                  <span className="splitLabel">70% to you</span>
-                  <span className="splitValue">£99.40</span>
-                </div>
-                <div>
-                  <span className="splitLabel">30% to Winners Circle</span>
-                  <span className="splitValue">£42.60</span>
-                </div>
+              <div>
+                <div className="splitLabel">30% to Winners Circle</div>
+                <div className="splitValue">£42.60</div>
               </div>
             </div>
+          </div>
+        </section>
 
-            <div className="divider" />
+        {/* PAYOUT + SPLIT SECTION */}
+        <section className="card payoutCard">
+          <h2 className="sectionTitle">Payout &amp; Profit Share</h2>
+          <p className="sectionText">
+            When a payout window opens, we confirm results together. Then you
+            choose a method below to send the 30% share.
+          </p>
 
-            <h3>Payout & Profit Share</h3>
-            <p className="muted small">
-              When a payout window opens, we confirm results together. Then you
-              choose a method below to send the 30% share.
-            </p>
+          <div className="btnGroup">
+            <button
+              className="primaryBtn"
+              type="button"
+              onClick={() => alert("Card payments are handled manually for now.")}
+            >
+              Pay 30% via Card
+            </button>
+            <button
+              className="secondaryBtn"
+              type="button"
+              onClick={() =>
+                alert("Crypto payments are handled manually for now.")
+              }
+            >
+              Pay 30% via Crypto
+            </button>
+          </div>
 
-            <div className="payMethods">
-              <button className="payBtn primary">Pay 30% via Card</button>
-              <button className="payBtn outline">Pay 30% via Crypto</button>
-            </div>
+          <p className="finePrint">
+            Payments are confirmed manually. This portal doesn’t move money or
+            connect directly to your broker. It is purely for structure,
+            tracking and communication.
+          </p>
+        </section>
 
-            <p className="tiny">
-              Payments are confirmed manually. This portal doesn’t process live
-              payments yet – it is a clean interface for tracking and
-              settlements.
-            </p>
-          </section>
-        </main>
-      </div>
+        <p className="disclaimer">
+          None of this is financial advice. It simply shows how our framework,
+          risk and split are structured when you are trading with your own
+          capital.
+        </p>
+      </main>
 
+      {/* STYLES */}
       <style jsx>{`
         .wrap {
           min-height: 100vh;
           background: radial-gradient(circle at top, #2a1f0f, #000);
+          color: #f7f0da;
           padding: 18px 14px 40px;
-          color: #f7f0d0;
         }
 
-        .header {
+        .topBar {
           display: flex;
           justify-content: space-between;
           align-items: center;
+          gap: 12px;
           margin-bottom: 26px;
-          border-bottom: 1px solid rgba(230, 195, 106, 0.25);
-          padding-bottom: 12px;
         }
 
-        .logoBlock {
-          display: flex;
+        .backLink {
+          display: inline-flex;
           align-items: center;
           gap: 10px;
           text-decoration: none;
+          color: #f7f0da;
+          font-size: 14px;
         }
 
         .logoImg {
           width: 40px;
           height: 40px;
-          border-radius: 10px;
-          object-fit: contain;
-          box-shadow: 0 0 24px rgba(230, 195, 106, 0.5);
+          border-radius: 12px;
+          box-shadow: 0 0 24px rgba(230, 195, 106, 0.35);
         }
 
-        .logoText {
-          font-size: 13px;
-          color: #e6c36a;
-        }
-
-        .tag {
-          font-size: 12px;
-          padding: 6px 10px;
+        .liveBadge {
+          padding: 10px 18px;
           border-radius: 999px;
-          border: 1px solid rgba(230, 195, 106, 0.5);
-          color: #e6c36a;
-          letter-spacing: 0.04em;
+          border: 1px solid rgba(230, 195, 106, 0.45);
+          background: radial-gradient(
+            circle at top,
+            rgba(230, 195, 106, 0.25),
+            rgba(0, 0, 0, 0.9)
+          );
+          font-size: 12px;
+          letter-spacing: 0.14em;
           text-transform: uppercase;
+          white-space: nowrap;
+        }
+
+        .liveBadge span {
+          color: #f7e3a5;
         }
 
         .main {
+          max-width: 900px;
+          margin: 0 auto;
           display: grid;
-          gap: 18px;
+          gap: 22px;
         }
 
         .card {
-          border-radius: 22px;
-          padding: 20px 18px;
+          border-radius: 26px;
+          border: 1px solid rgba(230, 195, 106, 0.35);
           background: radial-gradient(
-            circle at top,
-            rgba(230, 195, 106, 0.06),
-            rgba(0, 0, 0, 0.96)
+            circle at top left,
+            rgba(230, 195, 106, 0.12),
+            rgba(0, 0, 0, 0.92)
           );
-          border: 1px solid rgba(230, 195, 106, 0.3);
-          box-shadow: 0 0 60px rgba(230, 195, 106, 0.2);
+          padding: 22px 18px 20px;
+          box-shadow: 0 0 70px rgba(0, 0, 0, 0.6);
         }
 
-        .summary h1 {
-          font-size: 22px;
-          margin-bottom: 8px;
-          color: #e6c36a;
+        .heroCard {
+          margin-top: 8px;
         }
 
-        .muted {
-          color: #b8b29b;
-          line-height: 1.6;
-          margin-bottom: 12px;
+        .cardTitle {
+          font-size: 24px;
+          margin: 0 0 10px;
+          color: #f5e1a4;
         }
 
-        .muted.small {
-          font-size: 13px;
+        .cardLead {
+          margin: 0 0 20px;
+          font-size: 14px;
+          line-height: 1.7;
+          color: #e0d6ba;
         }
 
         .statsGrid {
           display: grid;
-          gap: 12px;
-          margin-top: 10px;
+          gap: 14px;
+        }
+
+        @media (min-width: 720px) {
+          .statsGrid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+          }
         }
 
         .statBox {
-          padding: 14px 12px;
-          border-radius: 18px;
-          background: rgba(0, 0, 0, 0.7);
-          border: 1px solid rgba(230, 195, 106, 0.25);
+          border-radius: 20px;
+          border: 1px solid rgba(230, 195, 106, 0.35);
+          background: linear-gradient(
+            180deg,
+            rgba(0, 0, 0, 0.85),
+            rgba(230, 195, 106, 0.04)
+          );
+          padding: 16px 16px 14px;
         }
 
-        .label {
+        .statLabel {
           font-size: 12px;
+          letter-spacing: 0.16em;
           text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: rgba(230, 195, 106, 0.85);
-          margin-bottom: 4px;
+          color: #cbb68a;
+          margin-bottom: 6px;
         }
 
-        .value {
-          font-size: 20px;
+        .statValue {
+          font-size: 22px;
           font-weight: 800;
-          color: #f4d47c;
-          margin-bottom: 4px;
+          color: #ffe29b;
+          margin-bottom: 6px;
         }
 
-        .hint {
-          font-size: 12px;
-          color: #a7a08a;
+        .statText {
+          font-size: 13px;
+          line-height: 1.7;
+          color: #ddd0b1;
+          margin: 0;
         }
 
-        .note {
-          margin-top: 14px;
-          font-size: 12px;
-          color: #a7a08a;
-        }
-
-        .trades h2 {
+        .sectionTitle {
           font-size: 18px;
-          margin-bottom: 4px;
-          color: #e6c36a;
+          margin: 0 0 8px;
+          color: #f5e1a4;
+        }
+
+        .sectionText {
+          font-size: 14px;
+          color: #e0d6ba;
+          margin: 0 0 16px;
         }
 
         .table {
-          margin-top: 14px;
-          border-radius: 16px;
+          margin-top: 4px;
+          border-radius: 18px;
           overflow: hidden;
-          border: 1px solid rgba(230, 195, 106, 0.25);
+          border: 1px solid rgba(230, 195, 106, 0.28);
+          background: radial-gradient(
+            circle at top,
+            rgba(0, 0, 0, 0.8),
+            rgba(0, 0, 0, 0.95)
+          );
         }
 
         .row {
           display: grid;
-          grid-template-columns: 1.1fr 1.3fr 1.4fr 1fr;
-          padding: 10px 12px;
+          grid-template-columns: 1.1fr 1.6fr 1.5fr 1fr;
+          padding: 10px 14px;
           font-size: 13px;
+          align-items: center;
         }
 
-        .row:nth-child(odd):not(.head) {
-          background: rgba(0, 0, 0, 0.6);
-        }
-
-        .row:nth-child(even):not(.head) {
-          background: rgba(230, 195, 106, 0.03);
-        }
-
-        .row.head {
-          background: rgba(0, 0, 0, 0.9);
+        .rowHead {
           font-weight: 700;
-          font-size: 12px;
-          text-transform: uppercase;
           letter-spacing: 0.08em;
-          color: rgba(230, 195, 106, 0.9);
+          text-transform: uppercase;
+          font-size: 11px;
+          background: linear-gradient(
+            90deg,
+            rgba(230, 195, 106, 0.18),
+            transparent
+          );
+        }
+
+        .row:nth-child(odd):not(.rowHead) {
+          background: rgba(255, 255, 255, 0.01);
+        }
+
+        .right {
+          text-align: right;
         }
 
         .pos {
-          color: #8cff9a;
+          color: #7bff9a;
           font-weight: 700;
         }
 
         .neg {
-          color: #ff8f8f;
+          color: #ff8d8d;
           font-weight: 700;
         }
 
-        .weekBox {
+        .weekResult {
           margin-top: 16px;
-          padding: 14px 12px;
-          border-radius: 18px;
-          background: linear-gradient(
-            135deg,
-            rgba(230, 195, 106, 0.18),
-            rgba(0, 0, 0, 0.85)
-          );
-          border: 1px solid rgba(230, 195, 106, 0.5);
-          display: grid;
-          gap: 10px;
         }
 
-        .split {
-          display: flex;
-          justify-content: space-between;
-          gap: 12px;
-          flex-wrap: wrap;
+        .weekLabel {
+          font-size: 11px;
+          text-transform: uppercase;
+          letter-spacing: 0.16em;
+          color: #cbb68a;
+          margin-bottom: 4px;
+        }
+
+        .weekR {
+          font-size: 22px;
+          font-weight: 900;
+          color: #ffe29b;
+          margin-bottom: 4px;
+        }
+
+        .weekText {
+          font-size: 13px;
+          color: #e0d6ba;
+          margin: 0 0 10px;
+        }
+
+        .splitGrid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 14px;
         }
 
         .splitLabel {
-          display: block;
           font-size: 11px;
-          color: #f4e7c0;
-          opacity: 0.9;
+          text-transform: uppercase;
+          letter-spacing: 0.12em;
+          color: #cbb68a;
+          margin-bottom: 2px;
         }
 
         .splitValue {
-          display: block;
-          font-size: 15px;
+          font-size: 18px;
           font-weight: 800;
-          color: #f4d47c;
+          color: #ffe29b;
         }
 
-        .divider {
-          height: 1px;
-          margin: 18px 0 12px;
-          background: rgba(230, 195, 106, 0.25);
+        .payoutCard {
+          margin-top: 4px;
         }
 
-        .payMethods {
-          display: flex;
-          flex-direction: column;
+        .btnGroup {
+          display: grid;
           gap: 10px;
-          margin-top: 10px;
-          margin-bottom: 8px;
+          margin: 14px 0 10px;
         }
 
-        .payBtn {
+        @media (min-width: 640px) {
+          .btnGroup {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+
+        .primaryBtn,
+        .secondaryBtn {
           border-radius: 999px;
-          padding: 12px 16px;
-          font-size: 14px;
+          padding: 14px 18px;
+          border: none;
           font-weight: 800;
-          border: 1px solid rgba(230, 195, 106, 0.7);
-          background: transparent;
-          color: #f4e7c0;
+          font-size: 14px;
+          cursor: pointer;
         }
 
-        .payBtn.primary {
+        .primaryBtn {
           background: linear-gradient(135deg, #e6c36a, #b8963f);
           color: #000;
         }
 
-        .payBtn.outline {
-          background: rgba(0, 0, 0, 0.6);
+        .secondaryBtn {
+          background: transparent;
+          border: 1px solid rgba(230, 195, 106, 0.45);
+          color: #f7e1aa;
         }
 
-        .tiny {
+        .finePrint {
+          margin-top: 8px;
+          font-size: 12px;
+          color: #cbbfa5;
+          line-height: 1.7;
+        }
+
+        .disclaimer {
+          margin-top: 10px;
           font-size: 11px;
-          color: #918a73;
-          margin-top: 4px;
-        }
-
-        @media (min-width: 900px) {
-          .wrap {
-            padding: 28px 40px 40px;
-          }
-
-          .main {
-            grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-          }
-
-          .summary h1 {
-            font-size: 26px;
-          }
-
-          .row {
-            font-size: 14px;
-          }
+          line-height: 1.7;
+          color: #a99b7c;
+          text-align: center;
         }
       `}</style>
-    </>
+    </div>
   );
 }
