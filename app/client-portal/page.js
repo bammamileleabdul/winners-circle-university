@@ -140,7 +140,9 @@ export default function ClientPortal() {
             <button
               className="primaryBtn"
               type="button"
-              onClick={() => alert("Card payments are handled manually for now.")}
+              onClick={() =>
+                alert("Card payments are handled manually for now.")
+              }
             >
               Pay 30% via Card
             </button>
