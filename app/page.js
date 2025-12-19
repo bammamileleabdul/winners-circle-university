@@ -1,80 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
+
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Waitlist (we still keep state even though Formspree handles submit)
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState("");
-
-  // Interactive reveals
+  // manifesto + vvip toggles
   const [manifestoOpen, setManifestoOpen] = useState(false);
   const [vvipOpen, setVvipOpen] = useState(false);
-
-  // MINI LELEFX
-  const [aiOpen, setAiOpen] = useState(false);
-  const [aiInput, setAiInput] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiMessages, setAiMessages] = useState([
-    {
-      role: "assistant",
-      content:
-        "I’m mini lelefx. Calm. Precise. Ask me anything — principles, VVIP, or risk math (capital ÷ 14).",
-    },
-  ]);
-
-  const sendAi = async (e) => {
-    e.preventDefault();
-    if (!aiInput.trim() || aiLoading) return;
-
-    const userMsg = { role: "user", content: aiInput.trim() };
-    setAiMessages((m) => [...m, userMsg]);
-    setAiInput("");
-    setAiLoading(true);
-
-    try {
-      const res = await fetch("/api/mini-lelefx", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMsg.content }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setAiMessages((m) => [
-          ...m,
-          {
-            role: "assistant",
-            content:
-              data?.error ||
-              "mini lelefx hit a connection issue. Re-center, then try again in a moment.",
-          },
-        ]);
-      } else {
-        setAiMessages((m) => [
-          ...m,
-          {
-            role: "assistant",
-            content: data.reply || "…",
-          },
-        ]);
-      }
-    } catch (err) {
-      setAiMessages((m) => [
-        ...m,
-        {
-          role: "assistant",
-          content:
-            "mini lelefx hit a connection issue. Re-center, then try again in a moment.",
-        },
-      ]);
-    } finally {
-      setAiLoading(false);
-    }
-  };
 
   return (
     <>
@@ -104,9 +40,14 @@ export default function Home() {
             <a href="#overview" onClick={() => setMenuOpen(false)}>
               Overview
             </a>
+
             <a href="#how" onClick={() => setMenuOpen(false)}>
               How It Works
             </a>
+            <a href="/how" onClick={() => setMenuOpen(false)}>
+              How (Full Page)
+            </a>
+
             <a href="#principles" onClick={() => setMenuOpen(false)}>
               Principles
             </a>
@@ -116,9 +57,13 @@ export default function Home() {
             <a href="#vvip" onClick={() => setMenuOpen(false)}>
               VVIP Access
             </a>
-            {/* NEW: client portal link */}
+
             <a href="/client-portal" onClick={() => setMenuOpen(false)}>
               Client Portal
+            </a>
+
+            <a href="/ai" onClick={() => setMenuOpen(false)}>
+              mini lelefx (AI)
             </a>
           </nav>
         </div>
@@ -219,12 +164,16 @@ export default function Home() {
             },
             {
               t: "Consistency Creates Inevitability",
-              d: "Repeat what works. Remove what doesn’t. Stay aligned.",
+              d: "Same rules, every session. Systems beat moods.",
             },
-          ].map((p) => (
-            <div key={p.t} className="luxCard">
-              <div className="luxTitle">{p.t}</div>
-              <div className="luxText">{p.d}</div>
+            {
+              t: "No Hype, Only Proof",
+              d: "We focus on results produced by rules — not noise.",
+            },
+          ].map((x) => (
+            <div key={x.t} className="luxCard">
+              <div className="luxTitle">{x.t}</div>
+              <div className="luxText">{x.d}</div>
             </div>
           ))}
         </div>
@@ -235,46 +184,35 @@ export default function Home() {
         <h2>Manifesto</h2>
 
         {!manifestoOpen ? (
-          <button className="curtainBtn" onClick={() => setManifestoOpen(true)}>
-            This was not written for everyone
+          <button
+            className="manifestoBtn"
+            onClick={() => setManifestoOpen(true)}
+          >
+            Open the Manifesto
           </button>
         ) : (
           <div className="manifestoCard">
-            <div className="manifestoHead">Founder’s Manifesto</div>
-            <div className="manifestoBody">
-              <p>
-                Winners Circle was not built for excitement. <br />
-                It was built for longevity.
-              </p>
-              <p>
-                I’ve seen what impatience does to talented people. <br />
-                I’ve seen discipline quietly outperform brilliance.
-              </p>
-              <p>
-                This framework exists to remove noise, emotion, and ego —
-                replacing them with structure, risk awareness, and clarity.
-              </p>
-              <p>
-                If you’re here to rush, impress, or gamble — this won’t work.{" "}
-                <br />
-                If you’re here to compound patiently — you’re in the right place.
-              </p>
+            <p className="manifestoText">
+              We don’t chase trades.
+              <br />
+              We build frameworks.
+              <br />
+              We remove emotion.
+              <br />
+              We protect capital.
+              <br />
+              We let patience compound.
+            </p>
 
-              <div className="signature">— Lelefx, Founder</div>
-
-              <button
-                className="ghostBtn"
-                onClick={() => setManifestoOpen(false)}
-              >
-                Close
-              </button>
-            </div>
+            <button className="ghostBtn" onClick={() => setManifestoOpen(false)}>
+              Close
+            </button>
           </div>
         )}
       </section>
 
       {/* VVIP */}
-      <section id="vvip" className="section last">
+      <section id="vvip" className="section">
         <h2>VVIP Access</h2>
 
         {!vvipOpen ? (
@@ -303,65 +241,22 @@ export default function Home() {
         )}
       </section>
 
-      {/* MINI LELEFX ROBOT BUTTON */}
-      <button className="aiFab" onClick={() => setAiOpen(true)}>
-        mini lelefx
+      {/* MINI LELEFX ROBOT BUTTON → /ai */}
+      <button
+        className="aiFab"
+        onClick={() => router.push("/ai")}
+        aria-label="Open mini lelefx"
+        title="mini lelefx"
+      >
+        <svg
+          className="aiFabIcon"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path d="M10 2a1 1 0 0 1 1 1v1h2V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v7a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm-3 4a1 1 0 0 0-1 1v7a3 3 0 0 0 3 3h7a3 3 0 0 0 3-3V7a1 1 0 0 0-1-1H7Zm2 4a1.25 1.25 0 1 1 0 2.5A1.25 1.25 0 0 1 9 10Zm6 0a1.25 1.25 0 1 1 0 2.5A1.25 1.25 0 0 1 15 10Z" />
+        </svg>
       </button>
-
-      {aiOpen && (
-        <div className="aiOverlay" onClick={() => setAiOpen(false)}>
-          <div className="aiModal" onClick={(e) => e.stopPropagation()}>
-            <div className="aiHeader">
-              <div className="aiHeaderLeft">
-                <div className="aiRobot">
-                  <div className="aiRobotFace" />
-                  <div className="aiRobotGlow" />
-                </div>
-                <div>
-                  <div className="aiTitle">mini lelefx</div>
-                  <div className="aiSub">
-                    Calm. Precise. Luxury execution.
-                  </div>
-                </div>
-              </div>
-              <button className="aiClose" onClick={() => setAiOpen(false)}>
-                ×
-              </button>
-            </div>
-
-            <div className="aiBody">
-              {aiMessages.map((m, i) => (
-                <div
-                  key={i}
-                  className={`aiMsg ${m.role === "user" ? "aiUser" : "aiBot"}`}
-                >
-                  {m.content}
-                </div>
-              ))}
-              {aiLoading && (
-                <div className="aiMsg aiBot">Thinking…</div>
-              )}
-            </div>
-
-            <form className="aiFooter" onSubmit={sendAi}>
-              <input
-                className="aiInput"
-                value={aiInput}
-                onChange={(e) => setAiInput(e.target.value)}
-                placeholder="Ask mini lelefx…"
-                required
-              />
-              <button className="aiSend" type="submit" disabled={aiLoading}>
-                Send
-              </button>
-            </form>
-
-            <div className="aiNote">
-              Not financial advice. Process only.
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* STYLES */}
       <style jsx>{`
@@ -463,59 +358,49 @@ export default function Home() {
           z-index: 1;
         }
 
-        .hero h1 {
-          color: #e6c36a;
-          font-size: 40px;
-          margin: 0 0 16px;
-          line-height: 1.12;
+        h1 {
+          margin: 0;
+          font-size: 42px;
+          letter-spacing: -0.02em;
           position: relative;
           z-index: 1;
         }
 
         .heroP {
-          color: #cfcfcf;
-          max-width: 640px;
-          margin: 0 auto 26px;
+          max-width: 720px;
+          margin: 16px auto 28px;
+          color: rgba(255, 255, 255, 0.75);
           line-height: 1.7;
-          font-size: 15px;
           position: relative;
           z-index: 1;
         }
 
         .waitlistForm {
           display: flex;
-          flex-direction: column;
-          gap: 12px;
-          max-width: 380px;
-          margin: 0 auto;
+          gap: 10px;
+          justify-content: center;
+          flex-wrap: wrap;
           position: relative;
           z-index: 1;
         }
 
         .waitlistInput {
+          min-width: 260px;
           padding: 14px 16px;
-          border-radius: 16px;
-          border: 1px solid rgba(230, 195, 106, 0.35);
-          background: rgba(0, 0, 0, 0.55);
+          border-radius: 14px;
+          border: 1px solid rgba(230, 195, 106, 0.18);
+          background: rgba(255, 255, 255, 0.04);
           color: #fff;
-          font-size: 15px;
           outline: none;
         }
 
         .goldBtn {
           background: linear-gradient(135deg, #e6c36a, #b8963f);
           border: none;
-          padding: 14px 18px;
-          border-radius: 999px;
-          font-size: 15px;
-          font-weight: 800;
+          padding: 14px 22px;
+          border-radius: 14px;
+          font-weight: 900;
           color: #000;
-        }
-
-        .status {
-          color: #e6c36a;
-          font-size: 13px;
-          margin: 6px 0 0;
         }
 
         .hintRow {
@@ -526,386 +411,193 @@ export default function Home() {
 
         .ghostLink {
           color: rgba(230, 195, 106, 0.9);
-          text-decoration: none;
-          font-size: 14px;
-          border-bottom: 1px solid rgba(230, 195, 106, 0.3);
-          padding-bottom: 2px;
+          font-weight: 700;
         }
 
         .section {
-          padding: 80px 18px;
-          text-align: center;
-          background: radial-gradient(
-            circle at top,
-            rgba(230, 195, 106, 0.06),
-            #000
-          );
+          padding: 64px 18px;
+          max-width: 980px;
+          margin: 0 auto;
         }
 
-        .section h2 {
+        h2 {
+          margin: 0 0 22px;
           color: #e6c36a;
-          margin-bottom: 34px;
-          font-size: 28px;
+          font-size: 24px;
+          letter-spacing: 0.02em;
         }
 
         .floatWrap {
           display: grid;
-          gap: 16px;
-          max-width: 520px;
-          margin: 0 auto;
+          gap: 14px;
+          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
         }
 
         .floatCard {
-          background: linear-gradient(
-            180deg,
-            rgba(0, 0, 0, 0.72),
-            rgba(0, 0, 0, 0.92)
-          );
-          border: 1px solid rgba(230, 195, 106, 0.35);
-          border-radius: 22px;
-          padding: 24px;
-          box-shadow: 0 0 40px rgba(230, 195, 106, 0.12);
-          text-align: left;
+          border: 1px solid rgba(230, 195, 106, 0.14);
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: 18px;
+          padding: 18px;
         }
 
         .floatTitle {
-          color: #e6c36a;
-          font-weight: 800;
-          font-size: 18px;
-          margin-bottom: 10px;
+          font-weight: 900;
+          color: rgba(255, 255, 255, 0.92);
+          margin-bottom: 8px;
         }
 
         .floatText {
-          color: #d7d7d7;
+          color: rgba(255, 255, 255, 0.68);
           line-height: 1.6;
-          font-size: 14px;
         }
 
         .luxGrid {
           display: grid;
           gap: 14px;
-          max-width: 700px;
-          margin: 0 auto;
+          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         }
 
         .luxCard {
-          background: linear-gradient(
-            180deg,
-            rgba(230, 195, 106, 0.08),
-            rgba(0, 0, 0, 0.9)
-          );
-          border: 1px solid rgba(230, 195, 106, 0.32);
-          border-radius: 22px;
-          padding: 26px;
-          text-align: left;
-          box-shadow: 0 0 55px rgba(230, 195, 106, 0.1);
+          border: 1px solid rgba(230, 195, 106, 0.14);
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: 18px;
+          padding: 18px;
         }
 
         .luxTitle {
-          color: #e6c36a;
           font-weight: 900;
-          font-size: 16px;
-          letter-spacing: 0.02em;
+          color: rgba(255, 255, 255, 0.92);
           margin-bottom: 8px;
         }
 
         .luxText {
-          color: #d8d2b6;
-          font-size: 14px;
-          line-height: 1.7;
+          color: rgba(255, 255, 255, 0.68);
+          line-height: 1.6;
         }
 
-        .curtainBtn {
-          background: transparent;
-          border: 1px solid rgba(230, 195, 106, 0.55);
-          color: #e6c36a;
-          padding: 16px 22px;
-          border-radius: 999px;
-          font-weight: 800;
-        }
-
-        .manifestoCard {
-          max-width: 760px;
-          margin: 0 auto;
-          background: linear-gradient(
-            180deg,
-            rgba(230, 195, 106, 0.1),
-            rgba(0, 0, 0, 0.92)
-          );
-          border: 1px solid rgba(230, 195, 106, 0.35);
-          border-radius: 26px;
-          padding: 26px;
-          box-shadow: 0 0 80px rgba(230, 195, 106, 0.14);
-          text-align: left;
-        }
-
-        .manifestoHead {
-          color: #e6c36a;
-          font-weight: 900;
-          font-size: 20px;
-          margin-bottom: 12px;
-        }
-
-        .manifestoBody p {
-          color: #d8d2b6;
-          line-height: 1.8;
-          font-size: 14px;
-          margin: 12px 0;
-        }
-
-        .signature {
-          margin-top: 16px;
-          color: #e6c36a;
-          font-weight: 800;
-        }
-
+        .manifestoBtn,
         .vvipBtn {
-          background: linear-gradient(135deg, #e6c36a, #8f6b1f);
+          background: linear-gradient(135deg, #e6c36a, #b8963f);
           border: none;
-          padding: 16px 26px;
-          border-radius: 999px;
+          padding: 14px 22px;
+          border-radius: 14px;
           font-weight: 900;
           color: #000;
-          box-shadow: 0 0 60px rgba(230, 195, 106, 0.15);
         }
 
+        .ghostBtn {
+          background: transparent;
+          border: 1px solid rgba(230, 195, 106, 0.3);
+          color: #e6c36a;
+          padding: 12px 18px;
+          border-radius: 14px;
+          font-weight: 800;
+        }
+
+        .manifestoCard,
         .vvipCard {
-          max-width: 740px;
-          margin: 0 auto;
-          background: radial-gradient(
-            circle at top,
-            rgba(230, 195, 106, 0.12),
-            rgba(0, 0, 0, 0.92)
-          );
-          border: 1px solid rgba(230, 195, 106, 0.4);
-          border-radius: 26px;
-          padding: 28px;
-          box-shadow: 0 0 95px rgba(230, 195, 106, 0.18);
-          text-align: left;
+          border: 1px solid rgba(230, 195, 106, 0.14);
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: 18px;
+          padding: 18px;
+        }
+
+        .manifestoText {
+          margin: 0 0 14px;
+          line-height: 1.8;
+          color: rgba(255, 255, 255, 0.8);
+          white-space: pre-line;
         }
 
         .vvipHead {
           color: #e6c36a;
           font-weight: 900;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          font-size: 12px;
-          margin-bottom: 14px;
+          margin-bottom: 10px;
         }
 
         .vvipText {
-          color: #d8d2b6;
-          line-height: 1.8;
-          font-size: 14px;
-          margin: 0 0 14px;
+          color: rgba(255, 255, 255, 0.78);
+          line-height: 1.7;
+          margin: 0 0 12px;
         }
 
         .vvipDivider {
           height: 1px;
-          background: rgba(230, 195, 106, 0.25);
-          margin: 14px 0;
+          background: rgba(230, 195, 106, 0.18);
+          margin: 12px 0;
         }
 
         .vvipTextMuted {
-          color: #a7a08a;
-          line-height: 1.7;
-          font-size: 13px;
+          color: rgba(255, 255, 255, 0.62);
           margin: 0 0 14px;
         }
 
-        .ghostBtn {
-          background: transparent;
-          border: 1px solid rgba(230, 195, 106, 0.35);
-          color: #e6c36a;
-          padding: 12px 18px;
-          border-radius: 999px;
-          font-weight: 800;
-          margin-top: 10px;
-        }
-
-        .last {
-          padding-bottom: 110px;
-        }
-
-        /* MINI LELEFX ROBOT BUTTON + MODAL */
+        /* AI FAB (bot icon) */
         .aiFab {
           position: fixed;
           right: 16px;
           bottom: 16px;
           z-index: 9998;
-          background: linear-gradient(135deg, #e6c36a, #8f6b1f);
-          border: none;
-          padding: 12px 16px;
+          width: 62px;
+          height: 62px;
           border-radius: 999px;
-          font-weight: 900;
-          color: #000;
-          box-shadow: 0 0 70px rgba(230, 195, 106, 0.22);
-          cursor: pointer;
-        }
-
-        .aiOverlay {
-          position: fixed;
-          inset: 0;
-          z-index: 9999;
-          background: rgba(0, 0, 0, 0.82);
-          backdrop-filter: blur(10px);
+          padding: 0;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 18px;
-        }
-
-        .aiModal {
-          width: 100%;
-          max-width: 520px;
-          border-radius: 24px;
-          border: 1px solid rgba(230, 195, 106, 0.35);
-          background: linear-gradient(
-            180deg,
-            rgba(230, 195, 106, 0.08),
-            rgba(0, 0, 0, 0.95)
-          );
-          box-shadow: 0 0 110px rgba(230, 195, 106, 0.18);
-          overflow: hidden;
-        }
-
-        .aiHeader {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 14px 16px;
-          border-bottom: 1px solid rgba(230, 195, 106, 0.18);
-        }
-
-        .aiHeaderLeft {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .aiRobot {
-          position: relative;
-          width: 32px;
-          height: 32px;
-          border-radius: 12px;
           background: radial-gradient(
-            circle at top,
-            rgba(230, 195, 106, 0.5),
-            #120d05
+            circle at 30% 30%,
+            #f3d27a,
+            #c9a24d 55%,
+            #1a1408 100%
           );
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
+          border: 1px solid rgba(230, 195, 106, 0.55);
+          box-shadow: 0 0 90px rgba(230, 195, 106, 0.22);
+          cursor: pointer;
+          transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
 
-        .aiRobotFace {
-          width: 18px;
-          height: 18px;
-          border-radius: 6px;
-          border: 1px solid rgba(0, 0, 0, 0.8);
-          background: radial-gradient(circle at top, #fff7d1, #c6a858);
+        .aiFab:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 0 110px rgba(230, 195, 106, 0.3);
         }
 
-        .aiRobotGlow {
+        .aiFab:focus-visible {
+          outline: 2px solid rgba(230, 195, 106, 0.7);
+          outline-offset: 4px;
+        }
+
+        .aiFabIcon {
+          width: 30px;
+          height: 30px;
+          fill: #0b0b0b;
+          filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.35));
+        }
+
+        .aiFab::after {
+          content: "mini lelefx";
           position: absolute;
-          inset: -12px;
-          border-radius: inherit;
-          box-shadow: 0 0 24px rgba(230, 195, 106, 0.7);
-          opacity: 0.3;
-        }
-
-        .aiTitle {
-          color: #e6c36a;
-          font-weight: 900;
-          letter-spacing: 0.02em;
-          font-size: 16px;
-        }
-
-        .aiSub {
-          color: rgba(216, 210, 182, 0.9);
-          font-size: 12px;
-          margin-top: 2px;
-        }
-
-        .aiClose {
-          background: transparent;
-          border: 1px solid rgba(230, 195, 106, 0.35);
-          color: #e6c36a;
-          width: 34px;
-          height: 34px;
+          right: 72px;
+          bottom: 14px;
+          padding: 8px 10px;
           border-radius: 999px;
-          font-size: 18px;
-          line-height: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-        }
-
-        .aiBody {
-          padding: 14px;
-          max-height: 52vh;
-          overflow: auto;
-          display: grid;
-          gap: 10px;
-        }
-
-        .aiMsg {
-          padding: 12px 14px;
-          border-radius: 16px;
-          line-height: 1.6;
-          font-size: 14px;
-          white-space: pre-wrap;
-        }
-
-        .aiBot {
-          background: rgba(0, 0, 0, 0.55);
-          border: 1px solid rgba(230, 195, 106, 0.18);
-          color: #d8d2b6;
-        }
-
-        .aiUser {
-          background: linear-gradient(
-            180deg,
-            rgba(230, 195, 106, 0.15),
-            rgba(0, 0, 0, 0.65)
-          );
+          background: rgba(0, 0, 0, 0.88);
           border: 1px solid rgba(230, 195, 106, 0.25);
-          color: #f1e7c6;
-        }
-
-        .aiFooter {
-          display: flex;
-          gap: 10px;
-          padding: 14px;
-          border-top: 1px solid rgba(230, 195, 106, 0.18);
-        }
-
-        .aiInput {
-          flex: 1;
-          padding: 12px 14px;
-          border-radius: 16px;
-          border: 1px solid rgba(230, 195, 106, 0.28);
-          background: rgba(0, 0, 0, 0.55);
-          color: #fff;
-          outline: none;
-        }
-
-        .aiSend {
-          background: linear-gradient(135deg, #e6c36a, #b8963f);
-          border: none;
-          padding: 12px 14px;
-          border-radius: 16px;
-          font-weight: 900;
-          color: #000;
-          cursor: pointer;
-        }
-
-        .aiNote {
-          padding: 0 14px 14px;
-          color: rgba(167, 160, 138, 0.9);
+          color: #e6c36a;
           font-size: 12px;
+          font-weight: 800;
+          letter-spacing: 0.03em;
+          opacity: 0;
+          transform: translateX(8px);
+          pointer-events: none;
+          transition: opacity 0.15s ease, transform 0.15s ease;
+          white-space: nowrap;
+        }
+
+        .aiFab:hover::after,
+        .aiFab:focus-visible::after {
+          opacity: 1;
+          transform: translateX(0);
         }
       `}</style>
     </>
