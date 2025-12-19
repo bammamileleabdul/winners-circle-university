@@ -93,7 +93,20 @@ function miniLelefxReply(rawMessage) {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const message = body?.message;
+
+    // Accept either:
+    // 1) { message: "..." }  (used by the homepage modal)
+    // 2) { messages: [{role, content}, ...] } (used by /ai page)
+    let message = "";
+
+    if (typeof body?.message === "string") {
+      message = body.message;
+    } else if (Array.isArray(body?.messages)) {
+      const lastUser = [...body.messages]
+        .reverse()
+        .find((m) => m?.role === "user" && typeof m?.content === "string");
+      message = lastUser?.content || "";
+    }
 
     if (!message || typeof message !== "string" || message.trim().length < 3) {
       return NextResponse.json({
