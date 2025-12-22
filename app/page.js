@@ -1144,3 +1144,17 @@ export default function Home() {
     </>
   );
 }
+/* --- Mobile polish / prevent AI button blocking menu --- */
+.menuOverlay{
+  z-index: 10000 !important;
+  padding-bottom: calc(120px + env(safe-area-inset-bottom)) !important;
+}
+
+.aiFab{
+  bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+}
+
+/* keep AI modal above everything (just in case) */
+.aiOverlay{
+  z-index: 10001 !important;
+}
