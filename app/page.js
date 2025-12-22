@@ -80,13 +80,29 @@ export default function Home() {
     <>
       {/* HEADER */}
       <header className="header">
-        <div className="logo">
+        <a className="logo" href="/" aria-label="Winners Circle University">
           <img
             src="/emblem.jpg"
             alt="Winners Circle Emblem"
             className="logoImg"
           />
-        </div>
+          <span className="logoText">Winners Circle University</span>
+        </a>
+
+        {/* DESKTOP NAV (shows on laptops) */}
+        <nav className="desktopNav" aria-label="Main navigation">
+          <a href="#overview">Overview</a>
+          <a href="/how">How It Works</a>
+          <a href="/access-trading">Access &amp; Trading</a>
+          <a href="/get-started">Get Started</a>
+          <a href="/waitlist">Waitlist</a>
+
+          <span className="navDivider" />
+
+          <a className="navGold" href="/clientportal">Client Portal</a>
+          <a className="navGold" href="/login">Login</a>
+          <a className="navGold" href="/signup">Sign Up</a>
+        </nav>
 
         <button className="menuBtn" onClick={() => setMenuOpen(true)}>
           ☰
@@ -127,6 +143,15 @@ export default function Home() {
             </a>
             <a href="/clientportal" onClick={() => setMenuOpen(false)}>
               Client Portal
+            </a>
+
+            <div className="menuDivider" />
+
+            <a href="/login" onClick={() => setMenuOpen(false)}>
+              Login
+            </a>
+            <a href="/signup" onClick={() => setMenuOpen(false)}>
+              Sign Up
             </a>
           </nav>
         </div>
@@ -178,6 +203,12 @@ export default function Home() {
           </a>
           <a className="ghostBtn" href="/clientportal">
             Client Portal
+          </a>
+          <a className="ghostBtn" href="/login">
+            Login
+          </a>
+          <a className="ghostBtn" href="/signup">
+            Sign Up
           </a>
         </div>
 
@@ -381,7 +412,73 @@ export default function Home() {
           border-bottom: 1px solid rgba(230, 195, 106, 0.18);
         }
 
-        .logoImg {
+        
+        .logo {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          text-decoration: none;
+          min-width: 0;
+        }
+
+        .logoText {
+          color: rgba(247, 240, 218, 0.92);
+          font-weight: 900;
+          letter-spacing: 0.02em;
+          font-size: 14px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 48vw;
+        }
+
+        .desktopNav {
+          display: none;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .desktopNav a {
+          color: rgba(247, 240, 218, 0.9);
+          text-decoration: none;
+          font-weight: 800;
+          font-size: 13px;
+          padding: 10px 10px;
+          border-radius: 12px;
+          border: 1px solid transparent;
+          white-space: nowrap;
+        }
+
+        .desktopNav a:hover {
+          border-color: rgba(230, 195, 106, 0.28);
+          background: rgba(230, 195, 106, 0.06);
+        }
+
+        .navGold {
+          color: rgba(230, 195, 106, 0.95) !important;
+          border: 1px solid rgba(230, 195, 106, 0.3) !important;
+          background: rgba(0, 0, 0, 0.35);
+        }
+
+        .navDivider {
+          width: 1px;
+          height: 24px;
+          background: rgba(230, 195, 106, 0.18);
+          margin: 0 2px;
+        }
+
+        @media (min-width: 980px) {
+          .desktopNav {
+            display: inline-flex;
+          }
+          .menuBtn {
+            display: none;
+          }
+          .logoText {
+            max-width: 260px;
+          }
+        }
+.logoImg {
           width: 42px;
           height: 42px;
           border-radius: 14px;
@@ -432,7 +529,14 @@ export default function Home() {
           font-weight: 700;
         }
 
-        .hero {
+        
+        .menuDivider {
+          height: 1px;
+          background: rgba(230, 195, 106, 0.22);
+          margin: 6px 0;
+          border-radius: 999px;
+        }
+.hero {
           min-height: 100vh;
           padding: 110px 16px 60px;
           background: radial-gradient(circle at top, #1a1408, #000);
