@@ -177,14 +177,18 @@ export default function ClientPortal() {
           <span>Back to main site</span>
         </a>
 
-        <div className="rightTop">
-          <div className="liveBadge">
-            <span>LIVE CLIENT PORTAL · 70/30 SPLIT</span>
-          </div>
-          <button className="logoutBtn" type="button" onClick={logout}>
-            Logout
-          </button>
-        </div>
+      <div className="rightTop">
+  <div className="liveBadge">
+    <span>LIVE CLIENT PORTAL · 70/30 SPLIT</span>
+  </div>
+
+  <a className="pairBtn" href="/pair">Pair EA</a>
+
+  <button className="logoutBtn" type="button" onClick={logout}>
+    Logout
+  </button>
+</div>
+
       </header>
 
       {/* MAIN CONTENT */}
