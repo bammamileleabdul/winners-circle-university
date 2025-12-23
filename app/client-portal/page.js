@@ -177,18 +177,19 @@ export default function ClientPortal() {
           <span>Back to main site</span>
         </a>
 
-      <div className="rightTop">
-  <div className="liveBadge">
-    <span>LIVE CLIENT PORTAL · 70/30 SPLIT</span>
-  </div>
+        <div className="rightTop">
+          <div className="liveBadge">
+            <span>LIVE CLIENT PORTAL · 70/30 SPLIT</span>
+          </div>
 
-  <a className="pairBtn" href="/pair">Pair EA</a>
+          <a className="pairBtn" href="/pair">
+            Pair EA
+          </a>
 
-  <button className="logoutBtn" type="button" onClick={logout}>
-    Logout
-  </button>
-</div>
-
+          <button className="logoutBtn" type="button" onClick={logout}>
+            Logout
+          </button>
+        </div>
       </header>
 
       {/* MAIN CONTENT */}
@@ -260,15 +261,13 @@ export default function ClientPortal() {
                 {pnl >= 0 ? "+" : "-"}£{fmt(Math.abs(pnl))}
               </div>
               <p className="statText">
-                {pnl > 0
-                  ? `WCU 30%: £${fmt(wcu30)} · Your 70%: £${fmt(client70)}`
-                  : "No commission on losses."}
+                {pnl > 0 ? `WCU 30%: £${fmt(wcu30)} · Your 70%: £${fmt(client70)}` : "No commission on losses."}
               </p>
             </div>
           </div>
         </section>
 
-        {/* PAYOUT + SPLIT SECTION (same design) */}
+        {/* PAYOUT + SPLIT SECTION */}
         <section className="card payoutCard">
           <h2 className="sectionTitle">30% Commission</h2>
           <p className="sectionText">
@@ -282,25 +281,17 @@ export default function ClientPortal() {
           </div>
 
           <div className="btnGroup">
-            <button
-              className="primaryBtn"
-              type="button"
-              onClick={() => alert("Card payments are handled manually for now.")}
-            >
+            <button className="primaryBtn" type="button" onClick={() => alert("Card payments are handled manually for now.")}>
               Pay 30% via Card
             </button>
-            <button
-              className="secondaryBtn"
-              type="button"
-              onClick={() => alert("Crypto payments are handled manually for now.")}
-            >
+            <button className="secondaryBtn" type="button" onClick={() => alert("Crypto payments are handled manually for now.")}>
               Pay 30% via Crypto
             </button>
           </div>
 
           <p className="finePrint">
-            Payments are confirmed manually. This portal doesn’t move money or connect directly
-            to your broker yet. It is for structure and tracking.
+            Payments are confirmed manually. This portal doesn’t move money or connect directly to your broker yet.
+            It is for structure and tracking.
           </p>
         </section>
 
@@ -309,7 +300,6 @@ export default function ClientPortal() {
         </p>
       </main>
 
-      {/* STYLES */}
       <style jsx>{`
         .wrap {
           min-height: 100vh;
@@ -355,11 +345,7 @@ export default function ClientPortal() {
           padding: 10px 18px;
           border-radius: 999px;
           border: 1px solid rgba(230, 195, 106, 0.45);
-          background: radial-gradient(
-            circle at top,
-            rgba(230, 195, 106, 0.25),
-            rgba(0, 0, 0, 0.9)
-          );
+          background: radial-gradient(circle at top, rgba(230, 195, 106, 0.25), rgba(0, 0, 0, 0.9));
           font-size: 12px;
           letter-spacing: 0.14em;
           text-transform: uppercase;
@@ -370,6 +356,25 @@ export default function ClientPortal() {
           color: #f7e3a5;
         }
 
+        .pairBtn {
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background: transparent;
+          border: 1px solid rgba(230, 195, 106, 0.45);
+          color: #f7e1aa;
+          padding: 10px 14px;
+          border-radius: 999px;
+          font-weight: 900;
+          cursor: pointer;
+          white-space: nowrap;
+        }
+        .pairBtn:hover {
+          background: rgba(230, 195, 106, 0.08);
+          border-color: rgba(230, 195, 106, 0.65);
+        }
+
         .logoutBtn {
           background: transparent;
           border: 1px solid rgba(230, 195, 106, 0.45);
@@ -378,6 +383,11 @@ export default function ClientPortal() {
           border-radius: 999px;
           font-weight: 900;
           cursor: pointer;
+          white-space: nowrap;
+        }
+        .logoutBtn:hover {
+          background: rgba(230, 195, 106, 0.08);
+          border-color: rgba(230, 195, 106, 0.65);
         }
 
         .main {
@@ -390,11 +400,7 @@ export default function ClientPortal() {
         .card {
           border-radius: 26px;
           border: 1px solid rgba(230, 195, 106, 0.35);
-          background: radial-gradient(
-            circle at top left,
-            rgba(230, 195, 106, 0.12),
-            rgba(0, 0, 0, 0.92)
-          );
+          background: radial-gradient(circle at top left, rgba(230, 195, 106, 0.12), rgba(0, 0, 0, 0.92));
           padding: 22px 18px 20px;
           box-shadow: 0 0 70px rgba(0, 0, 0, 0.6);
         }
@@ -507,11 +513,7 @@ export default function ClientPortal() {
         .statBox {
           border-radius: 20px;
           border: 1px solid rgba(230, 195, 106, 0.35);
-          background: linear-gradient(
-            180deg,
-            rgba(0, 0, 0, 0.85),
-            rgba(230, 195, 106, 0.04)
-          );
+          background: linear-gradient(180deg, rgba(0, 0, 0, 0.85), rgba(230, 195, 106, 0.04));
           padding: 16px 16px 14px;
         }
 
@@ -637,3 +639,4 @@ export default function ClientPortal() {
     </div>
   );
 }
+
