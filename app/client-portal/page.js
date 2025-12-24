@@ -1,833 +1,818 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "../../lib/supabaseBrowser";
+import { createClient } from "@supabase/supabase-js";
 
-/* ---------- formatting helpers ---------- */
-function fmtMoney(n) {
+/**
+ * Client Portal — pulls:
+ *  - Latest MT5 snapshot from: mt5_snapshots
+ *  - Weekly realised PnL & fee due from: mt5_weekly_pnl
+ *
+ * Notes:
+ *  - Requires NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY on Vercel
+ *  - Optional: NEXT_PUBLIC_WCU_ADMIN_EMAILS="you@email.com,other@email.com"
+ */
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+);
+
+function money(n) {
   if (n === null || n === undefined || Number.isNaN(Number(n))) return "—";
-  const v = Number(n);
-  const sign = v < 0 ? "-" : "";
-  const abs = Math.abs(v);
-  return `${sign}£${abs.toFixed(2)}`;
+  const num = Number(n);
+  return new Intl.NumberFormat("en-GB", {
+    style: "currency",
+    currency: "GBP",
+    maximumFractionDigits: 2,
+  }).format(num);
 }
-function fmtNum(n) {
+
+function num(n) {
   if (n === null || n === undefined || Number.isNaN(Number(n))) return "—";
-  return Number(n).toFixed(2);
-}
-function fmtTime(iso) {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleString();
-}
-function clamp(n, min, max) {
-  return Math.max(min, Math.min(max, n));
-}
-function agoLabel(iso) {
-  if (!iso) return "—";
-  const t = new Date(iso).getTime();
-  if (!t) return "—";
-  const s = Math.max(0, Math.floor((Date.now() - t) / 1000));
-  if (s < 60) return `${s}s ago`;
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  return `${h}h ago`;
-}
-
-/* ---------- tiny SVG chart (no libs) ---------- */
-function buildPath(points, w = 1000, h = 320, pad = 18) {
-  if (!points || points.length < 2) return { line: "", area: "", min: null, max: null, first: null, last: null };
-
-  const vals = points.map((p) => Number(p.v)).filter((x) => Number.isFinite(x));
-  if (vals.length < 2) return { line: "", area: "", min: null, max: null, first: null, last: null };
-
-  let min = Math.min(...vals);
-  let max = Math.max(...vals);
-
-  if (min === max) {
-    min = min - 1;
-    max = max + 1;
-  }
-
-  const usableH = h - pad * 2;
-  const usableW = w - pad * 2;
-
-  const toXY = (i, v) => {
-    const x = pad + (i / (points.length - 1)) * usableW;
-    const t = (v - min) / (max - min);
-    const y = pad + (1 - t) * usableH;
-    return { x, y };
-  };
-
-  const coords = points.map((p, i) => toXY(i, Number(p.v)));
-
-  const line = coords.map((c, i) => `${i === 0 ? "M" : "L"} ${c.x.toFixed(2)} ${c.y.toFixed(2)}`).join(" ");
-  const area =
-    `${line} ` +
-    `L ${(pad + usableW).toFixed(2)} ${(pad + usableH).toFixed(2)} ` +
-    `L ${pad.toFixed(2)} ${(pad + usableH).toFixed(2)} Z`;
-
-  return { line, area, min: Math.min(...vals), max: Math.max(...vals), first: vals[0], last: vals[vals.length - 1] };
-}
-
-function ChartBlock({ title, subtitle, points, kind }) {
-  const meta = useMemo(() => buildPath(points), [points]);
-  const isDD = kind === "dd";
-
-  if (!points || points.length < 2 || !meta.line) {
-    return (
-      <div className="chartEmpty">
-        <div className="chartEmptyTitle">No chart data yet</div>
-        <div className="chartEmptySub">Waiting for more snapshots…</div>
-      </div>
-    );
-  }
-
-  const change = meta.last - meta.first;
-  const changePct = meta.first ? (change / meta.first) * 100 : 0;
-
-  return (
-    <div className="chartWrap">
-      <div className="chartMeta">
-        <div className="chartMetaItem">
-          <div className="dim">{isDD ? "Min DD" : "Range low"}</div>
-          <div className="gold">{isDD ? `${meta.min.toFixed(2)}%` : fmtMoney(meta.min)}</div>
-        </div>
-        <div className="chartMetaItem">
-          <div className="dim">{isDD ? "Max DD" : "Range high"}</div>
-          <div className="gold">{isDD ? `${meta.max.toFixed(2)}%` : fmtMoney(meta.max)}</div>
-        </div>
-        <div className="chartMetaItem">
-          <div className="dim">{isDD ? "DD change" : "Change"}</div>
-          <div className={`gold ${change > 0 ? "pos" : change < 0 ? "neg" : ""}`}>
-            {isDD ? `${change.toFixed(2)}%` : fmtMoney(change)} {!isDD ? `(${changePct.toFixed(2)}%)` : ""}
-          </div>
-        </div>
-      </div>
-
-      <div className="chartBox">
-        <div className="chartTitleRow">
-          <div>
-            <div className="chartTitle">{title}</div>
-            <div className="chartSub">{subtitle}</div>
-          </div>
-        </div>
-
-        <svg viewBox="0 0 1000 320" className="chartSvg" preserveAspectRatio="none" aria-label={title}>
-          <defs>
-            <linearGradient id={`goldStroke-${kind}`} x1="0" x2="1" y1="0" y2="0">
-              <stop offset="0%" stopColor="rgba(230,195,106,0.35)" />
-              <stop offset="55%" stopColor="rgba(247,227,165,0.95)" />
-              <stop offset="100%" stopColor="rgba(230,195,106,0.35)" />
-            </linearGradient>
-            <linearGradient id={`goldFill-${kind}`} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="rgba(230,195,106,0.20)" />
-              <stop offset="100%" stopColor="rgba(0,0,0,0)" />
-            </linearGradient>
-          </defs>
-
-          {[40, 120, 200, 280].map((y) => (
-            <line key={y} x1="0" y1={y} x2="1000" y2={y} stroke="rgba(230,195,106,0.08)" strokeWidth="2" />
-          ))}
-
-          <path d={meta.area} fill={`url(#goldFill-${kind})`} />
-          <path d={meta.line} fill="none" stroke={`url(#goldStroke-${kind})`} strokeWidth="6" strokeLinejoin="round" strokeLinecap="round" />
-        </svg>
-      </div>
-    </div>
+  return new Intl.NumberFormat("en-GB", { maximumFractionDigits: 2 }).format(
+    Number(n)
   );
 }
 
-function parseAdminEmailsPublic() {
-  return (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
+function isoDate(d) {
+  return d.toISOString().slice(0, 10);
 }
 
-export default function ClientPortal() {
-  const router = useRouter();
+/** Monday 00:00 UTC week start (simple + stable) */
+function getWeekStartUTC(now = new Date()) {
+  const dt = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  );
+  const day = dt.getUTCDay(); // 0 Sun .. 6 Sat
+  const diff = day === 0 ? 6 : day - 1; // days since Monday
+  dt.setUTCDate(dt.getUTCDate() - diff);
+  dt.setUTCHours(0, 0, 0, 0);
+  return dt;
+}
+function addDaysUTC(d, days) {
+  const x = new Date(d);
+  x.setUTCDate(x.getUTCDate() + days);
+  return x;
+}
 
-  const [checking, setChecking] = useState(true);
+const QUOTES = [
+  "Discipline is the real edge. The market rewards the calm.",
+  "Protect capital first. Profit is a by-product of structure.",
+  "You don’t need more trades — you need better patience.",
+  "The goal is consistency, not excitement.",
+  "Risk is a decision. Respect it every single time.",
+  "Small wins stacked clean become big numbers.",
+  "If you can’t follow rules on small capital, you won’t on big capital.",
+  "Your job is execution. Outcomes are noise in the short term.",
+  "No revenge trading. No impulse. No exceptions.",
+  "Consistency creates inevitability.",
+  "We trade a framework, not feelings.",
+  "One clean week beats ten emotional days.",
+];
+
+export default function ClientPortalPage() {
   const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
 
-  const [loadingData, setLoadingData] = useState(false);
-  const [conn, setConn] = useState(null);
-  const [latest, setLatest] = useState(null);
-  const [first, setFirst] = useState(null);
-  const [snapshots, setSnapshots] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // fee state
-  const [feeState, setFeeState] = useState(null); // {paid_hwm,last_fee_paid,last_paid_at}
+  const [snapshot, setSnapshot] = useState(null);
+  const [weekly, setWeekly] = useState(null);
 
-  // peaks (for dd only)
-  const [peakAll, setPeakAll] = useState(null);
+  const [status, setStatus] = useState("");
+  const [error, setError] = useState("");
 
-  // charts
-  const [range, setRange] = useState("24h");
-  const [chartMode, setChartMode] = useState("equity");
-  const [equitySeries, setEquitySeries] = useState([]);
-  const [ddSeries, setDdSeries] = useState([]);
-  const [seriesLoading, setSeriesLoading] = useState(false);
+  const [quote, setQuote] = useState(QUOTES[0]);
+  const quoteIndexRef = useRef(0);
 
-  const [quoteIndex, setQuoteIndex] = useState(0);
-  const [toast, setToast] = useState("");
-  const [lastRefreshAt, setLastRefreshAt] = useState(null);
+  const weekStart = useMemo(() => getWeekStartUTC(new Date()), []);
+  const weekEnd = useMemo(() => addDaysUTC(weekStart, 6), [weekStart]);
+  const weekStartISO = useMemo(() => isoDate(weekStart), [weekStart]);
+  const weekEndISO = useMemo(() => isoDate(weekEnd), [weekEnd]);
 
-  const refreshTimer = useRef(null);
-  const realtimeChannelRef = useRef(null);
+  const adminEmails = useMemo(() => {
+    const raw = process.env.NEXT_PUBLIC_WCU_ADMIN_EMAILS || "";
+    return raw
+      .split(",")
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean);
+  }, []);
+  const isAdmin = useMemo(() => {
+    const email = (user?.email || "").toLowerCase();
+    return !!email && adminEmails.includes(email);
+  }, [user, adminEmails]);
 
-  const quotes = useMemo(
-    () => [
-      "Discipline is a cheat code.",
-      "Protect capital. Let time do the rest.",
-      "You don’t need more trades — you need cleaner trades.",
-      "Patience compounds louder than hype.",
-      "Risk first. Reward follows.",
-      "Consistency beats intensity.",
-      "The market pays the calm, not the emotional.",
-      "If it’s not clean, it’s not a trade.",
-      "Your edge is execution, not prediction.",
-      "Boring trading beats emotional trading.",
-    ],
-    []
-  );
+  async function loadAll(u) {
+    if (!u?.id) return;
 
-  const showToast = (msg) => {
-    setToast(msg);
-    window.clearTimeout(showToast._t);
-    showToast._t = window.setTimeout(() => setToast(""), 2500);
-  };
-
-  const copyText = async (text) => {
-    try {
-      await navigator.clipboard.writeText(String(text || ""));
-      showToast("Copied ✅");
-    } catch {
-      showToast("Copy failed — hold to copy.");
-    }
-  };
-
-  const pickNewQuote = () => setQuoteIndex(Math.floor(Math.random() * quotes.length));
-
-  useEffect(() => {
-    const t = setInterval(() => setQuoteIndex((i) => (i + 1) % quotes.length), 9000);
-    return () => clearInterval(t);
-  }, [quotes.length]);
-
-  // auth
-  useEffect(() => {
-    const run = async () => {
-      const { data } = await supabase.auth.getSession();
-      const u = data?.session?.user;
-      if (!u) {
-        setChecking(false);
-        router.push("/login");
-        return;
-      }
-      setUser(u);
-      setChecking(false);
-    };
-    run();
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      const u = session?.user || null;
-      if (!u) {
-        setUser(null);
-        router.push("/login");
-        return;
-      }
-      setUser(u);
-    });
-
-    return () => sub?.subscription?.unsubscribe?.();
-  }, [router]);
-
-  const logout = async () => {
-    await supabase.auth.signOut();
-    router.push("/login");
-  };
-
-  const loadSeries = async (uid, r, silent = false) => {
-    if (!uid) return;
-    if (!silent) setSeriesLoading(true);
+    setRefreshing(true);
+    setError("");
+    setStatus("");
 
     try {
-      const now = Date.now();
-      const sinceMs = r === "7d" ? now - 7 * 24 * 60 * 60 * 1000 : now - 24 * 60 * 60 * 1000;
-      const sinceIso = new Date(sinceMs).toISOString();
-
-      const { data, error } = await supabase
+      // Latest snapshot
+      const { data: sData, error: sErr } = await supabase
         .from("mt5_snapshots")
-        .select("equity,created_at")
-        .eq("user_id", uid)
-        .gte("created_at", sinceIso)
-        .order("created_at", { ascending: true })
-        .limit(2500);
+        .select("*")
+        .eq("user_id", u.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      if (error) throw error;
+      if (sErr) throw new Error(sErr.message);
+      setSnapshot(sData || null);
 
-      const eqPts = (data || [])
-        .map((x) => ({ t: x.created_at, v: Number(x.equity) }))
-        .filter((p) => Number.isFinite(p.v));
+      // Weekly pnl row (optional if bot hasn’t reported weekly yet)
+      const { data: wData, error: wErr } = await supabase
+        .from("mt5_weekly_pnl")
+        .select("*")
+        .eq("user_id", u.id)
+        .eq("week_start", weekStartISO)
+        .maybeSingle();
 
-      let peak = 0;
-      const ddPts = eqPts.map((p) => {
-        if (p.v > peak) peak = p.v;
-        const dd = peak > 0 ? ((peak - p.v) / peak) * 100 : 0;
-        return { t: p.t, v: clamp(dd, 0, 100) };
+      if (wErr) throw new Error(wErr.message);
+      setWeekly(wData || null);
+
+      setStatus("Updated ✅");
+      setTimeout(() => setStatus(""), 1200);
+    } catch (e) {
+      setError(e?.message || "Failed to load portal data.");
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
+  async function doLogout() {
+    setError("");
+    await supabase.auth.signOut();
+    window.location.href = "/clientportal";
+  }
+
+  async function settleWeek() {
+    try {
+      setError("");
+      setStatus("");
+
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess?.session?.access_token;
+      if (!token) throw new Error("No session token. Please log in again.");
+
+      const res = await fetch("/api/fees/weekly/settle", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ user_id: user.id }),
       });
 
-      setEquitySeries(eqPts);
-      setDdSeries(ddPts);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Settle failed.");
+
+      setStatus(`Settled ✅ Fee paid: ${money(data.fee_paid)}`);
+      await loadAll(user);
+      setTimeout(() => setStatus(""), 2500);
     } catch (e) {
-      console.log(e);
-    } finally {
-      if (!silent) setSeriesLoading(false);
+      setError(e?.message || "Settle failed.");
     }
-  };
-
-  const refresh = async (opts = { silent: false }) => {
-    if (!user?.id) return;
-    if (!opts?.silent) setLoadingData(true);
-
-    try {
-      const { data: c, error: cErr } = await supabase
-        .from("mt5_connections")
-        .select("pairing_code,status,mt5_login,last_seen_at")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (cErr) throw cErr;
-      setConn(c || null);
-
-      const { data: lastSnap, error: lErr } = await supabase
-        .from("mt5_snapshots")
-        .select("id,balance,equity,margin,free_margin,created_at,mt5_login")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(1);
-      if (lErr) throw lErr;
-      setLatest(lastSnap?.[0] || null);
-
-      const { data: firstSnap, error: fErr } = await supabase
-        .from("mt5_snapshots")
-        .select("balance,equity,created_at")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: true })
-        .limit(1);
-      if (fErr) throw fErr;
-      setFirst(firstSnap?.[0] || null);
-
-      const { data: rec, error: rErr } = await supabase
-        .from("mt5_snapshots")
-        .select("equity,created_at")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (rErr) throw rErr;
-      setSnapshots(rec || []);
-
-      // all-time peak equity (for drawdown display)
-      const { data: top1 } = await supabase
-        .from("mt5_snapshots")
-        .select("equity")
-        .eq("user_id", user.id)
-        .order("equity", { ascending: false })
-        .limit(1);
-      const pk = Number(top1?.[0]?.equity);
-      setPeakAll(Number.isFinite(pk) ? pk : null);
-
-      // fee state (paid watermark)
-      const { data: fs, error: fsErr } = await supabase
-        .from("mt5_fee_state")
-        .select("paid_hwm,last_fee_paid,last_paid_at,updated_at")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (fsErr) console.log(fsErr);
-      setFeeState(fs || null);
-
-      await loadSeries(user.id, range, true);
-      setLastRefreshAt(new Date().toISOString());
-    } catch (e) {
-      console.log(e);
-      showToast("Couldn’t load data. Try refresh.");
-    } finally {
-      if (!opts?.silent) setLoadingData(false);
-    }
-  };
+  }
 
   useEffect(() => {
-    if (!checking && user?.id) refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [checking, user?.id]);
+    let mounted = true;
 
-  useEffect(() => {
-    if (!user?.id) return;
-    refreshTimer.current = window.setInterval(() => refresh({ silent: true }), 30000);
-    return () => window.clearInterval(refreshTimer.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+    (async () => {
+      setLoading(true);
+      const { data } = await supabase.auth.getSession();
+      const sess = data?.session || null;
 
-  useEffect(() => {
-    if (!user?.id) return;
-    loadSeries(user.id, range, false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [range, user?.id]);
+      if (!mounted) return;
 
-  useEffect(() => {
-    if (!user?.id) return;
+      setSession(sess);
+      setUser(sess?.user || null);
+      setLoading(false);
 
-    if (realtimeChannelRef.current) {
-      supabase.removeChannel(realtimeChannelRef.current);
-      realtimeChannelRef.current = null;
-    }
+      if (sess?.user) loadAll(sess.user);
+    })();
 
-    const channel = supabase
-      .channel(`portal-${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "mt5_snapshots", filter: `user_id=eq.${user.id}` },
-        () => {
-          window.clearTimeout(channel._t);
-          channel._t = window.setTimeout(() => refresh({ silent: true }), 350);
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "mt5_connections", filter: `user_id=eq.${user.id}` },
-        () => {
-          window.clearTimeout(channel._t2);
-          channel._t2 = window.setTimeout(() => refresh({ silent: true }), 350);
-        }
-      )
-      .subscribe();
-
-    realtimeChannelRef.current = channel;
+    const { data: sub } = supabase.auth.onAuthStateChange(
+      async (_event, sess) => {
+        setSession(sess);
+        setUser(sess?.user || null);
+        if (sess?.user) loadAll(sess.user);
+      }
+    );
 
     return () => {
-      if (realtimeChannelRef.current) {
-        supabase.removeChannel(realtimeChannelRef.current);
-        realtimeChannelRef.current = null;
-      }
+      mounted = false;
+      sub?.subscription?.unsubscribe?.();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, []);
 
-  const connectedStatus = useMemo(() => {
-    const snapTime = latest?.created_at ? new Date(latest.created_at).getTime() : 0;
-    const mins = snapTime ? (Date.now() - snapTime) / 60000 : 9999;
+  // Rotating quotes (every 15s)
+  useEffect(() => {
+    const t = setInterval(() => {
+      quoteIndexRef.current = (quoteIndexRef.current + 1) % QUOTES.length;
+      setQuote(QUOTES[quoteIndexRef.current]);
+    }, 15000);
+    return () => clearInterval(t);
+  }, []);
 
-    if (!conn?.pairing_code) return { label: "Not paired", tone: "warn" };
-    if (!latest) return { label: "Waiting snapshot", tone: "warn" };
-    if (mins <= 2) return { label: "Live", tone: "ok" };
-    if (mins <= 6) return { label: "Delayed", tone: "warn" };
-    return { label: "Offline", tone: "warn" };
-  }, [conn?.pairing_code, latest]);
-
-  const startEquity = useMemo(() => {
-    const b = first?.equity ?? first?.balance ?? null;
-    return b === null ? null : Number(b);
-  }, [first]);
-
-  const currentEquity = useMemo(() => {
-    const e = latest?.equity ?? null;
-    return e === null ? null : Number(e);
-  }, [latest]);
-
-  const currentBalance = useMemo(() => {
-    const b = latest?.balance ?? null;
-    return b === null ? null : Number(b);
-  }, [latest]);
-
-  const floating = useMemo(() => {
-    if (currentEquity === null || currentBalance === null) return null;
-    return Number(currentEquity - currentBalance);
-  }, [currentEquity, currentBalance]);
-
-  // paid watermark effective (if none, default to starting equity)
-  const paidHwmEffective = useMemo(() => {
-    const p = Number(feeState?.paid_hwm);
-    if (Number.isFinite(p) && p > 0) return p;
-    return startEquity;
-  }, [feeState?.paid_hwm, startEquity]);
-
-  // fee due NOW (only above paid watermark)
-  const feeDueNow = useMemo(() => {
-    if (!Number.isFinite(currentEquity) || !Number.isFinite(paidHwmEffective)) return null;
-    return Math.max(0, currentEquity - paidHwmEffective) * 0.3;
-  }, [currentEquity, paidHwmEffective]);
-
-  const clientShareNow = useMemo(() => {
-    if (!Number.isFinite(currentEquity) || !Number.isFinite(paidHwmEffective)) return null;
-    return Math.max(0, currentEquity - paidHwmEffective) * 0.7;
-  }, [currentEquity, paidHwmEffective]);
-
-  const hwmDrawdownPct = useMemo(() => {
-    if (!Number.isFinite(peakAll) || !Number.isFinite(currentEquity) || peakAll <= 0) return null;
-    return clamp(((peakAll - currentEquity) / peakAll) * 100, 0, 100);
-  }, [peakAll, currentEquity]);
-
-  const drawdownRecentPct = useMemo(() => {
-    if (!snapshots?.length) return null;
-    const series2 = [...snapshots].map((s) => Number(s.equity)).filter((x) => Number.isFinite(x)).reverse();
-    if (series2.length < 2) return null;
-
-    let peak = series2[0];
-    let maxDd = 0;
-    for (const x of series2) {
-      if (x > peak) peak = x;
-      const dd = peak > 0 ? (peak - x) / peak : 0;
-      if (dd > maxDd) maxDd = dd;
-    }
-    return clamp(maxDd * 100, 0, 100);
-  }, [snapshots]);
-
-  const portalHint = useMemo(() => {
-    if (!conn?.pairing_code) return "Your account isn’t paired yet. Go to Get Started, connect the bot, then your dashboard updates automatically.";
-    if (!latest) return "Paired ✅. Waiting for the first MT5 snapshot… (Once the bot sends data, stats appear here.)";
-    return "Live MT5 stats are updating through the reporting pipeline.";
-  }, [conn?.pairing_code, latest]);
-
-  const isAdmin = useMemo(() => {
-    const admins = parseAdminEmailsPublic();
-    const em = (user?.email || "").toLowerCase();
-    return admins.includes(em);
-  }, [user?.email]);
-
-  const settleFeeAdmin = async () => {
-    if (!isAdmin) return;
-    if (!confirm("Admin settle fee now? This will move PAID watermark up to CURRENT equity.")) return;
-
-    const { data } = await supabase.auth.getSession();
-    const token = data?.session?.access_token;
-    if (!token) {
-      showToast("No session token.");
-      return;
-    }
-
-    const res = await fetch("/api/fees/settle", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ user_id: user.id }),
-    });
-
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      showToast(j?.error || "Settle failed");
-      return;
-    }
-
-    showToast(`Settled ✅ Fee paid: ${fmtMoney(j.fee_paid)}`);
-    refresh();
-  };
-
-  if (checking) {
-    return (
-      <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "radial-gradient(circle at top, #2a1f0f, #000)", color: "#f7f0da", padding: 18 }}>
-        Loading…
-      </div>
-    );
-  }
+  const showLogin = !loading && !user;
 
   return (
     <div className="wrap">
       <header className="topBar">
-        <a href="/" className="backLink">
-          <img src="/emblem.jpg" alt="Winners Circle University" className="logoImg" />
-          <span>Back to main site</span>
+        <a className="brand" href="/">
+          <img src="/emblem.jpg" alt="Winners Circle University" />
+          <div>
+            <div className="brandName">Winners Circle University</div>
+            <div className="brandTag">Client Portal</div>
+          </div>
         </a>
 
-        <div className="rightSide">
-          <div className="statusPill" data-tone={connectedStatus.tone}>
-            {connectedStatus.label}
+        <div className="topRight">
+          <div className="pill">
+            <span className="dot" />
+            LIVE · 70/30
           </div>
 
-          <div className="userTag" title={user?.email || ""}>
-            {user?.email || "Client"}
-          </div>
-
-          <button className="ghostBtn" type="button" onClick={() => refresh()} disabled={loadingData}>
-            {loadingData ? "Refreshing…" : "Refresh"}
-          </button>
-
-          <button className="logoutBtn" type="button" onClick={logout}>
-            Logout
-          </button>
+          {user ? (
+            <button className="ghost" onClick={doLogout}>
+              Logout
+            </button>
+          ) : (
+            <a className="ghost" href="/clientportal">
+              Login
+            </a>
+          )}
         </div>
       </header>
 
       <main className="main">
-        {/* HERO */}
-        <section className="card hero">
-          <div className="heroTop">
-            <div>
-              <div className="pill">LIVE CLIENT PORTAL · PAID WATERMARK ENGINE</div>
-              <h1 className="title">Client Dashboard</h1>
-              <p className="lead">{portalHint}</p>
-              <div className="metaLine">
-                <span className="dim">Last refresh:</span> <span className="gold">{lastRefreshAt ? agoLabel(lastRefreshAt) : "—"}</span>
-                <span className="sep">·</span>
-                <span className="dim">Last snapshot:</span> <span className="gold">{latest?.created_at ? agoLabel(latest.created_at) : "—"}</span>
-              </div>
+        {loading && (
+          <section className="card">
+            <div className="titleRow">
+              <h1>Loading portal…</h1>
             </div>
+            <p className="muted">Please wait.</p>
+          </section>
+        )}
 
-            <div className="quoteBox">
-              <div className="quoteLabel">Today’s push</div>
-              <div className="quoteText">“{quotes[quoteIndex]}”</div>
-              <div className="quoteActions">
-                <button className="miniBtn" type="button" onClick={() => setQuoteIndex(Math.floor(Math.random() * quotes.length))}>
-                  New quote
-                </button>
-              </div>
+        {showLogin && (
+          <section className="card">
+            <div className="titleRow">
+              <h1>Login required</h1>
             </div>
-          </div>
+            <p className="muted">
+              You need to be logged in to view your MT5 stats and weekly profit
+              share.
+            </p>
+            <div className="btnRow">
+              <a className="gold" href="/clientportal">
+                Go to Login / Signup →
+              </a>
+            </div>
+          </section>
+        )}
 
-          <div className="pairRow">
-            <div className="pairCard">
-              <div className="pairLabel">Pairing code</div>
-              <div className="pairCode">{conn?.pairing_code || "—"}</div>
-              <div className="pairActions">
-                <button className="miniBtn" type="button" onClick={() => copyText(conn?.pairing_code || "")} disabled={!conn?.pairing_code}>
-                  Copy
-                </button>
-                <a className="miniBtn miniLink" href="/get-started">
-                  Get Started
-                </a>
-              </div>
-              <div className="pairMeta">
-                <div>
-                  <span className="dim">MT5 login:</span> <span className="gold">{conn?.mt5_login || latest?.mt5_login || "—"}</span>
+        {user && (
+          <>
+            {!!(error || status) && (
+              <section className="notice">
+                {error ? (
+                  <div className="err">{error}</div>
+                ) : (
+                  <div className="ok">{status}</div>
+                )}
+              </section>
+            )}
+
+            <section className="grid">
+              {/* Snapshot */}
+              <section className="card">
+                <div className="titleRow">
+                  <h2>MT5 Snapshot</h2>
+                  <div className="actions">
+                    <button
+                      className="ghost small"
+                      onClick={() => loadAll(user)}
+                      disabled={refreshing}
+                      title="Refresh"
+                    >
+                      {refreshing ? "Refreshing…" : "Refresh"}
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <span className="dim">Last seen:</span> <span className="gold">{fmtTime(conn?.last_seen_at)}</span>
+
+                <p className="muted">
+                  Latest numbers reported by your MT5 connection.
+                </p>
+
+                <div className="stats">
+                  <div className="stat">
+                    <div className="k">Balance</div>
+                    <div className="v">{money(snapshot?.balance)}</div>
+                  </div>
+                  <div className="stat">
+                    <div className="k">Equity</div>
+                    <div className="v">{money(snapshot?.equity)}</div>
+                  </div>
+                  <div className="stat">
+                    <div className="k">Margin</div>
+                    <div className="v">{money(snapshot?.margin)}</div>
+                  </div>
+                  <div className="stat">
+                    <div className="k">Free margin</div>
+                    <div className="v">{money(snapshot?.free_margin)}</div>
+                  </div>
                 </div>
+
+                <div className="mini">
+                  <div>
+                    <span className="miniK">MT5 Login:</span>{" "}
+                    <span className="miniV">{snapshot?.mt5_login || "—"}</span>
+                  </div>
+                  <div>
+                    <span className="miniK">Last update:</span>{" "}
+                    <span className="miniV">
+                      {snapshot?.created_at
+                        ? new Date(snapshot.created_at).toLocaleString()
+                        : "—"}
+                    </span>
+                  </div>
+                </div>
+              </section>
+
+              {/* Weekly */}
+              <section className="card">
+                <div className="titleRow">
+                  <h2>Weekly Profit Share</h2>
+                  <div className="weekTag">
+                    Week: {weekStartISO} → {weekEndISO}
+                  </div>
+                </div>
+
+                <p className="muted">
+                  We charge <b>30% of weekly realised trading profit</b> (only
+                  profits). Deposits/withdrawals don’t affect this.
+                </p>
+
+                <div className="weeklyGrid">
+                  <div className="weeklyBox">
+                    <div className="k">Realised PnL (this week)</div>
+                    <div
+                      className={`v ${
+                        weekly?.pnl > 0 ? "pos" : weekly?.pnl < 0 ? "neg" : ""
+                      }`}
+                    >
+                      {weekly ? money(weekly.pnl) : "—"}
+                    </div>
+                    <div className="hint">
+                      Includes profit + swap + commission (net).
+                    </div>
+                  </div>
+
+                  <div className="weeklyBox">
+                    <div className="k">30% Fee Due</div>
+                    <div className="v">{weekly ? money(weekly.fee_due) : "—"}</div>
+                    <div className="hint">
+                      Fee = max(0, pnl) × 30%
+                    </div>
+                  </div>
+                </div>
+
+                <div className="settleRow">
+                  <div className="settleLeft">
+                    <div className="k">Status</div>
+                    <div className="v2">
+                      {weekly
+                        ? weekly.settled
+                          ? "Settled ✅"
+                          : "Unsettled"
+                        : "Waiting for weekly report…"}
+                    </div>
+                    {weekly?.settled_at && (
+                      <div className="hint">
+                        Settled at:{" "}
+                        {new Date(weekly.settled_at).toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Admin only (optional) */}
+                  {isAdmin && (
+                    <button
+                      className="gold"
+                      onClick={settleWeek}
+                      disabled={!weekly || weekly?.settled}
+                      title="Locks the week as settled"
+                    >
+                      Settle week
+                    </button>
+                  )}
+                </div>
+
+                <div className="payRow">
+                  <button
+                    className="primary"
+                    type="button"
+                    onClick={() =>
+                      alert("Card payments are handled manually for now.")
+                    }
+                  >
+                    Pay 30% via Card
+                  </button>
+                  <button
+                    className="ghost"
+                    type="button"
+                    onClick={() =>
+                      alert("Crypto payments are handled manually for now.")
+                    }
+                  >
+                    Pay 30% via Crypto
+                  </button>
+                </div>
+              </section>
+
+              {/* Motivation */}
+              <section className="card">
+                <div className="titleRow">
+                  <h2>Motivation</h2>
+                </div>
+                <div className="quote">“{quote}”</div>
+                <div className="muted smallText">
+                  Quote updates automatically.
+                </div>
+              </section>
+            </section>
+
+            <section className="foot">
+              <div className="muted smallText">
+                Logged in as <b>{user.email}</b>
               </div>
-            </div>
-
-            <div className="pairCard">
-              <div className="pairLabel">Fee logic</div>
-              <div className="pairCode">30% only above PAID watermark</div>
-              <div className="pairMeta">
-                <div className="dim">Clients cannot change watermark. Only admin can settle after payment.</div>
+              <div className="muted smallText">
+                This portal doesn’t move money. It only displays reporting and
+                fee structure.
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* PERFORMANCE */}
-        <section className="card">
-          <h2 className="sectionTitle">Performance</h2>
-
-          <div className="statsGrid">
-            <div className="stat">
-              <div className="statLabel">Current equity</div>
-              <div className="statValue">{currentEquity === null ? "—" : fmtMoney(currentEquity)}</div>
-              <div className="statHint">Latest MT5 equity.</div>
-            </div>
-
-            <div className="stat">
-              <div className="statLabel">Paid watermark</div>
-              <div className="statValue">{paidHwmEffective === null ? "—" : fmtMoney(paidHwmEffective)}</div>
-              <div className="statHint">Fee is only charged above this level.</div>
-            </div>
-
-            <div className="stat">
-              <div className="statLabel">Fee due now (30%)</div>
-              <div className="statValue">{feeDueNow === null ? "—" : fmtMoney(feeDueNow)}</div>
-              <div className="statHint">If you’re below watermark, this stays £0.</div>
-            </div>
-
-            <div className="stat">
-              <div className="statLabel">Client share on new high (70%)</div>
-              <div className="statValue">{clientShareNow === null ? "—" : fmtMoney(clientShareNow)}</div>
-              <div className="statHint">Only counts above watermark.</div>
-            </div>
-
-            <div className="stat">
-              <div className="statLabel">Drawdown from all-time peak</div>
-              <div className={`statValue ${hwmDrawdownPct > 0 ? "neg" : ""}`}>
-                {hwmDrawdownPct === null ? "—" : `${hwmDrawdownPct.toFixed(2)}%`}
-              </div>
-              <div className="statHint">From your highest equity ever recorded.</div>
-            </div>
-
-            <div className="stat">
-              <div className="statLabel">Last fee settled</div>
-              <div className="statValue">{feeState?.last_paid_at ? fmtTime(feeState.last_paid_at) : "—"}</div>
-              <div className="statHint">{feeState?.last_fee_paid ? `Last paid: ${fmtMoney(feeState.last_fee_paid)}` : "No settlement recorded yet."}</div>
-            </div>
-          </div>
-
-          <div className="subGrid">
-            <div className="miniCard">
-              <div className="miniLabel">Balance</div>
-              <div className="miniValue">{fmtMoney(latest?.balance)}</div>
-            </div>
-            <div className="miniCard">
-              <div className="miniLabel">Floating P/L</div>
-              <div className={`miniValue ${floating < 0 ? "neg" : floating > 0 ? "pos" : ""}`}>
-                {floating === null ? "—" : fmtMoney(floating)}
-              </div>
-            </div>
-            <div className="miniCard">
-              <div className="miniLabel">Free margin</div>
-              <div className="miniValue">{fmtNum(latest?.free_margin)}</div>
-            </div>
-            <div className="miniCard">
-              <div className="miniLabel">Max DD (recent)</div>
-              <div className="miniValue">{drawdownRecentPct === null ? "—" : `${drawdownRecentPct.toFixed(2)}%`}</div>
-            </div>
-          </div>
-
-          <div className="footNote">
-            Last snapshot: <span className="gold">{fmtTime(latest?.created_at)}</span>
-          </div>
-
-          {isAdmin && (
-            <div className="adminBox">
-              <div className="adminTitle">Admin Actions</div>
-              <div className="adminText">Use this only after client has paid the 30%.</div>
-              <button className="primaryBtn" type="button" onClick={settleFeeAdmin} disabled={!feeDueNow || feeDueNow <= 0}>
-                Settle fee (move watermark to current equity)
-              </button>
-              <div className="finePrint" style={{ marginTop: 10 }}>
-                This prevents double-charging: after settle, fee due becomes £0 until the next new high.
-              </div>
-            </div>
-          )}
-        </section>
-
-        {/* CHARTS */}
-        <section className="card">
-          <div className="chartHead">
-            <h2 className="sectionTitle" style={{ margin: 0 }}>
-              Charts
-            </h2>
-
-            <div className="chartControls">
-              <div className="modePills">
-                <button className={`rangeBtn ${chartMode === "equity" ? "active" : ""}`} type="button" onClick={() => setChartMode("equity")} disabled={seriesLoading}>
-                  Equity
-                </button>
-                <button className={`rangeBtn ${chartMode === "dd" ? "active" : ""}`} type="button" onClick={() => setChartMode("dd")} disabled={seriesLoading}>
-                  Drawdown
-                </button>
-              </div>
-
-              <div className="rangePills">
-                <button className={`rangeBtn ${range === "24h" ? "active" : ""}`} type="button" onClick={() => setRange("24h")} disabled={seriesLoading}>
-                  24H
-                </button>
-                <button className={`rangeBtn ${range === "7d" ? "active" : ""}`} type="button" onClick={() => setRange("7d")} disabled={seriesLoading}>
-                  7D
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="leadSmall" style={{ marginTop: 8 }}>
-            {seriesLoading ? "Loading…" : `Showing ${range === "7d" ? "7 days" : "24 hours"} of snapshots.`}
-          </div>
-
-          {chartMode === "equity" ? (
-            <ChartBlock kind="equity" title="Equity Curve" subtitle="Tracks equity over time (snapshots)." points={equitySeries} />
-          ) : (
-            <ChartBlock kind="dd" title="Drawdown Curve" subtitle="Running-peak drawdown % (0% = at peak)." points={ddSeries} />
-          )}
-        </section>
-
-        <p className="disclaimer">Trading is high risk. This is not financial advice.</p>
+            </section>
+          </>
+        )}
       </main>
 
-      {!!toast && <div className="toast">{toast}</div>}
-
       <style jsx>{`
-        .wrap{min-height:100vh;background:radial-gradient(circle at top,#2a1f0f,#000);color:#f7f0da;padding:18px 14px 40px}
-        .topBar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
-        .backLink{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:#f7f0da;font-size:14px;font-weight:800}
-        .logoImg{height:36px;width:auto;filter:drop-shadow(0 0 14px rgba(230,195,106,.45))}
-        .rightSide{display:inline-flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
-        .statusPill{padding:8px 12px;border-radius:999px;border:1px solid rgba(230,195,106,.22);background:rgba(0,0,0,.55);font-weight:900;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
-        .statusPill[data-tone="ok"]{color:#b8ffcc;border-color:rgba(184,255,204,.22)}
-        .statusPill[data-tone="warn"]{color:#ffd59e;border-color:rgba(255,213,158,.22)}
-        .userTag{padding:8px 12px;border-radius:999px;border:1px solid rgba(230,195,106,.22);background:rgba(0,0,0,.55);color:#ffe29b;font-weight:900;font-size:12px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-        .ghostBtn{background:transparent;border:1px solid rgba(230,195,106,.25);color:#e6c36a;padding:9px 14px;border-radius:999px;font-weight:900;cursor:pointer}
-        .ghostBtn:disabled{opacity:.6;cursor:not-allowed}
-        .logoutBtn{background:rgba(230,195,106,.12);border:1px solid rgba(230,195,106,.35);color:#e6c36a;padding:9px 14px;border-radius:999px;font-weight:900;cursor:pointer}
-        .main{max-width:980px;margin:0 auto}
-        .card{border-radius:24px;border:1px solid rgba(230,195,106,.22);background:radial-gradient(circle at top left,rgba(230,195,106,.1),rgba(0,0,0,.88));padding:18px 16px;margin-bottom:14px;box-shadow:0 0 60px rgba(0,0,0,.6)}
-        .hero .pill{display:inline-block;padding:6px 12px;border-radius:999px;border:1px solid rgba(230,195,106,.28);color:#e6c36a;font-size:11px;letter-spacing:.16em;margin-bottom:10px;text-transform:uppercase}
-        .heroTop{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;align-items:start}
-        @media (max-width:860px){.heroTop{grid-template-columns:1fr}}
-        .title{margin:0 0 6px;color:#f5e1a4;font-size:26px;line-height:1.15}
-        .lead{margin:0;color:#d8d2b6;line-height:1.7;font-size:14px}
-        .metaLine{margin-top:10px;font-size:13px;color:#d8d2b6;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-        .sep{opacity:.7}
-        .quoteBox{border-radius:18px;border:1px solid rgba(230,195,106,.18);background:rgba(0,0,0,.55);padding:14px}
-        .quoteLabel{font-size:12px;color:#bfae78;margin-bottom:6px;font-weight:800}
-        .quoteText{font-size:14px;color:#ffe29b;font-weight:900;line-height:1.5}
-        .quoteActions{margin-top:10px}
-        .pairRow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
-        @media (max-width:860px){.pairRow{grid-template-columns:1fr}}
-        .pairCard{border-radius:18px;border:1px solid rgba(230,195,106,.18);background:rgba(0,0,0,.55);padding:14px}
-        .pairLabel{font-size:12px;color:#bfae78;font-weight:900;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
-        .pairCode{font-size:18px;font-weight:1000;color:#f7e3a5;letter-spacing:.12em;word-break:break-word}
-        .pairActions{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
-        .miniBtn{border-radius:999px;padding:8px 12px;border:1px solid rgba(230,195,106,.25);background:rgba(230,195,106,.08);color:#e6c36a;font-weight:900;cursor:pointer;font-size:13px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
-        .miniBtn:disabled{opacity:.6;cursor:not-allowed}
-        .miniLink{background:transparent}
-        .pairMeta{margin-top:10px;display:grid;gap:6px;font-size:13px}
-        .dim{color:#bfae78}
-        .gold{color:#f7e3a5;font-weight:900}
-        .pos{color:#b8ffcc!important}
-        .neg{color:#ffb8b8!important}
-        .sectionTitle{margin:0 0 12px;color:#e6c36a;font-size:18px;font-weight:1000}
-        .statsGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-        @media (max-width:900px){.statsGrid{grid-template-columns:1fr}}
-        .stat{border-radius:18px;border:1px solid rgba(230,195,106,.16);background:rgba(0,0,0,.55);padding:14px}
-        .statLabel{font-size:12px;color:#bfae78;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
-        .statValue{font-size:20px;font-weight:1000;color:#f7e3a5;margin-bottom:6px}
-        .statHint{font-size:13px;color:#d8d2b6;line-height:1.5}
-        .subGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
-        @media (max-width:900px){.subGrid{grid-template-columns:1fr 1fr}}
-        @media (max-width:520px){.subGrid{grid-template-columns:1fr}}
-        .miniCard{border-radius:18px;border:1px solid rgba(230,195,106,.14);background:rgba(0,0,0,.55);padding:12px}
-        .miniLabel{font-size:12px;color:#bfae78;font-weight:900;margin-bottom:6px}
-        .miniValue{font-size:16px;font-weight:1000;color:#f7e3a5}
-        .footNote{margin-top:10px;font-size:13px;color:#d8d2b6}
-        .leadSmall{margin:0 0 12px;color:#d8d2b6;line-height:1.7;font-size:14px}
-        .primaryBtn{border-radius:999px;padding:12px 16px;border:1px solid rgba(230,195,106,.35);background:linear-gradient(180deg,rgba(230,195,106,.22),rgba(0,0,0,.75));color:#f7e3a5;font-weight:1000;cursor:pointer}
-        .primaryBtn:disabled{opacity:.5;cursor:not-allowed}
-        .finePrint{margin-top:10px;font-size:13px;color:#bfae78;line-height:1.6}
-        .adminBox{margin-top:14px;border-radius:18px;border:1px dashed rgba(230,195,106,.32);background:rgba(0,0,0,.55);padding:14px}
-        .adminTitle{font-weight:1000;color:#f7e3a5;margin-bottom:6px}
-        .adminText{color:#d8d2b6;margin-bottom:10px;font-size:13px;line-height:1.6}
-        .disclaimer{margin:10px 0 0;font-size:12px;color:rgba(255,255,255,.6);line-height:1.6;text-align:center}
-        .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(0,0,0,.85);border:1px solid rgba(230,195,106,.22);color:#f7e3a5;padding:10px 14px;border-radius:999px;font-weight:900;z-index:9999;box-shadow:0 0 30px rgba(0,0,0,.6)}
-        .chartHead{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
-        .chartControls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
-        .modePills,.rangePills{display:inline-flex;gap:8px;align-items:center}
-        .rangeBtn{border-radius:999px;padding:8px 12px;border:1px solid rgba(230,195,106,.22);background:rgba(0,0,0,.55);color:#e6c36a;font-weight:1000;cursor:pointer;min-width:84px}
-        .rangeBtn.active{background:rgba(230,195,106,.14);border-color:rgba(230,195,106,.45);color:#f7e3a5}
-        .rangeBtn:disabled{opacity:.6;cursor:not-allowed}
-        .chartWrap{margin-top:10px}
-        .chartMeta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
-        @media (max-width:860px){.chartMeta{grid-template-columns:1fr}}
-        .chartMetaItem{border-radius:16px;border:1px solid rgba(230,195,106,.14);background:rgba(0,0,0,.55);padding:12px}
-        .chartBox{border-radius:18px;border:1px solid rgba(230,195,106,.16);background:rgba(0,0,0,.55);overflow:hidden;padding:12px}
-        .chartTitleRow{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:10px}
-        .chartTitle{font-weight:1000;color:#f7e3a5;margin-bottom:2px}
-        .chartSub{color:#bfae78;font-size:13px}
-        .chartSvg{width:100%;height:240px;display:block}
-        .chartEmpty{border-radius:18px;border:1px solid rgba(230,195,106,.16);background:rgba(0,0,0,.55);padding:20px;text-align:center}
-        .chartEmptyTitle{font-weight:1000;color:#f7e3a5;margin-bottom:6px}
-        .chartEmptySub{color:#bfae78;font-size:13px}
+        .wrap {
+          min-height: 100vh;
+          background: radial-gradient(circle at top, #1b1408, #000);
+          color: #f7f0da;
+          padding: 18px 14px 44px;
+        }
+
+        .topBar {
+          max-width: 1100px;
+          margin: 0 auto 18px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+        }
+
+        .brand {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          text-decoration: none;
+          color: inherit;
+        }
+
+        .brand img {
+          width: 44px;
+          height: 44px;
+          border-radius: 14px;
+          box-shadow: 0 0 26px rgba(230, 195, 106, 0.35);
+        }
+
+        .brandName {
+          font-weight: 900;
+          letter-spacing: 0.02em;
+          color: #f5e1a4;
+          line-height: 1.1;
+        }
+
+        .brandTag {
+          font-size: 12px;
+          color: #bfae78;
+          margin-top: 2px;
+        }
+
+        .topRight {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 14px;
+          border-radius: 999px;
+          border: 1px solid rgba(230, 195, 106, 0.35);
+          background: rgba(0, 0, 0, 0.55);
+          font-size: 12px;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          white-space: nowrap;
+        }
+
+        .dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #33ff86;
+          box-shadow: 0 0 14px rgba(51, 255, 134, 0.35);
+        }
+
+        .main {
+          max-width: 1100px;
+          margin: 0 auto;
+        }
+
+        .notice {
+          margin: 10px auto 14px;
+          max-width: 1100px;
+        }
+
+        .err,
+        .ok {
+          padding: 12px 14px;
+          border-radius: 16px;
+          border: 1px solid rgba(230, 195, 106, 0.25);
+          background: rgba(0, 0, 0, 0.65);
+          font-size: 14px;
+        }
+
+        .err {
+          color: #ffb3b3;
+          border-color: rgba(255, 120, 120, 0.4);
+        }
+        .ok {
+          color: #bff7d2;
+          border-color: rgba(51, 255, 134, 0.35);
+        }
+
+        .grid {
+          display: grid;
+          gap: 16px;
+          grid-template-columns: 1fr;
+        }
+
+        @media (min-width: 940px) {
+          .grid {
+            grid-template-columns: 1.15fr 0.85fr;
+          }
+          .grid > section:nth-child(3) {
+            grid-column: 1 / -1;
+          }
+        }
+
+        .card {
+          border-radius: 26px;
+          border: 1px solid rgba(230, 195, 106, 0.35);
+          background: radial-gradient(
+            circle at top left,
+            rgba(230, 195, 106, 0.12),
+            rgba(0, 0, 0, 0.92)
+          );
+          padding: 18px 16px 16px;
+          box-shadow: 0 0 70px rgba(0, 0, 0, 0.6);
+        }
+
+        .titleRow {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 12px;
+          margin-bottom: 8px;
+        }
+
+        h1 {
+          margin: 0;
+          color: #f5e1a4;
+          font-size: 22px;
+        }
+
+        h2 {
+          margin: 0;
+          color: #f5e1a4;
+          font-size: 18px;
+        }
+
+        .muted {
+          color: #d8d2b6;
+          opacity: 0.95;
+          font-size: 13px;
+          line-height: 1.6;
+          margin: 0 0 12px;
+        }
+
+        .smallText {
+          font-size: 12px;
+        }
+
+        .actions {
+          display: inline-flex;
+          gap: 8px;
+          align-items: center;
+        }
+
+        .weekTag {
+          font-size: 12px;
+          color: #bfae78;
+          border: 1px solid rgba(230, 195, 106, 0.25);
+          padding: 8px 10px;
+          border-radius: 999px;
+          white-space: nowrap;
+          background: rgba(0, 0, 0, 0.5);
+        }
+
+        .stats {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+          margin-top: 10px;
+        }
+
+        @media (min-width: 520px) {
+          .stats {
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+          }
+        }
+
+        .stat {
+          border-radius: 18px;
+          border: 1px solid rgba(230, 195, 106, 0.22);
+          background: rgba(0, 0, 0, 0.62);
+          padding: 12px 12px 10px;
+        }
+
+        .k {
+          font-size: 12px;
+          color: #bfae78;
+          margin-bottom: 6px;
+        }
+
+        .v {
+          font-size: 18px;
+          font-weight: 900;
+          letter-spacing: 0.01em;
+          color: #fff;
+        }
+
+        .pos {
+          color: #bff7d2;
+        }
+
+        .neg {
+          color: #ffb3b3;
+        }
+
+        .mini {
+          margin-top: 12px;
+          display: grid;
+          gap: 6px;
+          font-size: 12px;
+        }
+
+        .miniK {
+          color: #bfae78;
+        }
+        .miniV {
+          color: #f7f0da;
+        }
+
+        .weeklyGrid {
+          display: grid;
+          gap: 12px;
+          grid-template-columns: 1fr;
+          margin-top: 8px;
+        }
+
+        @media (min-width: 560px) {
+          .weeklyGrid {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+
+        .weeklyBox {
+          border-radius: 18px;
+          border: 1px solid rgba(230, 195, 106, 0.22);
+          background: rgba(0, 0, 0, 0.62);
+          padding: 12px 12px 10px;
+        }
+
+        .hint {
+          margin-top: 6px;
+          font-size: 12px;
+          color: #bfae78;
+        }
+
+        .settleRow {
+          margin-top: 12px;
+          padding-top: 12px;
+          border-top: 1px solid rgba(230, 195, 106, 0.18);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        .v2 {
+          font-weight: 900;
+          color: #fff;
+        }
+
+        .payRow {
+          margin-top: 12px;
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .quote {
+          font-size: 16px;
+          line-height: 1.7;
+          padding: 14px 14px;
+          border-radius: 18px;
+          border: 1px solid rgba(230, 195, 106, 0.22);
+          background: rgba(0, 0, 0, 0.62);
+          color: #f7f0da;
+        }
+
+        .foot {
+          margin-top: 16px;
+          display: grid;
+          gap: 6px;
+          opacity: 0.92;
+        }
+
+        .btnRow {
+          display: flex;
+          gap: 10px;
+          margin-top: 12px;
+          flex-wrap: wrap;
+        }
+
+        .ghost,
+        .gold,
+        .primary {
+          border: none;
+          cursor: pointer;
+          border-radius: 14px;
+          padding: 12px 14px;
+          font-weight: 900;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          user-select: none;
+        }
+
+        .ghost {
+          background: rgba(0, 0, 0, 0.55);
+          border: 1px solid rgba(230, 195, 106, 0.25);
+          color: #f7f0da;
+        }
+
+        .ghost:hover {
+          border-color: rgba(230, 195, 106, 0.45);
+        }
+
+        .ghost.small {
+          padding: 10px 12px;
+          font-size: 12px;
+          border-radius: 12px;
+        }
+
+        .gold {
+          background: linear-gradient(135deg, #e6c36a, #b8963f);
+          color: #121212;
+          box-shadow: 0 0 24px rgba(230, 195, 106, 0.18);
+        }
+
+        .gold:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .primary {
+          background: linear-gradient(135deg, #e6c36a, #b8963f);
+          color: #121212;
+        }
       `}</style>
     </div>
   );
