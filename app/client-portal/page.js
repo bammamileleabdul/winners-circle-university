@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabaseBrowser";
 
@@ -28,6 +28,18 @@ function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n));
 }
 
+function agoLabel(iso) {
+  if (!iso) return "—";
+  const t = new Date(iso).getTime();
+  if (!t) return "—";
+  const s = Math.max(0, Math.floor((Date.now() - t) / 1000));
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  return `${h}h ago`;
+}
+
 export default function ClientPortal() {
   const router = useRouter();
 
@@ -42,6 +54,10 @@ export default function ClientPortal() {
 
   const [quoteIndex, setQuoteIndex] = useState(0);
   const [toast, setToast] = useState("");
+  const [lastRefreshAt, setLastRefreshAt] = useState(null);
+
+  const refreshTimer = useRef(null);
+  const realtimeChannelRef = useRef(null);
 
   const quotes = useMemo(
     () => [
@@ -53,46 +69,11 @@ export default function ClientPortal() {
       "Consistency beats intensity.",
       "The market pays the calm, not the emotional.",
       "If it’s not clean, it’s not a trade.",
+      "Your edge is execution, not prediction.",
+      "Boring trading beats emotional trading.",
     ],
     []
   );
-
-  // Rotate quote
-  useEffect(() => {
-    const t = setInterval(() => {
-      setQuoteIndex((i) => (i + 1) % quotes.length);
-    }, 9000);
-    return () => clearInterval(t);
-  }, [quotes.length]);
-
-  // Auth guard
-  useEffect(() => {
-    const run = async () => {
-      const { data } = await supabase.auth.getSession();
-      const u = data?.session?.user;
-      if (!u) {
-        router.push("/login");
-        return;
-      }
-      setUser(u);
-      setChecking(false);
-    };
-
-    run();
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      const u = session?.user || null;
-      if (!u) router.push("/login");
-      setUser(u);
-    });
-
-    return () => sub?.subscription?.unsubscribe?.();
-  }, [router]);
-
-  const logout = async () => {
-    await supabase.auth.signOut();
-    router.push("/login");
-  };
 
   const showToast = (msg) => {
     setToast(msg);
@@ -109,9 +90,59 @@ export default function ClientPortal() {
     }
   };
 
-  const refresh = async () => {
+  const pickNewQuote = () => {
+    const next = Math.floor(Math.random() * quotes.length);
+    setQuoteIndex(next);
+  };
+
+  // Rotate quote
+  useEffect(() => {
+    const t = setInterval(() => {
+      setQuoteIndex((i) => (i + 1) % quotes.length);
+    }, 9000);
+    return () => clearInterval(t);
+  }, [quotes.length]);
+
+  // Auth guard
+  useEffect(() => {
+    const run = async () => {
+      const { data } = await supabase.auth.getSession();
+      const u = data?.session?.user;
+
+      if (!u) {
+        setChecking(false);
+        router.push("/login");
+        return;
+      }
+
+      setUser(u);
+      setChecking(false);
+    };
+
+    run();
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      const u = session?.user || null;
+      if (!u) {
+        setUser(null);
+        router.push("/login");
+        return;
+      }
+      setUser(u);
+    });
+
+    return () => sub?.subscription?.unsubscribe?.();
+  }, [router]);
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
+
+  const refresh = async (opts = { silent: false }) => {
     if (!user?.id) return;
-    setLoadingData(true);
+    if (!opts?.silent) setLoadingData(true);
+
     try {
       // 1) Connection (pairing + status)
       const { data: c, error: cErr } = await supabase
@@ -126,13 +157,14 @@ export default function ClientPortal() {
       // 2) Latest snapshot
       const { data: lastSnap, error: lErr } = await supabase
         .from("mt5_snapshots")
-        .select("balance,equity,margin,free_margin,created_at")
+        .select("balance,equity,margin,free_margin,created_at,mt5_login")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(1);
 
       if (lErr) throw lErr;
-      setLatest(lastSnap?.[0] || null);
+      const last = lastSnap?.[0] || null;
+      setLatest(last);
 
       // 3) First snapshot (use as “starting balance / deposit proxy”)
       const { data: firstSnap, error: fErr } = await supabase
@@ -155,31 +187,98 @@ export default function ClientPortal() {
 
       if (rErr) throw rErr;
       setSnapshots(rec || []);
+
+      setLastRefreshAt(new Date().toISOString());
     } catch (e) {
       console.log(e);
       showToast("Couldn’t load data. Try refresh.");
     } finally {
-      setLoadingData(false);
+      if (!opts?.silent) setLoadingData(false);
     }
   };
 
+  // Initial load
   useEffect(() => {
     if (!checking && user?.id) refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checking, user?.id]);
 
+  // Auto-refresh every 30s (silent)
+  useEffect(() => {
+    if (!user?.id) return;
+    refreshTimer.current = window.setInterval(() => {
+      refresh({ silent: true });
+    }, 30000);
+    return () => window.clearInterval(refreshTimer.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // Realtime updates (new snapshots / connection updates)
+  useEffect(() => {
+    if (!user?.id) return;
+
+    // cleanup previous
+    if (realtimeChannelRef.current) {
+      supabase.removeChannel(realtimeChannelRef.current);
+      realtimeChannelRef.current = null;
+    }
+
+    const channel = supabase
+      .channel(`portal-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "mt5_snapshots",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          // debounce refresh
+          window.clearTimeout(channel._t);
+          channel._t = window.setTimeout(() => refresh({ silent: true }), 350);
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "mt5_connections",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          window.clearTimeout(channel._t2);
+          channel._t2 = window.setTimeout(() => refresh({ silent: true }), 350);
+        }
+      )
+      .subscribe();
+
+    realtimeChannelRef.current = channel;
+
+    return () => {
+      if (realtimeChannelRef.current) {
+        supabase.removeChannel(realtimeChannelRef.current);
+        realtimeChannelRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
   const connectedStatus = useMemo(() => {
-    const last = conn?.last_seen_at ? new Date(conn.last_seen_at).getTime() : 0;
+    const snapTime = latest?.created_at ? new Date(latest.created_at).getTime() : 0;
     const now = Date.now();
-    const mins = last ? (now - last) / 60000 : 9999;
+    const mins = snapTime ? (now - snapTime) / 60000 : 9999;
+
     if (!conn?.pairing_code) return { label: "Not paired", tone: "warn" };
-    if (mins <= 5) return { label: "Connected", tone: "ok" };
+    if (!latest) return { label: "Waiting snapshot", tone: "warn" };
+    if (mins <= 2) return { label: "Live", tone: "ok" };
+    if (mins <= 6) return { label: "Delayed", tone: "warn" };
     return { label: "Offline", tone: "warn" };
-  }, [conn]);
+  }, [conn?.pairing_code, latest]);
 
   const startBalance = useMemo(() => {
-    // Use first snapshot balance as “starting capital proxy”
-    const b = first?.balance ?? first?.equity ?? null;
+    const b = first?.equity ?? first?.balance ?? null;
     return b === null ? null : Number(b);
   }, [first]);
 
@@ -187,6 +286,16 @@ export default function ClientPortal() {
     const e = latest?.equity ?? null;
     return e === null ? null : Number(e);
   }, [latest]);
+
+  const currentBalance = useMemo(() => {
+    const b = latest?.balance ?? null;
+    return b === null ? null : Number(b);
+  }, [latest]);
+
+  const floating = useMemo(() => {
+    if (currentEquity === null || currentBalance === null) return null;
+    return Number(currentEquity - currentBalance);
+  }, [currentEquity, currentBalance]);
 
   const pnl = useMemo(() => {
     if (startBalance === null || currentEquity === null) return null;
@@ -204,18 +313,16 @@ export default function ClientPortal() {
   }, [pnl]);
 
   const riskPerTrade = useMemo(() => {
-    // your rule: capital ÷ 14
     if (startBalance === null) return null;
     return startBalance / 14;
   }, [startBalance]);
 
   const drawdownPct = useMemo(() => {
-    // Simple peak-to-trough drawdown from recent equities
     if (!snapshots?.length) return null;
     const series = [...snapshots]
       .map((s) => Number(s.equity))
       .filter((x) => Number.isFinite(x))
-      .reverse(); // oldest -> newest
+      .reverse();
 
     if (series.length < 2) return null;
 
@@ -233,7 +340,7 @@ export default function ClientPortal() {
 
   const portalHint = useMemo(() => {
     if (!conn?.pairing_code) {
-      return "Your account isn’t paired yet. Once we pair it, your dashboard updates automatically from MT5.";
+      return "Your account isn’t paired yet. Go to Get Started, connect the bot, then your dashboard updates automatically.";
     }
     if (!latest) {
       return "Paired ✅. Waiting for the first MT5 snapshot… (Once the bot sends data, stats appear here.)";
@@ -276,7 +383,7 @@ export default function ClientPortal() {
             {user?.email || "Client"}
           </div>
 
-          <button className="ghostBtn" type="button" onClick={refresh} disabled={loadingData}>
+          <button className="ghostBtn" type="button" onClick={() => refresh()} disabled={loadingData}>
             {loadingData ? "Refreshing…" : "Refresh"}
           </button>
 
@@ -295,11 +402,23 @@ export default function ClientPortal() {
               <div className="pill">LIVE CLIENT PORTAL · 70/30 SPLIT</div>
               <h1 className="title">Client Dashboard</h1>
               <p className="lead">{portalHint}</p>
+              <div className="metaLine">
+                <span className="dim">Last portal refresh:</span>{" "}
+                <span className="gold">{lastRefreshAt ? agoLabel(lastRefreshAt) : "—"}</span>
+                <span className="sep">·</span>
+                <span className="dim">Last snapshot:</span>{" "}
+                <span className="gold">{latest?.created_at ? agoLabel(latest.created_at) : "—"}</span>
+              </div>
             </div>
 
             <div className="quoteBox">
               <div className="quoteLabel">Today’s push</div>
               <div className="quoteText">“{quotes[quoteIndex]}”</div>
+              <div className="quoteActions">
+                <button className="miniBtn" type="button" onClick={pickNewQuote}>
+                  New quote
+                </button>
+              </div>
             </div>
           </div>
 
@@ -323,7 +442,17 @@ export default function ClientPortal() {
               <div className="pairMeta">
                 <div>
                   <span className="dim">MT5 login:</span>{" "}
-                  <span className="gold">{conn?.mt5_login || "—"}</span>
+                  <span className="gold">{conn?.mt5_login || latest?.mt5_login || "—"}</span>
+                  {!!(conn?.mt5_login || latest?.mt5_login) && (
+                    <button
+                      className="copyTiny"
+                      type="button"
+                      onClick={() => copyText(conn?.mt5_login || latest?.mt5_login)}
+                      title="Copy MT5 login"
+                    >
+                      Copy
+                    </button>
+                  )}
                 </div>
                 <div>
                   <span className="dim">Last seen:</span>{" "}
@@ -336,9 +465,7 @@ export default function ClientPortal() {
               <div className="pairLabel">Commission model</div>
               <div className="pairCode">30% of net profit</div>
               <div className="pairMeta">
-                <div className="dim">
-                  This dashboard is read-only. Clients cannot change profits here.
-                </div>
+                <div className="dim">This dashboard is read-only. Clients cannot change profits here.</div>
               </div>
             </div>
           </div>
@@ -350,33 +477,33 @@ export default function ClientPortal() {
 
           <div className="statsGrid">
             <div className="stat">
-              <div className="statLabel">Starting balance (first snapshot)</div>
+              <div className="statLabel">Starting equity (first snapshot)</div>
               <div className="statValue">{startBalance === null ? "—" : fmtMoney(startBalance)}</div>
-              <div className="statHint">Used as deposit proxy until we add real deposit tracking.</div>
+              <div className="statHint">This becomes your “start” baseline for profit share.</div>
             </div>
 
             <div className="stat">
               <div className="statLabel">Current equity</div>
               <div className="statValue">{currentEquity === null ? "—" : fmtMoney(currentEquity)}</div>
-              <div className="statHint">Latest MT5 equity reported to the server.</div>
+              <div className="statHint">Latest MT5 equity reported.</div>
             </div>
 
             <div className="stat">
-              <div className="statLabel">P/L (since start)</div>
+              <div className="statLabel">Net P/L (since start)</div>
               <div className={`statValue ${pnl !== null && pnl < 0 ? "neg" : pnl !== null && pnl > 0 ? "pos" : ""}`}>
                 {pnl === null ? "—" : fmtMoney(pnl)}
               </div>
-              <div className="statHint">This is not editable by the client.</div>
+              <div className="statHint">Calculated from snapshots. Not editable by client.</div>
             </div>
 
             <div className="stat">
               <div className="statLabel">Your 70%</div>
               <div className="statValue">{client70 === null ? "—" : fmtMoney(client70)}</div>
-              <div className="statHint">Only counts if P/L is positive.</div>
+              <div className="statHint">Only counts if net P/L is positive.</div>
             </div>
 
             <div className="stat">
-              <div className="statLabel">Our 30%</div>
+              <div className="statLabel">Our 30% due</div>
               <div className="statValue">{commission30 === null ? "—" : fmtMoney(commission30)}</div>
               <div className="statHint">Only charged on net profit.</div>
             </div>
@@ -394,8 +521,10 @@ export default function ClientPortal() {
               <div className="miniValue">{fmtMoney(latest?.balance)}</div>
             </div>
             <div className="miniCard">
-              <div className="miniLabel">Margin</div>
-              <div className="miniValue">{fmtNum(latest?.margin)}</div>
+              <div className="miniLabel">Floating P/L</div>
+              <div className={`miniValue ${floating !== null && floating < 0 ? "neg" : floating !== null && floating > 0 ? "pos" : ""}`}>
+                {floating === null ? "—" : fmtMoney(floating)}
+              </div>
             </div>
             <div className="miniCard">
               <div className="miniLabel">Free margin</div>
@@ -412,7 +541,7 @@ export default function ClientPortal() {
           </div>
         </section>
 
-        {/* PAYOUT BUTTONS (still manual) */}
+        {/* PAYOUT BUTTONS (manual for now) */}
         <section className="card">
           <h2 className="sectionTitle">Payout & Profit Share</h2>
           <p className="leadSmall">
@@ -590,6 +719,19 @@ export default function ClientPortal() {
           font-size: 14px;
         }
 
+        .metaLine {
+          margin-top: 10px;
+          font-size: 13px;
+          color: #d8d2b6;
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          align-items: center;
+        }
+        .sep {
+          opacity: 0.7;
+        }
+
         .quoteBox {
           border-radius: 18px;
           border: 1px solid rgba(230, 195, 106, 0.18);
@@ -607,6 +749,9 @@ export default function ClientPortal() {
           color: #ffe29b;
           font-weight: 900;
           line-height: 1.5;
+        }
+        .quoteActions {
+          margin-top: 10px;
         }
 
         .pairRow {
@@ -669,6 +814,19 @@ export default function ClientPortal() {
         .miniLink {
           background: transparent;
         }
+
+        .copyTiny {
+          margin-left: 8px;
+          border-radius: 999px;
+          padding: 6px 10px;
+          border: 1px solid rgba(230, 195, 106, 0.18);
+          background: rgba(0, 0, 0, 0.45);
+          color: #e6c36a;
+          font-weight: 900;
+          cursor: pointer;
+          font-size: 12px;
+        }
+
         .pairMeta {
           margin-top: 10px;
           display: grid;
@@ -721,10 +879,12 @@ export default function ClientPortal() {
           color: #f7e3a5;
           margin-bottom: 6px;
         }
-        .statValue.pos {
+        .statValue.pos,
+        .miniValue.pos {
           color: #b8ffcc;
         }
-        .statValue.neg {
+        .statValue.neg,
+        .miniValue.neg {
           color: #ffb8b8;
         }
         .statHint {
