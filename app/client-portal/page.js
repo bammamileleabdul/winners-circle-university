@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -36,6 +35,25 @@ function agoLabel(iso) {
   if (m < 60) return `${m}m ago`;
   const h = Math.floor(m / 60);
   return `${h}h ago`;
+}
+
+/* ---------- week helpers (weekly profit share) ---------- */
+function isoDateUTC(d) {
+  return new Date(d).toISOString().slice(0, 10);
+}
+// Monday 00:00 UTC (simple and stable for weekly buckets)
+function getWeekStartUTC(now = new Date()) {
+  const dt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const day = dt.getUTCDay(); // 0 Sun..6 Sat
+  const diff = day === 0 ? 6 : day - 1; // days since Monday
+  dt.setUTCDate(dt.getUTCDate() - diff);
+  dt.setUTCHours(0, 0, 0, 0);
+  return dt;
+}
+function addDaysUTC(d, days) {
+  const x = new Date(d);
+  x.setUTCDate(x.getUTCDate() + days);
+  return x;
 }
 
 /* ---------- tiny SVG chart (no libs) ---------- */
@@ -135,7 +153,14 @@ function ChartBlock({ title, subtitle, points, kind }) {
           ))}
 
           <path d={meta.area} fill={`url(#goldFill-${kind})`} />
-          <path d={meta.line} fill="none" stroke={`url(#goldStroke-${kind})`} strokeWidth="6" strokeLinejoin="round" strokeLinecap="round" />
+          <path
+            d={meta.line}
+            fill="none"
+            stroke={`url(#goldStroke-${kind})`}
+            strokeWidth="6"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
         </svg>
       </div>
     </div>
@@ -161,8 +186,8 @@ export default function ClientPortal() {
   const [first, setFirst] = useState(null);
   const [snapshots, setSnapshots] = useState([]);
 
-  // fee state
-  const [feeState, setFeeState] = useState(null); // {paid_hwm,last_fee_paid,last_paid_at}
+  // ✅ weekly fee model (uncheatable)
+  const [weekly, setWeekly] = useState(null); // {week_start, week_end, pnl, fee_due, settled, settled_at, updated_at}
 
   // peaks (for dd only)
   const [peakAll, setPeakAll] = useState(null);
@@ -180,6 +205,11 @@ export default function ClientPortal() {
 
   const refreshTimer = useRef(null);
   const realtimeChannelRef = useRef(null);
+
+  const weekStart = useMemo(() => getWeekStartUTC(new Date()), []);
+  const weekEnd = useMemo(() => addDaysUTC(weekStart, 6), [weekStart]);
+  const weekStartISO = useMemo(() => isoDateUTC(weekStart), [weekStart]);
+  const weekEndISO = useMemo(() => isoDateUTC(weekEnd), [weekEnd]);
 
   const quotes = useMemo(
     () => [
@@ -211,8 +241,6 @@ export default function ClientPortal() {
       showToast("Copy failed — hold to copy.");
     }
   };
-
-  const pickNewQuote = () => setQuoteIndex(Math.floor(Math.random() * quotes.length));
 
   useEffect(() => {
     const t = setInterval(() => setQuoteIndex((i) => (i + 1) % quotes.length), 9000);
@@ -341,14 +369,16 @@ export default function ClientPortal() {
       const pk = Number(top1?.[0]?.equity);
       setPeakAll(Number.isFinite(pk) ? pk : null);
 
-      // fee state (paid watermark)
-      const { data: fs, error: fsErr } = await supabase
-        .from("mt5_fee_state")
-        .select("paid_hwm,last_fee_paid,last_paid_at,updated_at")
+      // ✅ Weekly realised PnL row for THIS week
+      // If none yet, it means bot hasn't sent weekly pnl yet (snapshots can still show).
+      const { data: w, error: wErr } = await supabase
+        .from("mt5_weekly_pnl")
+        .select("week_start,week_end,pnl,fee_due,settled,settled_at,updated_at,created_at")
         .eq("user_id", user.id)
+        .eq("week_start", weekStartISO)
         .maybeSingle();
-      if (fsErr) console.log(fsErr);
-      setFeeState(fs || null);
+      if (wErr) console.log(wErr);
+      setWeekly(w || null);
 
       await loadSeries(user.id, range, true);
       setLastRefreshAt(new Date().toISOString());
@@ -404,6 +434,14 @@ export default function ClientPortal() {
           channel._t2 = window.setTimeout(() => refresh({ silent: true }), 350);
         }
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "mt5_weekly_pnl", filter: `user_id=eq.${user.id}` },
+        () => {
+          window.clearTimeout(channel._t3);
+          channel._t3 = window.setTimeout(() => refresh({ silent: true }), 350);
+        }
+      )
       .subscribe();
 
     realtimeChannelRef.current = channel;
@@ -448,23 +486,21 @@ export default function ClientPortal() {
     return Number(currentEquity - currentBalance);
   }, [currentEquity, currentBalance]);
 
-  // paid watermark effective (if none, default to starting equity)
-  const paidHwmEffective = useMemo(() => {
-    const p = Number(feeState?.paid_hwm);
-    if (Number.isFinite(p) && p > 0) return p;
-    return startEquity;
-  }, [feeState?.paid_hwm, startEquity]);
+  // Weekly model numbers
+  const weeklyPnl = useMemo(() => {
+    const p = Number(weekly?.pnl);
+    return Number.isFinite(p) ? p : null;
+  }, [weekly?.pnl]);
 
-  // fee due NOW (only above paid watermark)
-  const feeDueNow = useMemo(() => {
-    if (!Number.isFinite(currentEquity) || !Number.isFinite(paidHwmEffective)) return null;
-    return Math.max(0, currentEquity - paidHwmEffective) * 0.3;
-  }, [currentEquity, paidHwmEffective]);
+  const feeDueWeek = useMemo(() => {
+    const f = Number(weekly?.fee_due);
+    return Number.isFinite(f) ? f : weeklyPnl !== null ? Math.max(0, weeklyPnl) * 0.3 : null;
+  }, [weekly?.fee_due, weeklyPnl]);
 
-  const clientShareNow = useMemo(() => {
-    if (!Number.isFinite(currentEquity) || !Number.isFinite(paidHwmEffective)) return null;
-    return Math.max(0, currentEquity - paidHwmEffective) * 0.7;
-  }, [currentEquity, paidHwmEffective]);
+  const clientShareWeek = useMemo(() => {
+    if (weeklyPnl === null) return null;
+    return Math.max(0, weeklyPnl) * 0.7;
+  }, [weeklyPnl]);
 
   const hwmDrawdownPct = useMemo(() => {
     if (!Number.isFinite(peakAll) || !Number.isFinite(currentEquity) || peakAll <= 0) return null;
@@ -498,9 +534,9 @@ export default function ClientPortal() {
     return admins.includes(em);
   }, [user?.email]);
 
-  const settleFeeAdmin = async () => {
+  const settleWeekAdmin = async () => {
     if (!isAdmin) return;
-    if (!confirm("Admin settle fee now? This will move PAID watermark up to CURRENT equity.")) return;
+    if (!confirm("Admin settle WEEK now? This marks the week as PAID/SETTLED (weekly fee).")) return;
 
     const { data } = await supabase.auth.getSession();
     const token = data?.session?.access_token;
@@ -509,7 +545,7 @@ export default function ClientPortal() {
       return;
     }
 
-    const res = await fetch("/api/fees/settle", {
+    const res = await fetch("/api/fees/weekly/settle", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -524,13 +560,22 @@ export default function ClientPortal() {
       return;
     }
 
-    showToast(`Settled ✅ Fee paid: ${fmtMoney(j.fee_paid)}`);
+    showToast(`Settled ✅ Fee paid: ${fmtMoney(j.fee_paid ?? feeDueWeek ?? 0)}`);
     refresh();
   };
 
   if (checking) {
     return (
-      <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "radial-gradient(circle at top, #2a1f0f, #000)", color: "#f7f0da", padding: 18 }}>
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "grid",
+          placeItems: "center",
+          background: "radial-gradient(circle at top, #2a1f0f, #000)",
+          color: "#f7f0da",
+          padding: 18,
+        }}
+      >
         Loading…
       </div>
     );
@@ -568,10 +613,12 @@ export default function ClientPortal() {
         <section className="card hero">
           <div className="heroTop">
             <div>
-              <div className="pill">LIVE CLIENT PORTAL · PAID WATERMARK ENGINE</div>
+              <div className="pill">LIVE CLIENT PORTAL · WEEKLY PROFIT SHARE (30%)</div>
               <h1 className="title">Client Dashboard</h1>
               <p className="lead">{portalHint}</p>
               <div className="metaLine">
+                <span className="dim">Week:</span> <span className="gold">{weekStartISO} → {weekEndISO}</span>
+                <span className="sep">·</span>
                 <span className="dim">Last refresh:</span> <span className="gold">{lastRefreshAt ? agoLabel(lastRefreshAt) : "—"}</span>
                 <span className="sep">·</span>
                 <span className="dim">Last snapshot:</span> <span className="gold">{latest?.created_at ? agoLabel(latest.created_at) : "—"}</span>
@@ -613,9 +660,9 @@ export default function ClientPortal() {
 
             <div className="pairCard">
               <div className="pairLabel">Fee logic</div>
-              <div className="pairCode">30% only above PAID watermark</div>
+              <div className="pairCode">30% of weekly realised profit</div>
               <div className="pairMeta">
-                <div className="dim">Clients cannot change watermark. Only admin can settle after payment.</div>
+                <div className="dim">Only profits. Based on realised trading PnL (profit+swap+commission). Deposits/withdrawals don’t change it.</div>
               </div>
             </div>
           </div>
@@ -633,21 +680,29 @@ export default function ClientPortal() {
             </div>
 
             <div className="stat">
-              <div className="statLabel">Paid watermark</div>
-              <div className="statValue">{paidHwmEffective === null ? "—" : fmtMoney(paidHwmEffective)}</div>
-              <div className="statHint">Fee is only charged above this level.</div>
+              <div className="statLabel">Weekly realised PnL</div>
+              <div className={`statValue ${weeklyPnl > 0 ? "pos" : weeklyPnl < 0 ? "neg" : ""}`}>
+                {weeklyPnl === null ? "—" : fmtMoney(weeklyPnl)}
+              </div>
+              <div className="statHint">This week only (net: profit + swap + commission).</div>
             </div>
 
             <div className="stat">
-              <div className="statLabel">Fee due now (30%)</div>
-              <div className="statValue">{feeDueNow === null ? "—" : fmtMoney(feeDueNow)}</div>
-              <div className="statHint">If you’re below watermark, this stays £0.</div>
+              <div className="statLabel">Fee due this week (30%)</div>
+              <div className="statValue">{feeDueWeek === null ? "—" : fmtMoney(feeDueWeek)}</div>
+              <div className="statHint">Fee = max(0, weekly PnL) × 30%.</div>
             </div>
 
             <div className="stat">
-              <div className="statLabel">Client share on new high (70%)</div>
-              <div className="statValue">{clientShareNow === null ? "—" : fmtMoney(clientShareNow)}</div>
-              <div className="statHint">Only counts above watermark.</div>
+              <div className="statLabel">Client share (70%)</div>
+              <div className="statValue">{clientShareWeek === null ? "—" : fmtMoney(clientShareWeek)}</div>
+              <div className="statHint">Client share = max(0, weekly PnL) × 70%.</div>
+            </div>
+
+            <div className="stat">
+              <div className="statLabel">Week status</div>
+              <div className="statValue">{weekly ? (weekly.settled ? "Settled ✅" : "Unsettled") : "Waiting…"}</div>
+              <div className="statHint">{weekly?.settled_at ? `Settled at: ${fmtTime(weekly.settled_at)}` : "Settled only after payment."}</div>
             </div>
 
             <div className="stat">
@@ -656,12 +711,6 @@ export default function ClientPortal() {
                 {hwmDrawdownPct === null ? "—" : `${hwmDrawdownPct.toFixed(2)}%`}
               </div>
               <div className="statHint">From your highest equity ever recorded.</div>
-            </div>
-
-            <div className="stat">
-              <div className="statLabel">Last fee settled</div>
-              <div className="statValue">{feeState?.last_paid_at ? fmtTime(feeState.last_paid_at) : "—"}</div>
-              <div className="statHint">{feeState?.last_fee_paid ? `Last paid: ${fmtMoney(feeState.last_fee_paid)}` : "No settlement recorded yet."}</div>
             </div>
           </div>
 
@@ -693,12 +742,17 @@ export default function ClientPortal() {
           {isAdmin && (
             <div className="adminBox">
               <div className="adminTitle">Admin Actions</div>
-              <div className="adminText">Use this only after client has paid the 30%.</div>
-              <button className="primaryBtn" type="button" onClick={settleFeeAdmin} disabled={!feeDueNow || feeDueNow <= 0}>
-                Settle fee (move watermark to current equity)
+              <div className="adminText">Use this only after client has paid the 30% for this week.</div>
+              <button
+                className="primaryBtn"
+                type="button"
+                onClick={settleWeekAdmin}
+                disabled={!weekly || weekly?.settled || !(feeDueWeek > 0)}
+              >
+                Settle this week (mark paid)
               </button>
               <div className="finePrint" style={{ marginTop: 10 }}>
-                This prevents double-charging: after settle, fee due becomes £0 until the next new high.
+                After settle, the week shows “Settled ✅”. Next week starts fresh (no “new high” tricks).
               </div>
             </div>
           )}
