@@ -12,18 +12,11 @@ function fmtMoney(n) {
   const abs = Math.abs(v);
   return `${sign}£${abs.toFixed(2)}`;
 }
-function fmtNum(n) {
-  if (n === null || n === undefined || Number.isNaN(Number(n))) return "—";
-  return Number(n).toFixed(2);
-}
 function fmtTime(iso) {
   if (!iso) return "—";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleString();
-}
-function clamp(n, min, max) {
-  return Math.max(min, Math.min(max, n));
 }
 function agoLabel(iso) {
   if (!iso) return "—";
@@ -58,7 +51,6 @@ function TinyLine({ data, height = 44 }) {
       </svg>
     );
   }
-  const xs = data.map((d) => d.x);
   const ys = data.map((d) => d.y);
   const minY = Math.min(...ys);
   const maxY = Math.max(...ys);
@@ -100,7 +92,7 @@ export default function ClientPortalPage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
 
-  // connection + latest snapshot
+  // connection + snapshots
   const [conn, setConn] = useState(null);
   const [latest, setLatest] = useState(null);
   const [firstSnap, setFirstSnap] = useState(null);
@@ -110,11 +102,10 @@ export default function ClientPortalPage() {
   const [weekStartSnap, setWeekStartSnap] = useState(null);
   const [payLoading, setPayLoading] = useState(false);
 
-  // fee state (kept for compatibility; UI now uses weekly profit-share)
-  const [feeState, setFeeState] = useState(null);
+  // peak equity directly from mt5_snapshots (NO mt5_equity_peaks table)
+  const [peakSnap, setPeakSnap] = useState(null);
 
-  // performance tracking
-  const [equityPeaks, setEquityPeaks] = useState({ hwmEquity: null, hwmAt: null });
+  // equity series for mini chart
   const [equitySeries, setEquitySeries] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -130,11 +121,19 @@ export default function ClientPortalPage() {
   };
 
   useEffect(() => {
+    // Stripe redirect feedback
+    try {
+      const url = new URL(window.location.href);
+      if (url.searchParams.get("paid") === "1") showToast("Payment received ✅");
+      if (url.searchParams.get("canceled") === "1") showToast("Payment canceled");
+    } catch {}
+    // rotating quotes
     setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
     const t = setInterval(() => {
       setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
     }, 25000);
     return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // auth gate
@@ -232,7 +231,7 @@ export default function ClientPortalPage() {
       if (lErr) throw lErr;
       setLatest(l || null);
 
-      // first snapshot (for “since started” stats)
+      // first snapshot
       const { data: f, error: fErr } = await supabase
         .from("mt5_snapshots")
         .select("*")
@@ -265,26 +264,16 @@ export default function ClientPortalPage() {
       if (wsErr) throw wsErr;
       setWeekStartSnap(ws?.[0] || null);
 
-      // fee state (kept for compatibility)
-      const { data: fs, error: fsErr } = await supabase
-        .from("mt5_fee_state")
-        .select("*")
+      // peak equity directly from mt5_snapshots (no extra tables)
+      const { data: pk, error: pkErr } = await supabase
+        .from("mt5_snapshots")
+        .select("equity,created_at")
         .eq("user_id", user.id)
+        .order("equity", { ascending: false })
+        .limit(1)
         .maybeSingle();
-      if (fsErr && fsErr.code !== "PGRST116") throw fsErr;
-      setFeeState(fs || null);
-
-      // peaks (all-time HWM)
-      const { data: peak, error: pErr } = await supabase
-        .from("mt5_equity_peaks")
-        .select("hwm_equity,hwm_at")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (pErr && pErr.code !== "PGRST116") throw pErr;
-      setEquityPeaks({
-        hwmEquity: peak?.hwm_equity ?? null,
-        hwmAt: peak?.hwm_at ?? null,
-      });
+      if (pkErr) throw pkErr;
+      setPeakSnap(pk || null);
 
       // equity series (for mini chart)
       const { data: series, error: sErr } = await supabase
@@ -329,10 +318,16 @@ export default function ClientPortalPage() {
     return v === null ? null : Number(v);
   }, [latest]);
 
+  const sinceStartPL = useMemo(() => {
+    if (startEquity === null || currentEquity === null) return null;
+    return Number(currentEquity - startEquity);
+  }, [startEquity, currentEquity]);
+
+  // peak equity derived from snapshots
   const hwmEquity = useMemo(() => {
-    const v = equityPeaks?.hwmEquity;
+    const v = peakSnap?.equity;
     return v === null || v === undefined ? null : Number(v);
-  }, [equityPeaks]);
+  }, [peakSnap]);
 
   const hwmDrawdownPct = useMemo(() => {
     if (hwmEquity === null || currentEquity === null) return null;
@@ -340,30 +335,6 @@ export default function ClientPortalPage() {
     const dd = Math.max(0, (hwmEquity - currentEquity) / hwmEquity);
     return dd * 100;
   }, [hwmEquity, currentEquity]);
-
-  const sinceStartPL = useMemo(() => {
-    if (startEquity === null || currentEquity === null) return null;
-    return Number(currentEquity - startEquity);
-  }, [startEquity, currentEquity]);
-
-  // Legacy watermark logic (not used for billing now)
-  const paidHwmEffective = useMemo(() => {
-    if (!feeState) return startEquity;
-    const v = feeState.paid_hwm_equity ?? startEquity;
-    return v === null || v === undefined ? null : Number(v);
-  }, [feeState, startEquity]);
-
-  const feeDueNow = useMemo(() => {
-    if (currentEquity === null || paidHwmEffective === null) return null;
-    const above = Math.max(0, currentEquity - paidHwmEffective);
-    return above * 0.3;
-  }, [currentEquity, paidHwmEffective]);
-
-  const clientShareNow = useMemo(() => {
-    if (currentEquity === null || paidHwmEffective === null) return null;
-    const above = Math.max(0, currentEquity - paidHwmEffective);
-    return above * 0.7;
-  }, [currentEquity, paidHwmEffective]);
 
   // Weekly profit-share (30% of profits this week only)
   const weekStartIsoLabel = useMemo(() => startOfWeekISO(new Date()), []);
@@ -391,10 +362,7 @@ export default function ClientPortalPage() {
     if (!equitySeries || equitySeries.length < 2) return [];
     return equitySeries
       .filter((p) => p?.equity !== null && p?.equity !== undefined)
-      .map((p, i) => ({
-        x: i,
-        y: Number(p.equity),
-      }));
+      .map((p, i) => ({ x: i, y: Number(p.equity) }));
   }, [equitySeries]);
 
   if (!user) {
@@ -487,7 +455,9 @@ export default function ClientPortalPage() {
               <div className="pairCode">{conn?.pairing_code || "—"}</div>
               <div className="pairMeta">
                 <div className="dim">This is linked to your account.</div>
-                <div className="dim">MT5 Login: <b>{conn?.mt5_login || "—"}</b></div>
+                <div className="dim">
+                  MT5 Login: <b>{conn?.mt5_login || "—"}</b>
+                </div>
               </div>
             </div>
 
@@ -549,7 +519,7 @@ export default function ClientPortalPage() {
               <div className={`statValue ${hwmDrawdownPct > 0 ? "neg" : ""}`}>
                 {hwmDrawdownPct === null ? "—" : `${hwmDrawdownPct.toFixed(2)}%`}
               </div>
-              <div className="statHint">From your highest equity ever recorded.</div>
+              <div className="statHint">Peak equity is computed from mt5_snapshots (no extra table).</div>
             </div>
           </div>
 
