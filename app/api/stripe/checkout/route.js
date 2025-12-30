@@ -2,7 +2,7 @@ import Stripe from "stripe";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-export const runtime = "nodejs"; // Stripe SDK needs Node runtime
+export const runtime = "nodejs";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2024-06-20",
@@ -43,7 +43,6 @@ export async function POST(req) {
     const body = await req.json().catch(() => ({}));
     const amountPence = Number(body?.amount_pence);
     const currency = (body?.currency || "gbp").toLowerCase();
-    const weekStartIso = body?.week_start_iso ? String(body.week_start_iso) : "";
 
     if (!Number.isFinite(amountPence) || amountPence < 50) {
       return NextResponse.json({ error: "amount_pence must be >= 50" }, { status: 400 });
@@ -75,9 +74,9 @@ export async function POST(req) {
       metadata: {
         kind: String(body?.kind || "weekly_profit_share"),
         user_id: user.id,
-        pairing_code: body?.pairing_code ? String(body.pairing_code) : "",
         mt5_login: body?.mt5_login ? String(body.mt5_login) : "",
-        week_start_iso: weekStartIso,
+        pairing_code: body?.pairing_code ? String(body.pairing_code) : "",
+        week_start_iso: body?.week_start_iso ? String(body.week_start_iso) : "",
       },
     });
 
