@@ -1,4 +1,4 @@
-"use client";
+a"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -101,6 +101,14 @@ export default function ClientPortalPage() {
   // weekly billing (start-of-week snapshot)
   const [weekStartSnap, setWeekStartSnap] = useState(null);
   const [payLoading, setPayLoading] = useState(false);
+
+  // crypto payments
+  const [cryptoOpen, setCryptoOpen] = useState(false);
+  const [cryptoLoading, setCryptoLoading] = useState(false);
+  const [cryptoInvoice, setCryptoInvoice] = useState(null);
+  const [cryptoNetwork, setCryptoNetwork] = useState("usdt_trc20");
+  const [cryptoTxid, setCryptoTxid] = useState("");
+  const [cryptoVerifyLoading, setCryptoVerifyLoading] = useState(false);
 
   // peak equity directly from mt5_snapshots (NO mt5_equity_peaks table)
   const [peakSnap, setPeakSnap] = useState(null);
@@ -207,6 +215,99 @@ export default function ClientPortalPage() {
     }
   };
 
+  const copyText = async (t) => {
+    try {
+      await navigator.clipboard.writeText(String(t || ""));
+      showToast("Copied ✅");
+    } catch {
+      showToast("Copy failed");
+    }
+  };
+
+  const openCrypto = async () => {
+    try {
+      if (!weeklyFeeDue || weeklyFeeDue <= 0) {
+        showToast("No fee due this week ✅");
+        return;
+      }
+
+      setCryptoOpen(true);
+      setCryptoLoading(true);
+      setCryptoInvoice(null);
+      setCryptoTxid("");
+      setCryptoNetwork("usdt_trc20");
+
+      const { data } = await supabase.auth.getSession();
+      const token = data?.session?.access_token;
+
+      const res = await fetch("/api/crypto/invoice", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(out?.error || "Failed to create invoice");
+      setCryptoInvoice(out);
+    } catch (e) {
+      showToast(e?.message || "Crypto invoice error");
+      setCryptoOpen(false);
+    } finally {
+      setCryptoLoading(false);
+    }
+  };
+
+  const verifyCrypto = async () => {
+    try {
+      if (!cryptoInvoice?.invoice_id) {
+        showToast("Missing invoice");
+        return;
+      }
+      if (!cryptoTxid || cryptoTxid.trim().length < 20) {
+        showToast("Paste a valid transaction hash");
+        return;
+      }
+
+      setCryptoVerifyLoading(true);
+
+      const { data } = await supabase.auth.getSession();
+      const token = data?.session?.access_token;
+
+      const res = await fetch("/api/crypto/verify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          invoice_id: cryptoInvoice.invoice_id,
+          network: cryptoNetwork,
+          txid: cryptoTxid.trim(),
+        }),
+      });
+
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(out?.error || "Verify failed");
+
+      if (out?.ok && out?.status === "paid") {
+        showToast("Crypto payment confirmed ✅");
+        setCryptoOpen(false);
+        setCryptoTxid("");
+        // refresh portal numbers
+        refresh();
+        return;
+      }
+
+      showToast(out?.message || "Not paid yet");
+    } catch (e) {
+      showToast(e?.message || "Verify error");
+    } finally {
+      setCryptoVerifyLoading(false);
+    }
+  };
+
   const refresh = async () => {
     if (!user) return;
     setLoading(true);
@@ -275,15 +376,15 @@ export default function ClientPortalPage() {
       if (pkErr) throw pkErr;
       setPeakSnap(pk || null);
 
-      // equity series (for mini chart)
+      // equity series (for mini chart) - last 240 points
       const { data: series, error: sErr } = await supabase
         .from("mt5_snapshots")
         .select("created_at,equity")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: true })
+        .order("created_at", { ascending: false })
         .limit(240);
       if (sErr) throw sErr;
-      setEquitySeries(series || []);
+      setEquitySeries((series || []).slice().reverse());
     } catch (e) {
       showToast(e?.message || "Refresh failed");
     } finally {
@@ -532,6 +633,15 @@ export default function ClientPortalPage() {
             >
               {payLoading ? "Opening checkout…" : "Pay profit share (Stripe)"}
             </button>
+
+            <button
+              className="ghostBtn"
+              type="button"
+              onClick={openCrypto}
+              disabled={cryptoLoading || payLoading || !weeklyFeeDue || weeklyFeeDue <= 0}
+            >
+              {cryptoLoading ? "Preparing invoice…" : "Pay with crypto (BTC / USDT)"}
+            </button>
             <div className="finePrint">
               Week start (ISO): <span className="mono">{weekStartIsoLabel}</span>
             </div>
@@ -585,6 +695,90 @@ export default function ClientPortalPage() {
           </div>
         </section>
       </section>
+
+      {cryptoOpen ? (
+        <div className="modalOverlay" onClick={() => setCryptoOpen(false)} role="dialog" aria-modal="true">
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modalHead">
+              <div>
+                <div className="modalTitle">Pay with crypto</div>
+                <div className="dim small">Send exactly the invoice amount to our address, then paste your tx hash to verify.</div>
+              </div>
+              <button className="iconBtn" type="button" onClick={() => setCryptoOpen(false)} aria-label="Close">
+                ✕
+              </button>
+            </div>
+
+            {cryptoLoading ? (
+              <div className="dim">Preparing invoice…</div>
+            ) : !cryptoInvoice ? (
+              <div className="dim">No invoice yet.</div>
+            ) : cryptoInvoice?.invoice_id === null ? (
+              <div className="dim">No fee due this week ✅</div>
+            ) : (
+              <div className="modalBody">
+                <div className="kv">
+                  <div className="k">Amount due</div>
+                  <div className="v"><b>{fmtMoney(cryptoInvoice?.due_gbp)}</b></div>
+                </div>
+
+                <div className="payBox">
+                  <div className="payBoxTitle">BTC</div>
+                  <div className="mono big">{cryptoInvoice?.btc_amount}</div>
+                  <div className="addrRow">
+                    <div className="mono addr">{cryptoInvoice?.btc_address}</div>
+                    <button className="miniBtn" type="button" onClick={() => copyText(cryptoInvoice?.btc_address)}>
+                      Copy
+                    </button>
+                  </div>
+                  <div className="dim small">Network fee is paid separately by you.</div>
+                </div>
+
+                <div className="payBox">
+                  <div className="payBoxTitle">USDT (TRC20)</div>
+                  <div className="mono big">{cryptoInvoice?.usdt_amount}</div>
+                  <div className="addrRow">
+                    <div className="mono addr">{cryptoInvoice?.usdt_trc20_address}</div>
+                    <button className="miniBtn" type="button" onClick={() => copyText(cryptoInvoice?.usdt_trc20_address)}>
+                      Copy
+                    </button>
+                  </div>
+                  <div className="dim small">Only send USDT on the TRON (TRC20) network.</div>
+                </div>
+
+                <div className="divider" />
+
+                <div className="formRow">
+                  <label className="label">
+                    Network
+                    <select className="select" value={cryptoNetwork} onChange={(e) => setCryptoNetwork(e.target.value)}>
+                      <option value="usdt_trc20">USDT (TRC20)</option>
+                      <option value="btc">BTC</option>
+                    </select>
+                  </label>
+
+                  <label className="label" style={{ flex: 1 }}>
+                    Transaction hash (txid)
+                    <input
+                      className="input"
+                      value={cryptoTxid}
+                      onChange={(e) => setCryptoTxid(e.target.value)}
+                      placeholder="Paste your tx hash here"
+                    />
+                  </label>
+                </div>
+
+                <div className="modalActions">
+                  <button className="primaryBtn" type="button" onClick={verifyCrypto} disabled={cryptoVerifyLoading}>
+                    {cryptoVerifyLoading ? "Verifying…" : "Verify payment"}
+                  </button>
+                  <div className="dim small">Invoice: <span className="mono">{cryptoInvoice?.invoice_id}</span></div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
 
       <style jsx>{styles}</style>
     </div>
@@ -644,6 +838,33 @@ const styles = `
 .payRow .finePrint{opacity:.8;font-size:12px;line-height:1.4}
 .primaryBtn{border:1px solid rgba(255,215,0,.35);background:linear-gradient(135deg,rgba(255,215,0,.26),rgba(255,215,0,.08));color:#fff;padding:12px 14px;border-radius:14px;font-weight:900;cursor:pointer}
 .primaryBtn:disabled{opacity:.5;cursor:not-allowed}
+.ghostBtn{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:#fff;padding:12px 14px;border-radius:14px;font-weight:850;cursor:pointer}
+.ghostBtn:hover{background:rgba(255,255,255,.08)}
+.ghostBtn:disabled{opacity:.5;cursor:not-allowed}
+
+.modalOverlay{position:fixed;inset:0;background:rgba(0,0,0,.68);display:flex;align-items:center;justify-content:center;padding:18px;z-index:60}
+.modal{width:min(720px,100%);border:1px solid rgba(255,255,255,.12);background:rgba(12,12,12,.92);backdrop-filter:blur(10px);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.55);padding:14px}
+.modalHead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}
+.modalTitle{font-size:16px;font-weight:950}
+.iconBtn{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;border-radius:12px;padding:8px 10px;cursor:pointer}
+.iconBtn:hover{background:rgba(255,255,255,.1)}
+.modalBody{display:flex;flex-direction:column;gap:12px}
+.kv{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.25);border-radius:14px;padding:10px 12px}
+.kv .k{opacity:.75;font-size:12px}
+.kv .v{font-size:14px}
+.payBox{border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.22);border-radius:16px;padding:12px}
+.payBoxTitle{font-size:12px;opacity:.8;margin-bottom:6px}
+.big{font-size:18px;font-weight:950}
+.addrRow{display:flex;gap:10px;align-items:center;margin-top:8px}
+.addr{word-break:break-all;opacity:.9}
+.miniBtn{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;border-radius:12px;padding:8px 10px;cursor:pointer;white-space:nowrap}
+.miniBtn:hover{background:rgba(255,255,255,.1)}
+.divider{height:1px;background:rgba(255,255,255,.12);margin:6px 0}
+.formRow{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.label{display:flex;flex-direction:column;gap:6px;font-size:12px;opacity:.9}
+.select,.input{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:#fff;border-radius:12px;padding:10px 12px;outline:none}
+.input{width:100%}
+.modalActions{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
 .tableWrap{overflow:auto;border-radius:16px;border:1px solid rgba(255,255,255,.08)}
 .table{width:100%;border-collapse:collapse;min-width:640px}
 .table th,.table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);text-align:left}
