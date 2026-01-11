@@ -110,6 +110,9 @@ export default function ClientPortalPage() {
   const [cryptoTxid, setCryptoTxid] = useState("");
   const [cryptoVerifyLoading, setCryptoVerifyLoading] = useState(false);
 
+  // payment history
+  const [payments, setPayments] = useState([]);
+
   // peak equity directly from mt5_snapshots (NO mt5_equity_peaks table)
   const [peakSnap, setPeakSnap] = useState(null);
 
@@ -222,6 +225,20 @@ export default function ClientPortalPage() {
     } catch {
       showToast("Copy failed");
     }
+  };
+
+
+  const shortTx = (txid) => {
+    if (!txid) return "—";
+    const s = String(txid);
+    if (s.length <= 16) return s;
+    return `${s.slice(0, 8)}…${s.slice(-6)}`;
+  };
+
+  const explorerLink = (network, txid) => {
+    if (!txid) return null;
+    if (network === "BTC" || network === "btc") return `https://blockstream.info/tx/${txid}`;
+    return `https://tronscan.org/#/transaction/${txid}`;
   };
 
   const openCrypto = async () => {
@@ -385,6 +402,23 @@ export default function ClientPortalPage() {
         .limit(240);
       if (sErr) throw sErr;
       setEquitySeries((series || []).slice().reverse());
+
+
+      // payment history (last 10)
+      try {
+        const { data: pays, error: pErr } = await supabase
+          .from("crypto_payments")
+          .select("created_at,network,amount_crypto,amount_gbp,txid,confirmed,confirmations,to_address")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(10);
+
+        if (pErr) throw pErr;
+        setPayments(pays || []);
+      } catch {
+        // don't break the whole refresh if payments table isn't accessible yet
+        setPayments([]);
+      }
     } catch (e) {
       showToast(e?.message || "Refresh failed");
     } finally {
@@ -571,6 +605,24 @@ export default function ClientPortalPage() {
             </div>
           </div>
 
+          <div className="howToBox">
+            <div className="howToTitle">How to pay with crypto</div>
+            <ul className="howToList">
+              <li>
+                Click <b>Pay with crypto</b> and choose <b>BTC</b> or <b>USDT (TRC20)</b>.
+              </li>
+              <li>
+                Send the <b>exact amount</b> shown. BTC network fees are paid separately by you.
+              </li>
+              <li>
+                After sending, copy your <b>TXID</b> from your wallet/exchange and paste it to verify.
+              </li>
+              <li>
+                <b>USDT must be TRC20</b> — do not send on ERC20/BEP20.
+              </li>
+            </ul>
+          </div>
+
           <div className="dim small note">
             If your portal shows “—”, your MT5 snapshot sender may not be running yet.
           </div>
@@ -651,6 +703,69 @@ export default function ClientPortalPage() {
             Stripe endpoints show <b>405</b> if you open them in browser. That’s normal — the button sends a POST.
           </div>
         </section>
+        <section className="card full">
+          <div className="sectionHead">
+            <h2 className="sectionTitle">Payment history</h2>
+            <div className="dim small">Last {payments?.length || 0} crypto payments</div>
+          </div>
+
+          <div className="tableWrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Network</th>
+                  <th>Amount</th>
+                  <th>Confirmations</th>
+                  <th>TXID</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(payments || []).map((p) => {
+                  const link = explorerLink(p.network, p.txid);
+                  const unit = p.network === "BTC" ? "BTC" : "USDT";
+                  return (
+                    <tr key={p.txid}>
+                      <td className="mono">{fmtTime(p.created_at)}</td>
+                      <td>{p.network}</td>
+                      <td>
+                        <div>{fmtMoney(p.amount_gbp)}</div>
+                        <div className="dim small mono">
+                          {p.amount_crypto} {unit}
+                        </div>
+                      </td>
+                      <td>
+                        {p.confirmed ? (
+                          <span className="pillOk">✅ {p.confirmations}</span>
+                        ) : (
+                          <span className="pillWait">⏳ {p.confirmations}</span>
+                        )}
+                      </td>
+                      <td className="mono">
+                        {link ? (
+                          <a className="link" href={link} target="_blank" rel="noreferrer">
+                            {shortTx(p.txid)}
+                          </a>
+                        ) : (
+                          shortTx(p.txid)
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {!payments?.length ? (
+                  <tr>
+                    <td colSpan={5} className="dim">
+                      No crypto payments yet.
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+
 
         <section className="card full">
           <div className="sectionHead">
@@ -841,6 +956,17 @@ const styles = `
 .ghostBtn{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:#fff;padding:12px 14px;border-radius:14px;font-weight:850;cursor:pointer}
 .ghostBtn:hover{background:rgba(255,255,255,.08)}
 .ghostBtn:disabled{opacity:.5;cursor:not-allowed}
+
+.howToBox{margin-top:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);border-radius:16px;padding:12px}
+.howToTitle{font-weight:900;margin-bottom:8px}
+.howToList{margin:0;padding-left:18px;opacity:.92;font-size:13px;line-height:1.5}
+.howToList li{margin:6px 0}
+
+.link{color:rgba(255,215,0,.95);text-decoration:none}
+.link:hover{text-decoration:underline}
+.pillOk{display:inline-block;border:1px solid rgba(87,255,158,.35);background:rgba(87,255,158,.10);padding:4px 10px;border-radius:999px;font-size:12px}
+.pillWait{display:inline-block;border:1px solid rgba(255,215,0,.25);background:rgba(255,215,0,.08);padding:4px 10px;border-radius:999px;font-size:12px}
+
 
 .modalOverlay{position:fixed;inset:0;background:rgba(0,0,0,.68);display:flex;align-items:center;justify-content:center;padding:18px;z-index:60}
 .modal{width:min(720px,100%);border:1px solid rgba(255,255,255,.12);background:rgba(12,12,12,.92);backdrop-filter:blur(10px);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.55);padding:14px}
