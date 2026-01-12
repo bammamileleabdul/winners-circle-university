@@ -577,41 +577,6 @@ export default function ClientPortalPage() {
         </div>
       </section>
 
-<section className="card full">
-  <div className="sectionHead">
-    <h2 className="sectionTitle">Onboarding</h2>
-    <div className="dim small">Finish these once to get fully set up</div>
-  </div>
-
-  <div className="onbList">
-    <div className="onbItem">
-      <span className="onbDot ok">✅</span>
-      <div>
-        <div className="onbTitle">Account created</div>
-        <div className="dim small">You’re logged in and your portal is active.</div>
-      </div>
-    </div>
-
-    <div className="onbItem">
-      <span className="onbDot">2</span>
-      <div>
-        <div className="onbTitle">Connect MT5</div>
-        <div className="dim small">Follow the connection instructions below (pairing code / EA).</div>
-      </div>
-    </div>
-
-    <div className="onbItem">
-      <span className="onbDot">3</span>
-      <div>
-        <div className="onbTitle">Pay weekly fee (only if profit)</div>
-        <div className="dim small">When fee due &gt; 0, pay via Stripe or Crypto in this portal.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-
       <section className="grid">
         <section className="card">
           <div className="sectionHead">
@@ -936,7 +901,7 @@ export default function ClientPortalPage() {
 }
 
 const styles = `
-.wrap{min-height:100vh;padding:20px;background:radial-gradient(1200px 600px at 10% 0%,rgba(255,215,0,.08),transparent),radial-gradient(900px 600px at 90% 10%,rgba(255,215,0,.06),transparent),#070707;color:#f7f7f7}
+.wrap{min-height:100vh;padding:20px;background:radial-gradient(1200px 600px at 10% 0%,rgba(255,215,0,.08),transparent),radial-gradient(900px 600px at 90% 10%,rgba(255,215,0,.06),transparent),#070707;color:var(--text);--gold:rgba(255,215,0,.92);--text:rgba(247,240,208,.95);--muted:rgba(223,210,160,.78);}
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
 .brand{display:flex;align-items:center;gap:12px}
 .logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#3a2a00,#f8d773);display:grid;place-items:center;font-weight:900;color:#1b1200;box-shadow:0 10px 26px rgba(0,0,0,.35)}
@@ -945,7 +910,7 @@ const styles = `
 .dim{opacity:.78}
 .small{font-size:12px}
 .actions{display:flex;gap:10px;flex-wrap:wrap}
-.btn{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;padding:10px 12px;border-radius:12px;cursor:pointer}
+.btn{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:var(--text);padding:10px 12px;border-radius:12px;cursor:pointer}
 .btn:hover{background:rgba(255,255,255,.1)}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .ghost{background:transparent}
@@ -955,7 +920,7 @@ const styles = `
 .heroTop{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .heroTitle{font-size:16px;font-weight:800}
 .quote{display:flex;gap:10px;max-width:420px}
-.quoteMark{font-size:32px;line-height:1;color:rgba(255,215,0,.85)}
+.quoteMark{font-size:32px;line-height:1;color:var(--gold)}
 .quoteText{font-size:13px;opacity:.9;line-height:1.35}
 .heroGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
 .kpi{border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.25);border-radius:16px;padding:12px}
@@ -986,9 +951,9 @@ const styles = `
 .statHint{font-size:12px;opacity:.75;margin-top:6px;line-height:1.35}
 .payRow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px}
 .payRow .finePrint{opacity:.8;font-size:12px;line-height:1.4}
-.primaryBtn{border:1px solid rgba(255,215,0,.35);background:linear-gradient(135deg,rgba(255,215,0,.26),rgba(255,215,0,.08));color:#fff;padding:12px 14px;border-radius:14px;font-weight:900;cursor:pointer}
+.primaryBtn{border:1px solid rgba(255,215,0,.35);background:linear-gradient(135deg,rgba(255,215,0,.26),rgba(255,215,0,.08));color:var(--text);padding:12px 14px;border-radius:14px;font-weight:900;cursor:pointer}
 .primaryBtn:disabled{opacity:.5;cursor:not-allowed}
-.ghostBtn{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:#fff;padding:12px 14px;border-radius:14px;font-weight:850;cursor:pointer}
+.ghostBtn{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:var(--text);padding:12px 14px;border-radius:14px;font-weight:850;cursor:pointer}
 .ghostBtn:hover{background:rgba(255,255,255,.08)}
 .ghostBtn:disabled{opacity:.5;cursor:not-allowed}
 
@@ -1007,7 +972,7 @@ const styles = `
 .modal{width:min(720px,100%);border:1px solid rgba(255,255,255,.12);background:rgba(12,12,12,.92);backdrop-filter:blur(10px);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.55);padding:14px}
 .modalHead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}
 .modalTitle{font-size:16px;font-weight:950}
-.iconBtn{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;border-radius:12px;padding:8px 10px;cursor:pointer}
+.iconBtn{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:var(--text);border-radius:12px;padding:8px 10px;cursor:pointer}
 .iconBtn:hover{background:rgba(255,255,255,.1)}
 .modalBody{display:flex;flex-direction:column;gap:12px}
 .kv{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.25);border-radius:14px;padding:10px 12px}
@@ -1018,12 +983,12 @@ const styles = `
 .big{font-size:18px;font-weight:950}
 .addrRow{display:flex;gap:10px;align-items:center;margin-top:8px}
 .addr{word-break:break-all;opacity:.9}
-.miniBtn{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;border-radius:12px;padding:8px 10px;cursor:pointer;white-space:nowrap}
+.miniBtn{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:var(--text);border-radius:12px;padding:8px 10px;cursor:pointer;white-space:nowrap}
 .miniBtn:hover{background:rgba(255,255,255,.1)}
 .divider{height:1px;background:rgba(255,255,255,.12);margin:6px 0}
 .formRow{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
 .label{display:flex;flex-direction:column;gap:6px;font-size:12px;opacity:.9}
-.select,.input{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:#fff;border-radius:12px;padding:10px 12px;outline:none}
+.select,.input{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:var(--text);border-radius:12px;padding:10px 12px;outline:none}
 .input{width:100%}
 .modalActions{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
 .tableWrap{overflow:auto;border-radius:16px;border:1px solid rgba(255,255,255,.08)}
@@ -1044,10 +1009,10 @@ const styles = `
   .btn{width:100%}
   .primaryBtn{width:100%}
 }
-
-.onbList{display:grid;gap:10px;margin-top:10px}
-.onbItem{display:flex;gap:10px;align-items:flex-start;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px;background:rgba(255,255,255,.02)}
-.onbDot{width:26px;height:26px;border-radius:999px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.14);font-weight:900;font-size:13px;opacity:.9}
-.onbDot.ok{border-color:rgba(87,255,158,.35);background:rgba(87,255,158,.10)}
-.onbTitle{font-weight:900;margin-bottom:2px}
 `;
+
+/* --- Golden typography overrides --- */
+.sectionTitle,.modalTitle,.payTitle,.howToTitle,.kpiValue,.onbTitle{color:var(--gold)}
+.dim,.small,.finePrint{color:var(--muted)}
+.table th{color:rgba(243,210,122,.9)}
+
