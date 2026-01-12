@@ -1,3 +1,6 @@
+js
+
+
 export default function GetStartedPage() {
   return (
     <main className="gsWrap">
