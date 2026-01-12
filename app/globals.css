@@ -38,3 +38,26 @@ button {
 .aiOverlay{
   z-index: 10001 !important;
 }
+
+
+/* --- Site footer (legal links) --- */
+.siteFooter{border-top:1px solid rgba(255,255,255,.08);padding:18px 14px;color:rgba(237,237,237,.78);font-size:13px}
+.siteFooterInner{max-width:1100px;margin:0 auto;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.siteFooterLinks{display:flex;gap:10px;align-items:center}
+.siteFooterLinks a{color:rgba(237,237,237,.85)}
+.siteFooterLinks a:hover{text-decoration:underline}
+.dot{opacity:.5}
+
+/* --- Simple content page layout (Terms/Privacy/Support) --- */
+.legalWrap{min-height:100vh;padding:18px 14px 40px;background:radial-gradient(circle at top, #2a1f0f, #000);color:#f7f0d0}
+.legalHeader{display:flex;align-items:center;margin-bottom:22px}
+.legalBack{display:flex;align-items:center;gap:10px}
+.legalLogo{width:40px;height:40px;border-radius:10px;object-fit:contain;border:1px solid rgba(255,255,255,.12)}
+.legalMain{max-width:900px;margin:0 auto;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:18px}
+.legalMain h1{margin:0 0 10px}
+.legalMain h2{margin:18px 0 8px}
+.legalMain p{opacity:.92;line-height:1.6}
+.legalMain ul{margin:8px 0 0;padding-left:18px;opacity:.92;line-height:1.6}
+.legalMain a{color:#f3d27a;text-decoration:none}
+.legalMain a:hover{text-decoration:underline}
+.legalNote{margin-top:12px;opacity:.75;font-size:12px}
