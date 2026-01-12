@@ -577,6 +577,41 @@ export default function ClientPortalPage() {
         </div>
       </section>
 
+<section className="card full">
+  <div className="sectionHead">
+    <h2 className="sectionTitle">Onboarding</h2>
+    <div className="dim small">Finish these once to get fully set up</div>
+  </div>
+
+  <div className="onbList">
+    <div className="onbItem">
+      <span className="onbDot ok">✅</span>
+      <div>
+        <div className="onbTitle">Account created</div>
+        <div className="dim small">You’re logged in and your portal is active.</div>
+      </div>
+    </div>
+
+    <div className="onbItem">
+      <span className="onbDot">2</span>
+      <div>
+        <div className="onbTitle">Connect MT5</div>
+        <div className="dim small">Follow the connection instructions below (pairing code / EA).</div>
+      </div>
+    </div>
+
+    <div className="onbItem">
+      <span className="onbDot">3</span>
+      <div>
+        <div className="onbTitle">Pay weekly fee (only if profit)</div>
+        <div className="dim small">When fee due &gt; 0, pay via Stripe or Crypto in this portal.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
       <section className="grid">
         <section className="card">
           <div className="sectionHead">
@@ -1009,4 +1044,10 @@ const styles = `
   .btn{width:100%}
   .primaryBtn{width:100%}
 }
+
+.onbList{display:grid;gap:10px;margin-top:10px}
+.onbItem{display:flex;gap:10px;align-items:flex-start;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px;background:rgba(255,255,255,.02)}
+.onbDot{width:26px;height:26px;border-radius:999px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.14);font-weight:900;font-size:13px;opacity:.9}
+.onbDot.ok{border-color:rgba(87,255,158,.35);background:rgba(87,255,158,.10)}
+.onbTitle{font-weight:900;margin-bottom:2px}
 `;
