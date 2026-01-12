@@ -297,6 +297,46 @@ export default function Home() {
         )}
       </section>
 
+      {/* PRICING */}
+      <section id="pricing" className="section">
+        <h2>Pricing</h2>
+        <p className="sectionP">
+          Transparent, performance-based fees. You keep the majority of profits — we only earn when you do.
+        </p>
+
+        <div className="pricingGrid">
+          <div className="pricingCard">
+            <div className="pricingTitle">Weekly performance fee</div>
+            <div className="pricingBig">30%</div>
+            <div className="pricingText">
+              Charged only on weekly profit. No profit = no fee.
+            </div>
+          </div>
+
+          <div className="pricingCard">
+            <div className="pricingTitle">Payment options</div>
+            <div className="pricingBigSmall">Stripe or Crypto</div>
+            <div className="pricingText">
+              Pay by card (Stripe) or pay with BTC / USDT (TRC20) directly from your dashboard.
+            </div>
+          </div>
+
+          <div className="pricingCard">
+            <div className="pricingTitle">Support</div>
+            <div className="pricingBigSmall">Fast help</div>
+            <div className="pricingText">
+              Having issues? Visit <a className="inlineLink" href="/support">Support</a> for FAQs or email us.
+            </div>
+          </div>
+        </div>
+
+        <div className="ctaRow">
+          <a className="ctaPrimary" href="/get-started">Get Started</a>
+          <a className="ctaGhost" href="/clientportal">Open Client Portal</a>
+        </div>
+      </section>
+
+
       {/* VVIP */}
       <section id="vvip" className="section last">
         <h2>VVIP Access</h2>
@@ -1140,7 +1180,105 @@ export default function Home() {
           color: rgba(167, 160, 138, 0.9);
           font-size: 12px;
         }
-      `}</style>
+      
+
+        .sectionP {
+          max-width: 760px;
+          margin: -6px auto 18px;
+          opacity: 0.82;
+          line-height: 1.6;
+          text-align: center;
+        }
+
+        .pricingGrid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 14px;
+          margin-top: 16px;
+        }
+
+        @media (max-width: 900px) {
+          .pricingGrid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        .pricingCard {
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(0, 0, 0, 0.25);
+          border-radius: 16px;
+          padding: 16px;
+          text-align: center;
+        }
+
+        .pricingTitle {
+          font-weight: 800;
+          letter-spacing: 0.2px;
+          margin-bottom: 10px;
+        }
+
+        .pricingBig {
+          font-size: 44px;
+          font-weight: 900;
+          background: linear-gradient(135deg, #f6e2a5, #c6a858);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          margin: 6px 0 8px;
+        }
+
+        .pricingBigSmall {
+          font-size: 20px;
+          font-weight: 800;
+          margin: 8px 0 8px;
+        }
+
+        .pricingText {
+          opacity: 0.86;
+          line-height: 1.55;
+          font-size: 14px;
+        }
+
+        .inlineLink {
+          color: #f3d27a;
+          text-decoration: none;
+        }
+        .inlineLink:hover {
+          text-decoration: underline;
+        }
+
+        .ctaRow {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+          margin-top: 18px;
+          flex-wrap: wrap;
+        }
+
+        .ctaPrimary {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 14px;
+          padding: 12px 18px;
+          font-weight: 800;
+          background: linear-gradient(135deg, #c9a24d, #f3d27a);
+          color: #0b0b0b;
+        }
+
+        .ctaGhost {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 14px;
+          padding: 12px 18px;
+          font-weight: 700;
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(0, 0, 0, 0.2);
+          color: #f7f0d0;
+        }
+
+`}</style>
     </>
   );
 }
