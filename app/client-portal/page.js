@@ -1009,10 +1009,8 @@ const styles = `
   .btn{width:100%}
   .primaryBtn{width:100%}
 }
-`;
-
 /* --- Golden typography overrides --- */
 .sectionTitle,.modalTitle,.payTitle,.howToTitle,.kpiValue,.onbTitle{color:var(--gold)}
 .dim,.small,.finePrint{color:var(--muted)}
 .table th{color:rgba(243,210,122,.9)}
-
+`;
