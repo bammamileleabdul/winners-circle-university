@@ -1,4 +1,4 @@
-js
+"use client";
 
 
 export default function GetStartedPage() {
