@@ -17,7 +17,7 @@ export async function GET() {
       hasServiceRole: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
 
       // Existing
-      hasIngestSecret: !!process.env.INGEST_SECRET,
+      hasIngestSecret: !!(process.env.WCU_INGEST_SECRET || process.env.INGEST_SECRET),
 
       // Crypto
       hasTronscanKey: !!process.env.TRONSCAN_API_KEY,

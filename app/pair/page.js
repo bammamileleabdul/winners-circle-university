@@ -127,27 +127,26 @@ export default function PairEA() {
     }
   };
 
+  // Checks whether the EA has reported in recently. Only the EA itself can report,
+  // so this reloads the status instead of sending a fake ping from the browser.
   const testPing = async () => {
     setBusy(true);
     setMsg("");
     try {
-      const r = await fetch("/api/mt5/report", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          pairing_code: pairingCode,
-          type: "heartbeat",
-          mt5_login: "TEST_LOGIN",
-        }),
-      });
-
-      const j = await r.json();
-      if (!r.ok) throw new Error(j?.error || "Ping failed");
-
-      setMsg("Ping sent ✅ (status should turn connected)");
+      const { data, error } = await supabase
+        .from("mt5_connections")
+        .select("status,last_seen_at")
+        .eq("pairing_code", pairingCode)
+        .maybeSingle();
+      if (error) throw error;
+      const seen = data?.last_seen_at ? new Date(data.last_seen_at) : null;
+      const mins = seen ? (Date.now() - seen.getTime()) / 60000 : null;
+      if (mins !== null && mins <= 5) setMsg("EA is connected ✅ (reported " + Math.max(0, Math.round(mins)) + " min ago)");
+      else if (seen) setMsg("EA last reported " + seen.toLocaleString() + ". Check it's running with auto-trading on.");
+      else setMsg("No report from the EA yet. Attach it to a chart with this pairing code.");
       await load();
     } catch (e) {
-      setMsg(e?.message || "Ping failed.");
+      setMsg(e?.message || "Check failed.");
     } finally {
       setBusy(false);
     }
@@ -219,7 +218,7 @@ export default function PairEA() {
           </button>
 
           <button className="btnOutline" type="button" disabled={busy} onClick={testPing}>
-            {busy ? "…" : "Test Ping"}
+            {busy ? "…" : "Check connection"}
           </button>
         </div>
 

@@ -41,14 +41,57 @@ export async function POST(req) {
     if (userErr || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json().catch(() => ({}));
-    const amountPence = Number(body?.amount_pence);
-    const currency = (body?.currency || "gbp").toLowerCase();
+    const currency = "gbp";
 
-    if (!Number.isFinite(amountPence) || amountPence < 50) {
-      return NextResponse.json({ error: "amount_pence must be >= 50" }, { status: 400 });
+    // The fee is worked out here on the server from the account's own snapshots.
+    // Whatever amount the browser sends is ignored, so it can't be edited to pay less.
+    const weekStart = new Date(body?.week_start_iso || "");
+    const now = Date.now();
+    if (Number.isNaN(weekStart.getTime()) || weekStart.getTime() > now || now - weekStart.getTime() > 8 * 24 * 3600 * 1000) {
+      return NextResponse.json({ error: "Invalid week_start_iso" }, { status: 400 });
     }
-    if (!["gbp"].includes(currency)) {
-      return NextResponse.json({ error: "Unsupported currency" }, { status: 400 });
+    const week_start_iso = weekStart.toISOString();
+
+    const { data: ws, error: wsErr } = await supabase
+      .from("mt5_snapshots")
+      .select("equity")
+      .eq("user_id", user.id)
+      .gte("created_at", week_start_iso)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (wsErr) return NextResponse.json({ error: wsErr.message }, { status: 400 });
+
+    const { data: latest, error: lErr } = await supabase
+      .from("mt5_snapshots")
+      .select("equity")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (lErr) return NextResponse.json({ error: lErr.message }, { status: 400 });
+
+    const startEq = Number(ws?.equity);
+    const curEq = Number(latest?.equity);
+    if (!Number.isFinite(startEq) || !Number.isFinite(curEq)) {
+      return NextResponse.json({ error: "No account data for this week yet" }, { status: 400 });
+    }
+
+    const amountPence = Math.round(Math.max(0, curEq - startEq) * 0.3 * 100);
+    if (amountPence < 50) {
+      return NextResponse.json({ error: "No fee due this week" }, { status: 400 });
+    }
+
+    // Don't take a second payment for a week that's already paid.
+    const { data: paid } = await supabase
+      .from("payments")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("week_start_iso", week_start_iso)
+      .eq("status", "paid")
+      .limit(1);
+    if (paid && paid.length) {
+      return NextResponse.json({ error: "This week's fee is already paid" }, { status: 409 });
     }
 
     const origin = getOrigin(req);
@@ -76,7 +119,7 @@ export async function POST(req) {
         user_id: user.id,
         mt5_login: body?.mt5_login ? String(body.mt5_login) : "",
         pairing_code: body?.pairing_code ? String(body.pairing_code) : "",
-        week_start_iso: body?.week_start_iso ? String(body.week_start_iso) : "",
+        week_start_iso,
       },
     });
 
