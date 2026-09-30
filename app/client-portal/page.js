@@ -1,171 +1,51 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabaseBrowser";
+import Scramble from "../../components/Scramble";
+import BalanceChart from "../../components/BalanceChart";
+import { SITE, WEEKLY_RETURNS, RETURNS_ARE_SAMPLE } from "../../lib/site";
+import { replay, money, pct } from "../../lib/replay";
 
-/* ---------- formatting helpers ---------- */
-function fmtMoney(n) {
-  if (n === null || n === undefined || Number.isNaN(Number(n))) return "—";
-  const v = Number(n);
-  const sign = v < 0 ? "-" : "";
-  const abs = Math.abs(v);
-  return `${sign}£${abs.toFixed(2)}`;
-}
-function fmtTime(iso) {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleString();
-}
-function agoLabel(iso) {
-  if (!iso) return "—";
-  const t = new Date(iso).getTime();
-  if (!t) return "—";
-  const s = Math.max(0, Math.floor((Date.now() - t) / 1000));
-  if (s < 60) return `${s}s ago`;
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  return `${h}h ago`;
-}
-
-function startOfWeekISO(now = new Date()) {
-  // Week starts Monday 00:00 (local time)
-  const d = new Date(now);
-  const day = d.getDay(); // 0 Sun .. 6 Sat
-  const daysSinceMonday = (day + 6) % 7;
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() - daysSinceMonday);
-  return d.toISOString();
-}
-
-/* ---------- tiny SVG chart ---------- */
-function TinyLine({ data, height = 44 }) {
-  const w = 240;
-  const h = height;
-  if (!data || data.length < 2) {
-    return (
-      <svg width="100%" viewBox={`0 0 ${w} ${h}`} className="tinyChart">
-        <path d={`M0 ${h / 2} L${w} ${h / 2}`} className="lineDim" />
-      </svg>
-    );
-  }
-  const ys = data.map((d) => d.y);
-  const minY = Math.min(...ys);
-  const maxY = Math.max(...ys);
-  const span = maxY - minY || 1;
-  const pad = span * 0.08;
-  const lo = minY - pad;
-  const hi = maxY + pad;
-
-  const path = data
-    .map((p, i) => {
-      const x = (i / (data.length - 1)) * (w - 8) + 4;
-      const y = h - ((p.y - lo) / (hi - lo)) * (h - 8) - 4;
-      return `${i === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
-    })
-    .join(" ");
-
-  return (
-    <svg width="100%" viewBox={`0 0 ${w} ${h}`} className="tinyChart" aria-hidden="true">
-      <path d={path} className="lineMain" />
-    </svg>
-  );
-}
-
-/* ---------- motivational quotes ---------- */
 const QUOTES = [
-  "Discipline beats motivation. Every single time.",
-  "Consistency is what makes the account grow.",
-  "Protect your capital like it’s your oxygen.",
-  "Small wins compound into big results.",
-  "Patience is a strategy, not a delay.",
-  "No revenge trades. Only clean execution.",
-  "Your edge is useless without risk control.",
-  "Let the process pay you.",
-  "One good week is built on many good decisions.",
+  "Discipline over dopamine.",
+  "Risk before reward.",
+  "Process over outcomes.",
+  "Patience compounds.",
+  "Consistency creates inevitability.",
 ];
 
-/* ---------- main page ---------- */
-export default function ClientPortalPage() {
+const TABS = [
+  { k: "strategy", t: "Strategy" },
+  { k: "fee", t: "Fee calculator" },
+  { k: "manage", t: "Manage your copy" },
+];
+
+export default function MembersArea() {
   const router = useRouter();
   const [user, setUser] = useState(null);
-
-  // connection + snapshots
-  const [conn, setConn] = useState(null);
-  const [latest, setLatest] = useState(null);
-  const [firstSnap, setFirstSnap] = useState(null);
-  const [snapshots, setSnapshots] = useState([]);
-
-  // weekly billing (start-of-week snapshot)
-  const [weekStartSnap, setWeekStartSnap] = useState(null);
-  const [payLoading, setPayLoading] = useState(false);
-
-  // crypto payments
-  const [cryptoOpen, setCryptoOpen] = useState(false);
-  const [cryptoLoading, setCryptoLoading] = useState(false);
-  const [cryptoInvoice, setCryptoInvoice] = useState(null);
-  const [cryptoNetwork, setCryptoNetwork] = useState("usdt_trc20");
-  const [cryptoTxid, setCryptoTxid] = useState("");
-  const [cryptoVerifyLoading, setCryptoVerifyLoading] = useState(false);
-
-  // payment history
-  const [payments, setPayments] = useState([]);
-
-  // peak equity directly from mt5_snapshots (NO mt5_equity_peaks table)
-  const [peakSnap, setPeakSnap] = useState(null);
-
-  // equity series for mini chart
-  const [equitySeries, setEquitySeries] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // UI
-  const [toast, setToast] = useState("");
-  const toastTimer = useRef(null);
+  const [tab, setTab] = useState("strategy");
   const [quote, setQuote] = useState(QUOTES[0]);
 
-  const showToast = (msg) => {
-    setToast(msg);
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(""), 2200);
-  };
+  // Fee calculator inputs (mirrors the Exness performance-fee formula)
+  const [invested, setInvested] = useState("500");
+  const [equity, setEquity] = useState("560");
+  const [paid, setPaid] = useState("0");
 
-  useEffect(() => {
-    // Stripe redirect feedback
-    try {
-      const url = new URL(window.location.href);
-      if (url.searchParams.get("paid") === "1") showToast("Payment received ✅");
-      if (url.searchParams.get("canceled") === "1") showToast("Payment canceled");
-    } catch {}
-    // rotating quotes
-    setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
-    const t = setInterval(() => {
-      setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
-    }, 25000);
-    return () => clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // auth gate
   useEffect(() => {
     let mounted = true;
-    const boot = async () => {
+    (async () => {
       const { data } = await supabase.auth.getUser();
       if (!mounted) return;
-      if (!data?.user) {
-        router.push("/login");
-        return;
-      }
-      setUser(data.user);
-    };
-    boot();
-
+      if (!data?.user) router.push("/login");
+      else setUser(data.user);
+    })();
     const { data: sub } = supabase.auth.onAuthStateChange((_evt, session) => {
       if (!session?.user) router.push("/login");
       else setUser(session.user);
     });
-
+    setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
     return () => {
       mounted = false;
       sub?.subscription?.unsubscribe?.();
@@ -177,840 +57,386 @@ export default function ClientPortalPage() {
     router.push("/login");
   };
 
-  const payWithStripe = async () => {
-    try {
-      if (!weeklyFeeDue || weeklyFeeDue <= 0) {
-        showToast("No fee due this week ✅");
-        return;
-      }
-      setPayLoading(true);
+  // Strategy growth of $1,000 across the history, before fees
+  const growth = useMemo(() => replay(1000, WEEKLY_RETURNS, 0), []);
+  const labels = ["Start", ...WEEKLY_RETURNS.map((_, i) => `Week ${i + 1}`)];
+  const totalReturn = (growth.end / 1000 - 1) * 100;
 
-      const { data } = await supabase.auth.getSession();
-      const token = data?.session?.access_token;
-
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          amount_pence: Math.round(Number(weeklyFeeDue) * 100),
-          currency: "gbp",
-          kind: "weekly_profit_share",
-          week_start_iso: startOfWeekISO(new Date()),
-          pairing_code: conn?.pairing_code || null,
-          mt5_login: conn?.mt5_login || null,
-        }),
-      });
-
-      const out = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(out?.error || "Checkout failed");
-      if (out?.url) {
-        window.location.href = out.url;
-        return;
-      }
-      throw new Error("No checkout URL returned");
-    } catch (e) {
-      showToast(e?.message || "Payment error");
-    } finally {
-      setPayLoading(false);
-    }
-  };
-
-  const copyText = async (t) => {
-    try {
-      await navigator.clipboard.writeText(String(t || ""));
-      showToast("Copied ✅");
-    } catch {
-      showToast("Copy failed");
-    }
-  };
-
-
-  const shortTx = (txid) => {
-    if (!txid) return "—";
-    const s = String(txid);
-    if (s.length <= 16) return s;
-    return `${s.slice(0, 8)}…${s.slice(-6)}`;
-  };
-
-  const explorerLink = (network, txid) => {
-    if (!txid) return null;
-    if (network === "BTC" || network === "btc") return `https://blockstream.info/tx/${txid}`;
-    return `https://tronscan.org/#/transaction/${txid}`;
-  };
-
-  const openCrypto = async () => {
-    try {
-      if (!weeklyFeeDue || weeklyFeeDue <= 0) {
-        showToast("No fee due this week ✅");
-        return;
-      }
-
-      setCryptoOpen(true);
-      setCryptoLoading(true);
-      setCryptoInvoice(null);
-      setCryptoTxid("");
-      setCryptoNetwork("usdt_trc20");
-
-      const { data } = await supabase.auth.getSession();
-      const token = data?.session?.access_token;
-
-      const res = await fetch("/api/crypto/invoice", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
-
-      const out = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(out?.error || "Failed to create invoice");
-      setCryptoInvoice(out);
-    } catch (e) {
-      showToast(e?.message || "Crypto invoice error");
-      setCryptoOpen(false);
-    } finally {
-      setCryptoLoading(false);
-    }
-  };
-
-  const verifyCrypto = async () => {
-    try {
-      if (!cryptoInvoice?.invoice_id) {
-        showToast("Missing invoice");
-        return;
-      }
-      if (!cryptoTxid || cryptoTxid.trim().length < 20) {
-        showToast("Paste a valid transaction hash");
-        return;
-      }
-
-      setCryptoVerifyLoading(true);
-
-      const { data } = await supabase.auth.getSession();
-      const token = data?.session?.access_token;
-
-      const res = await fetch("/api/crypto/verify", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          invoice_id: cryptoInvoice.invoice_id,
-          network: cryptoNetwork,
-          txid: cryptoTxid.trim(),
-        }),
-      });
-
-      const out = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(out?.error || "Verify failed");
-
-      if (out?.ok && out?.status === "paid") {
-        showToast("Crypto payment confirmed ✅");
-        setCryptoOpen(false);
-        setCryptoTxid("");
-        // refresh portal numbers
-        refresh();
-        return;
-      }
-
-      showToast(out?.message || "Not paid yet");
-    } catch (e) {
-      showToast(e?.message || "Verify error");
-    } finally {
-      setCryptoVerifyLoading(false);
-    }
-  };
-
-  const refresh = async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      // connection
-      const { data: c, error: cErr } = await supabase
-        .from("mt5_connections")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (cErr) throw cErr;
-      setConn(c || null);
-
-      // latest snapshot
-      const { data: l, error: lErr } = await supabase
-        .from("mt5_snapshots")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (lErr) throw lErr;
-      setLatest(l || null);
-
-      // first snapshot
-      const { data: f, error: fErr } = await supabase
-        .from("mt5_snapshots")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      if (fErr) throw fErr;
-      setFirstSnap(f || null);
-
-      // last 200 snapshots
-      const { data: rec, error: rErr } = await supabase
-        .from("mt5_snapshots")
-        .select("created_at,equity,balance,margin,free_margin")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (rErr) throw rErr;
-      setSnapshots(rec || []);
-
-      // Week start snapshot (Monday 00:00 local)
-      const weekStartIso = startOfWeekISO(new Date());
-      const { data: ws, error: wsErr } = await supabase
-        .from("mt5_snapshots")
-        .select("equity,created_at")
-        .eq("user_id", user.id)
-        .gte("created_at", weekStartIso)
-        .order("created_at", { ascending: true })
-        .limit(1);
-      if (wsErr) throw wsErr;
-      setWeekStartSnap(ws?.[0] || null);
-
-      // peak equity directly from mt5_snapshots (no extra tables)
-      const { data: pk, error: pkErr } = await supabase
-        .from("mt5_snapshots")
-        .select("equity,created_at")
-        .eq("user_id", user.id)
-        .order("equity", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (pkErr) throw pkErr;
-      setPeakSnap(pk || null);
-
-      // equity series (for mini chart) - last 240 points
-      const { data: series, error: sErr } = await supabase
-        .from("mt5_snapshots")
-        .select("created_at,equity")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(240);
-      if (sErr) throw sErr;
-      setEquitySeries((series || []).slice().reverse());
-
-
-      // payment history (last 10)
-      try {
-        const { data: pays, error: pErr } = await supabase
-          .from("crypto_payments")
-          .select("created_at,network,amount_crypto,amount_gbp,txid,confirmed,confirmations,to_address")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(10);
-
-        if (pErr) throw pErr;
-        setPayments(pays || []);
-      } catch {
-        // don't break the whole refresh if payments table isn't accessible yet
-        setPayments([]);
-      }
-    } catch (e) {
-      showToast(e?.message || "Refresh failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!user) return;
-    refresh();
-    const t = setInterval(refresh, 15000);
-    return () => clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
-
-  /* ---------- computed numbers ---------- */
-  const startEquity = useMemo(() => {
-    if (!firstSnap) return null;
-    const v = firstSnap.equity ?? firstSnap.balance ?? null;
-    return v === null ? null : Number(v);
-  }, [firstSnap]);
-
-  const currentEquity = useMemo(() => {
-    if (!latest) return null;
-    const v = latest.equity ?? latest.balance ?? null;
-    return v === null ? null : Number(v);
-  }, [latest]);
-
-  const currentBalance = useMemo(() => {
-    if (!latest) return null;
-    const v = latest.balance ?? null;
-    return v === null ? null : Number(v);
-  }, [latest]);
-
-  const sinceStartPL = useMemo(() => {
-    if (startEquity === null || currentEquity === null) return null;
-    return Number(currentEquity - startEquity);
-  }, [startEquity, currentEquity]);
-
-  // peak equity derived from snapshots
-  const hwmEquity = useMemo(() => {
-    const v = peakSnap?.equity;
-    return v === null || v === undefined ? null : Number(v);
-  }, [peakSnap]);
-
-  const hwmDrawdownPct = useMemo(() => {
-    if (hwmEquity === null || currentEquity === null) return null;
-    if (hwmEquity <= 0) return 0;
-    const dd = Math.max(0, (hwmEquity - currentEquity) / hwmEquity);
-    return dd * 100;
-  }, [hwmEquity, currentEquity]);
-
-  // Weekly profit-share (30% of profits this week only)
-  const weekStartIsoLabel = useMemo(() => startOfWeekISO(new Date()), []);
-  const weekStartEquity = useMemo(() => {
-    const v = weekStartSnap?.equity ?? startEquity;
-    return v === null || v === undefined ? null : Number(v);
-  }, [weekStartSnap, startEquity]);
-
-  const weeklyPL = useMemo(() => {
-    if (currentEquity === null || weekStartEquity === null) return null;
-    return Number(currentEquity - weekStartEquity);
-  }, [currentEquity, weekStartEquity]);
-
-  const weeklyFeeDue = useMemo(() => {
-    if (weeklyPL === null) return null;
-    return Math.max(0, weeklyPL) * 0.3;
-  }, [weeklyPL]);
-
-  const weeklyClientKeeps = useMemo(() => {
-    if (weeklyPL === null) return null;
-    return Math.max(0, weeklyPL) * 0.7;
-  }, [weeklyPL]);
-
-  const chartData = useMemo(() => {
-    if (!equitySeries || equitySeries.length < 2) return [];
-    return equitySeries
-      .filter((p) => p?.equity !== null && p?.equity !== undefined)
-      .map((p, i) => ({ x: i, y: Number(p.equity) }));
-  }, [equitySeries]);
+  const fee = useMemo(() => {
+    const inv = parseFloat(invested) || 0;
+    const eq = parseFloat(equity) || 0;
+    const pd = parseFloat(paid) || 0;
+    const rate = SITE.performanceFeePct / 100;
+    const due = Math.max(0, (eq + pd - inv) * rate - pd);
+    return { due, keep: eq - due, profit: eq + pd - inv };
+  }, [invested, equity, paid]);
 
   if (!user) {
     return (
-      <div className="wrap">
-        <div className="card">
-          <div className="title">Client Portal</div>
-          <div className="dim">Loading…</div>
-        </div>
-        <style jsx>{styles}</style>
-      </div>
+      <main className="load">
+        <span className="fx-eyebrow">Members area</span>
+        <p>Checking your session…</p>
+        <style jsx>{`
+          .load {
+            min-height: 60vh;
+            display: grid;
+            place-content: center;
+            justify-items: center;
+            gap: 10px;
+            color: var(--muted);
+          }
+        `}</style>
+      </main>
     );
   }
 
   return (
-    <div className="wrap">
-      <header className="topbar">
-        <div className="brand">
-          <div className="logo">WCU</div>
-          <div className="stack">
-            <div className="h1">Client Portal</div>
-            <div className="dim small">MT5 snapshots • secure • live updates</div>
-          </div>
-        </div>
-        <div className="actions">
-          <button className="btn" onClick={refresh} disabled={loading}>
-            {loading ? "Refreshing…" : "Refresh"}
+    <main className="mem">
+      <div className="mem-in">
+        <header className="top">
+          <a href="/" className="brand">
+            <img src="/emblem.jpg" alt="" />
+            <span>
+              <b>Members area</b>
+              <small>{user.email}</small>
+            </span>
+          </a>
+          <button type="button" className="btn-ghost" onClick={logout}>
+            Log out
           </button>
-          <button className="btn ghost" onClick={logout}>
-            Logout
-          </button>
-        </div>
-      </header>
+        </header>
 
-      {toast ? <div className="toast">{toast}</div> : null}
-
-      <section className="hero">
-        <div className="heroCard">
-          <div className="heroTop">
-            <div className="heroLeft">
-              <div className="heroTitle">Your account snapshot</div>
-              <div className="dim">
-                Last update: <b>{latest?.created_at ? agoLabel(latest.created_at) : "—"}</b>
-                {latest?.created_at ? <span className="dim"> • {fmtTime(latest.created_at)}</span> : null}
-              </div>
-            </div>
-            <div className="quote">
-              <div className="quoteMark">“</div>
-              <div className="quoteText">{quote}</div>
-            </div>
+        <div className="hello fx-glass fx-hud">
+          <div>
+            <span className="fx-eyebrow">Welcome back</span>
+            <Scramble as="h1" text={quote} className="hello-q" />
           </div>
-
-          <div className="heroGrid">
-            <div className="kpi">
-              <div className="kpiLabel">Balance</div>
-              <div className="kpiValue">{fmtMoney(currentBalance)}</div>
-            </div>
-            <div className="kpi">
-              <div className="kpiLabel">Equity</div>
-              <div className="kpiValue">{fmtMoney(currentEquity)}</div>
-            </div>
-            <div className="kpi">
-              <div className="kpiLabel">Since start (P/L)</div>
-              <div className={`kpiValue ${sinceStartPL > 0 ? "pos" : sinceStartPL < 0 ? "neg" : ""}`}>
-                {fmtMoney(sinceStartPL)}
-              </div>
-            </div>
-            <div className="kpi chartKpi">
-              <div className="kpiLabel">Equity trend</div>
-              <TinyLine data={chartData} />
-            </div>
-          </div>
-
-          <div className="heroFoot dim small">
-            Weekly profit-share uses MT5 equity snapshots only (week starts Monday 00:00 local).
-          </div>
-        </div>
-      </section>
-
-      <section className="grid">
-        <section className="card">
-          <div className="sectionHead">
-            <h2 className="sectionTitle">Pairing</h2>
-            <div className="dim small">Connect your MT5 to your portal</div>
-          </div>
-
-          <div className="pairGrid">
-            <div className="pairCard">
-              <div className="pairLabel">Your pairing code</div>
-              <div className="pairCode">{conn?.pairing_code || "—"}</div>
-              <div className="pairMeta">
-                <div className="dim">This is linked to your account.</div>
-                <div className="dim">
-                  MT5 Login: <b>{conn?.mt5_login || "—"}</b>
-                </div>
-              </div>
-            </div>
-
-            <div className="pairCard">
-              <div className="pairLabel">Profit share</div>
-              <div className="pairCode">30% of profits — weekly</div>
-              <div className="pairMeta">
-                <div className="dim">We calculate using your MT5 equity snapshots (week starts Monday 00:00).</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="howToBox">
-            <div className="howToTitle">How to pay with crypto</div>
-            <ul className="howToList">
-              <li>
-                Click <b>Pay with crypto</b> and choose <b>BTC</b> or <b>USDT (TRC20)</b>.
-              </li>
-              <li>
-                Send the <b>exact amount</b> shown. BTC network fees are paid separately by you.
-              </li>
-              <li>
-                After sending, copy your <b>TXID</b> from your wallet/exchange and paste it to verify.
-              </li>
-              <li>
-                <b>USDT must be TRC20</b> — do not send on ERC20/BEP20.
-              </li>
-            </ul>
-          </div>
-
-          <div className="dim small note">
-            If your portal shows “—”, your MT5 snapshot sender may not be running yet.
-          </div>
-        </section>
-
-        <section className="card">
-          <div className="sectionHead">
-            <h2 className="sectionTitle">Performance</h2>
-            <div className="dim small">Weekly profit share + drawdown</div>
-          </div>
-
-          <div className="statsGrid">
-            <div className="stat">
-              <div className="statLabel">Week start equity</div>
-              <div className="statValue">{weekStartEquity === null ? "—" : fmtMoney(weekStartEquity)}</div>
-              <div className="statHint">From first snapshot since Monday 00:00 (local).</div>
-            </div>
-
-            <div className="stat">
-              <div className="statLabel">Current equity</div>
-              <div className="statValue">{currentEquity === null ? "—" : fmtMoney(currentEquity)}</div>
-              <div className="statHint">Latest MT5 equity.</div>
-            </div>
-
-            <div className="stat">
-              <div className="statLabel">Weekly P/L</div>
-              <div className={`statValue ${weeklyPL > 0 ? "pos" : weeklyPL < 0 ? "neg" : ""}`}>
-                {weeklyPL === null ? "—" : fmtMoney(weeklyPL)}
-              </div>
-              <div className="statHint">Current equity minus week start equity.</div>
-            </div>
-
-            <div className="stat">
-              <div className="statLabel">Profit share due (30%)</div>
-              <div className="statValue">{weeklyFeeDue === null ? "—" : fmtMoney(weeklyFeeDue)}</div>
-              <div className="statHint">If weekly P/L is negative, fee stays £0.</div>
-            </div>
-
-            <div className="stat">
-              <div className="statLabel">Client keeps (70% of profits)</div>
-              <div className="statValue">{weeklyClientKeeps === null ? "—" : fmtMoney(weeklyClientKeeps)}</div>
-              <div className="statHint">Only counts on profits this week.</div>
-            </div>
-
-            <div className="stat">
-              <div className="statLabel">Drawdown from all-time peak</div>
-              <div className={`statValue ${hwmDrawdownPct > 0 ? "neg" : ""}`}>
-                {hwmDrawdownPct === null ? "—" : `${hwmDrawdownPct.toFixed(2)}%`}
-              </div>
-              <div className="statHint">Peak equity is computed from mt5_snapshots (no extra table).</div>
-            </div>
-          </div>
-
-          <div className="payRow">
-            <button
-              className="primaryBtn"
-              type="button"
-              onClick={payWithStripe}
-              disabled={payLoading || !weeklyFeeDue || weeklyFeeDue <= 0}
-            >
-              {payLoading ? "Opening checkout…" : "Pay profit share (Stripe)"}
-            </button>
-
-            <button
-              className="ghostBtn"
-              type="button"
-              onClick={openCrypto}
-              disabled={cryptoLoading || payLoading || !weeklyFeeDue || weeklyFeeDue <= 0}
-            >
-              {cryptoLoading ? "Preparing invoice…" : "Pay with crypto (BTC / USDT)"}
-            </button>
-            <div className="finePrint">
-              Week start (ISO): <span className="mono">{weekStartIsoLabel}</span>
-            </div>
-          </div>
-
-          <div className="dim small note">
-            Stripe endpoints show <b>405</b> if you open them in browser. That’s normal — the button sends a POST.
-          </div>
-        </section>
-        <section className="card full">
-          <div className="sectionHead">
-            <h2 className="sectionTitle">Payment history</h2>
-            <div className="dim small">Last {payments?.length || 0} crypto payments</div>
-          </div>
-
-          <div className="tableWrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>Network</th>
-                  <th>Amount</th>
-                  <th>Confirmations</th>
-                  <th>TXID</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(payments || []).map((p) => {
-                  const link = explorerLink(p.network, p.txid);
-                  const unit = p.network === "BTC" ? "BTC" : "USDT";
-                  return (
-                    <tr key={p.txid}>
-                      <td className="mono">{fmtTime(p.created_at)}</td>
-                      <td>{p.network}</td>
-                      <td>
-                        <div>{fmtMoney(p.amount_gbp)}</div>
-                        <div className="dim small mono">
-                          {p.amount_crypto} {unit}
-                        </div>
-                      </td>
-                      <td>
-                        {p.confirmed ? (
-                          <span className="pillOk">✅ {p.confirmations}</span>
-                        ) : (
-                          <span className="pillWait">⏳ {p.confirmations}</span>
-                        )}
-                      </td>
-                      <td className="mono">
-                        {link ? (
-                          <a className="link" href={link} target="_blank" rel="noreferrer">
-                            {shortTx(p.txid)}
-                          </a>
-                        ) : (
-                          shortTx(p.txid)
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-                {!payments?.length ? (
-                  <tr>
-                    <td colSpan={5} className="dim">
-                      No crypto payments yet.
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-
-
-        <section className="card full">
-          <div className="sectionHead">
-            <h2 className="sectionTitle">Recent snapshots</h2>
-            <div className="dim small">Last {snapshots?.length || 0} records</div>
-          </div>
-
-          <div className="tableWrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>Equity</th>
-                  <th>Balance</th>
-                  <th>Margin</th>
-                  <th>Free</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(snapshots || []).map((s) => (
-                  <tr key={s.created_at}>
-                    <td className="mono">{fmtTime(s.created_at)}</td>
-                    <td>{fmtMoney(s.equity)}</td>
-                    <td>{fmtMoney(s.balance)}</td>
-                    <td>{fmtMoney(s.margin)}</td>
-                    <td>{fmtMoney(s.free_margin)}</td>
-                  </tr>
-                ))}
-                {!snapshots?.length ? (
-                  <tr>
-                    <td colSpan={5} className="dim">
-                      No snapshots yet.
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="foot dim small">
-            You’re logged in as <span className="mono">{user.email}</span>
-          </div>
-        </section>
-      </section>
-
-      {cryptoOpen ? (
-        <div className="modalOverlay" onClick={() => setCryptoOpen(false)} role="dialog" aria-modal="true">
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modalHead">
-              <div>
-                <div className="modalTitle">Pay with crypto</div>
-                <div className="dim small">Send exactly the invoice amount to our address, then paste your tx hash to verify.</div>
-              </div>
-              <button className="iconBtn" type="button" onClick={() => setCryptoOpen(false)} aria-label="Close">
-                ✕
-              </button>
-            </div>
-
-            {cryptoLoading ? (
-              <div className="dim">Preparing invoice…</div>
-            ) : !cryptoInvoice ? (
-              <div className="dim">No invoice yet.</div>
-            ) : cryptoInvoice?.invoice_id === null ? (
-              <div className="dim">No fee due this week ✅</div>
+          <div className="btn-row">
+            {SITE.strategyUrl ? (
+              <a className="btn fx-mag" href={SITE.strategyUrl} target="_blank" rel="noopener noreferrer">
+                Open our strategy
+              </a>
             ) : (
-              <div className="modalBody">
-                <div className="kv">
-                  <div className="k">Amount due</div>
-                  <div className="v"><b>{fmtMoney(cryptoInvoice?.due_gbp)}</b></div>
-                </div>
-
-                <div className="payBox">
-                  <div className="payBoxTitle">BTC</div>
-                  <div className="mono big">{cryptoInvoice?.btc_amount}</div>
-                  <div className="addrRow">
-                    <div className="mono addr">{cryptoInvoice?.btc_address}</div>
-                    <button className="miniBtn" type="button" onClick={() => copyText(cryptoInvoice?.btc_address)}>
-                      Copy
-                    </button>
-                  </div>
-                  <div className="dim small">Network fee is paid separately by you.</div>
-                </div>
-
-                <div className="payBox">
-                  <div className="payBoxTitle">USDT (TRC20)</div>
-                  <div className="mono big">{cryptoInvoice?.usdt_amount}</div>
-                  <div className="addrRow">
-                    <div className="mono addr">{cryptoInvoice?.usdt_trc20_address}</div>
-                    <button className="miniBtn" type="button" onClick={() => copyText(cryptoInvoice?.usdt_trc20_address)}>
-                      Copy
-                    </button>
-                  </div>
-                  <div className="dim small">Only send USDT on the TRON (TRC20) network.</div>
-                </div>
-
-                <div className="divider" />
-
-                <div className="formRow">
-                  <label className="label">
-                    Network
-                    <select className="select" value={cryptoNetwork} onChange={(e) => setCryptoNetwork(e.target.value)}>
-                      <option value="usdt_trc20">USDT (TRC20)</option>
-                      <option value="btc">BTC</option>
-                    </select>
-                  </label>
-
-                  <label className="label" style={{ flex: 1 }}>
-                    Transaction hash (txid)
-                    <input
-                      className="input"
-                      value={cryptoTxid}
-                      onChange={(e) => setCryptoTxid(e.target.value)}
-                      placeholder="Paste your tx hash here"
-                    />
-                  </label>
-                </div>
-
-                <div className="modalActions">
-                  <button className="primaryBtn" type="button" onClick={verifyCrypto} disabled={cryptoVerifyLoading}>
-                    {cryptoVerifyLoading ? "Verifying…" : "Verify payment"}
-                  </button>
-                  <div className="dim small">Invoice: <span className="mono">{cryptoInvoice?.invoice_id}</span></div>
-                </div>
-              </div>
+              <span className="btn is-off">Strategy link coming soon</span>
             )}
+            <a className="btn-ghost fx-mag" href="/simulator">
+              Simulator
+            </a>
           </div>
         </div>
-      ) : null}
 
-      <style jsx>{styles}</style>
-    </div>
+        <div className="seg" role="tablist" aria-label="Members sections">
+          {TABS.map((t) => (
+            <button key={t.k} type="button" role="tab" aria-selected={tab === t.k} onClick={() => setTab(t.k)}>
+              {t.t}
+            </button>
+          ))}
+        </div>
+
+        {tab === "strategy" && (
+          <section className="pane" key="strategy">
+            {RETURNS_ARE_SAMPLE && (
+              <p className="fx-notice">
+                <b>Sample</b>
+                <span>These figures are placeholders until the verified Exness strategy history is published.</span>
+              </p>
+            )}
+            <div className="stats">
+              <div className="stat fx-tilt"><span>Total return</span><b className={totalReturn >= 0 ? "up" : "down"}>{pct(totalReturn)}</b><small>Before fees</small></div>
+              <div className="stat fx-tilt"><span>Weeks tracked</span><b>{WEEKLY_RETURNS.length}</b><small>Weekly closes</small></div>
+              <div className="stat fx-tilt"><span>Losing weeks</span><b>{growth.losing}</b><small>of {WEEKLY_RETURNS.length}</small></div>
+              <div className="stat fx-tilt"><span>Max drawdown</span><b className="down">-{(growth.maxDD * 100).toFixed(2)}%</b><small>Largest dip from a peak</small></div>
+            </div>
+            <div className="panel fx-glass">
+              <div className="panel-head">
+                <h2>Growth of $1,000</h2>
+                <span>Before fees</span>
+              </div>
+              <BalanceChart values={growth.points.map((p) => p.bal)} labels={labels} />
+            </div>
+          </section>
+        )}
+
+        {tab === "fee" && (
+          <section className="pane" key="fee">
+            <div className="panel fx-glass fx-hud feegrid">
+              <div className="inputs">
+                <p className="muted">
+                  Enter the figures from your Exness Social Trading investment to see the fee at the next monthly
+                  billing, using the same formula Exness uses.
+                </p>
+                <div>
+                  <label className="fx-label" htmlFor="f-inv">Amount invested ($)</label>
+                  <input id="f-inv" className="fx-input" type="number" inputMode="decimal" value={invested} onChange={(e) => setInvested(e.target.value)} />
+                </div>
+                <div>
+                  <label className="fx-label" htmlFor="f-eq">Current investment equity ($)</label>
+                  <input id="f-eq" className="fx-input" type="number" inputMode="decimal" value={equity} onChange={(e) => setEquity(e.target.value)} />
+                </div>
+                <div>
+                  <label className="fx-label" htmlFor="f-paid">Fees already paid ($)</label>
+                  <input id="f-paid" className="fx-input" type="number" inputMode="decimal" value={paid} onChange={(e) => setPaid(e.target.value)} />
+                </div>
+              </div>
+              <div className="out">
+                <div><span>Profit so far</span><b className={fee.profit >= 0 ? "" : "down"}>{money(fee.profit)}</b></div>
+                <div><span>Fee due ({SITE.performanceFeePct}%)</span><b>{money(fee.due)}</b></div>
+                <div className="hl"><span>You keep</span><b className="up">{money(fee.keep)}</b></div>
+                <p className="formula">
+                  (equity + fees paid − invested) × {SITE.performanceFeePct}% − fees paid
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {tab === "manage" && (
+          <section className="pane manage" key="manage">
+            {[
+              { t: "Watch your trades", d: "Every copied trade appears live in the Exness Social Trading app under your investment." },
+              { t: "Add or remove funds", d: "Top up or withdraw part of your investment from the app. Copying adjusts to the new amount." },
+              { t: "Stop copying", d: "Press Stop copying on your investment. Open trades close and the money returns to your wallet." },
+              { t: "Get help", d: `Questions about your copy or the fee? Email ${SITE.supportEmail}.` },
+            ].map((c) => (
+              <div key={c.t} className="m-card fx-glass fx-tilt">
+                <h3>{c.t}</h3>
+                <p>{c.d}</p>
+              </div>
+            ))}
+          </section>
+        )}
+      </div>
+
+      <style jsx>{`
+        .mem {
+          padding: 24px 16px 90px;
+        }
+        .mem-in {
+          max-width: 1120px;
+          margin: 0 auto;
+          display: grid;
+          gap: 20px;
+        }
+        .top {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 12px;
+        }
+        .brand {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          min-width: 0;
+        }
+        .brand img {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          object-fit: cover;
+          box-shadow: 0 0 0 1px var(--gold-deep);
+        }
+        .brand span {
+          display: grid;
+          min-width: 0;
+        }
+        .brand b {
+          font: 600 18px/1.2 var(--display);
+        }
+        .brand small {
+          color: var(--muted);
+          font: 400 12px/1.4 var(--mono);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .hello {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 20px;
+          flex-wrap: wrap;
+          padding: 26px;
+        }
+        .hello :global(.hello-q) {
+          display: block;
+          margin: 10px 0 0;
+          font-size: clamp(28px, 4.5vw, 44px);
+        }
+        .seg {
+          display: flex;
+          flex-wrap: wrap;
+          width: max-content;
+          max-width: 100%;
+          border: 1px solid var(--line);
+          background: rgba(8, 7, 5, 0.6);
+        }
+        .seg button {
+          background: transparent;
+          color: var(--muted);
+          border-radius: 0;
+          padding: 14px 18px;
+          font: 600 13px/1 var(--body);
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+        }
+        .seg button:hover {
+          box-shadow: none;
+          color: var(--gold);
+        }
+        .seg button[aria-selected="true"] {
+          background: var(--gold);
+          color: #0b0b0b;
+        }
+        .pane {
+          display: grid;
+          gap: 16px;
+          animation: fx-rise 0.4s ease-out;
+        }
+        .stats {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 12px;
+        }
+        @media (max-width: 760px) {
+          .stats {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+        .stat {
+          display: grid;
+          gap: 8px;
+          padding: 18px;
+          border: 1px solid var(--line);
+          border-radius: var(--radius);
+          background: rgba(12, 11, 8, 0.66);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+        }
+        .stat span {
+          font: 500 10px/1 var(--mono);
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--muted);
+        }
+        .stat b {
+          font: 600 clamp(24px, 4vw, 32px) / 1 var(--display);
+          font-variant-numeric: tabular-nums;
+        }
+        .stat small {
+          font: 400 12px/1.3 var(--mono);
+          color: var(--muted);
+        }
+        .up {
+          color: var(--gold);
+        }
+        .down {
+          color: var(--loss);
+        }
+        .panel {
+          padding: 22px;
+          display: grid;
+          gap: 14px;
+          min-width: 0;
+        }
+        .panel-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+        }
+        .panel-head h2 {
+          margin: 0;
+          font-size: 24px;
+        }
+        .panel-head span {
+          font: 400 12px/1 var(--mono);
+          color: var(--muted);
+        }
+        .feegrid {
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+          gap: 28px;
+          align-items: start;
+        }
+        @media (max-width: 760px) {
+          .feegrid {
+            grid-template-columns: 1fr;
+          }
+        }
+        .inputs {
+          display: grid;
+          gap: 16px;
+        }
+        .muted {
+          margin: 0;
+          color: var(--muted);
+          line-height: 1.6;
+        }
+        .out {
+          display: grid;
+          gap: 1px;
+          background: var(--line);
+          border: 1px solid var(--line);
+        }
+        .out div {
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          gap: 12px;
+          padding: 18px;
+          background: rgba(8, 7, 5, 0.75);
+        }
+        .out span {
+          font: 500 11px/1 var(--mono);
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--muted);
+        }
+        .out b {
+          font: 600 26px/1 var(--display);
+          font-variant-numeric: tabular-nums;
+        }
+        .out .hl {
+          background: rgba(230, 195, 106, 0.1);
+        }
+        .formula {
+          margin: 0;
+          padding: 12px 18px;
+          background: rgba(8, 7, 5, 0.75);
+          font: 400 12px/1.5 var(--mono);
+          color: var(--muted);
+        }
+        .manage {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        @media (max-width: 700px) {
+          .manage {
+            grid-template-columns: 1fr;
+          }
+        }
+        .m-card {
+          display: grid;
+          gap: 8px;
+          padding: 22px;
+          border-radius: var(--radius);
+        }
+        .m-n {
+          font: 500 12px/1 var(--mono);
+          color: var(--gold);
+        }
+        .m-card h3 {
+          margin: 0;
+          font-size: 22px;
+        }
+        .m-card p {
+          margin: 0;
+          color: var(--muted);
+          line-height: 1.6;
+        }
+        .is-off {
+          opacity: 0.5;
+          cursor: default;
+        }
+      `}</style>
+    </main>
   );
 }
-
-const styles = `
-.wrap{min-height:100vh;padding:20px;background:radial-gradient(1200px 600px at 10% 0%,rgba(255,215,0,.08),transparent),radial-gradient(900px 600px at 90% 10%,rgba(255,215,0,.06),transparent),#070707;color:var(--text);--gold:rgba(255,215,0,.92);--text:rgba(247,240,208,.95);--muted:rgba(223,210,160,.78);}
-.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
-.brand{display:flex;align-items:center;gap:12px}
-.logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#3a2a00,#f8d773);display:grid;place-items:center;font-weight:900;color:#1b1200;box-shadow:0 10px 26px rgba(0,0,0,.35)}
-.stack{display:flex;flex-direction:column}
-.h1{font-size:18px;font-weight:800;letter-spacing:.2px}
-.dim{opacity:.78}
-.small{font-size:12px}
-.actions{display:flex;gap:10px;flex-wrap:wrap}
-.btn{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:var(--text);padding:10px 12px;border-radius:12px;cursor:pointer}
-.btn:hover{background:rgba(255,255,255,.1)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.ghost{background:transparent}
-.toast{position:fixed;left:50%;transform:translateX(-50%);top:16px;background:rgba(20,20,20,.92);border:1px solid rgba(255,255,255,.12);padding:10px 14px;border-radius:12px;z-index:50}
-.hero{margin-bottom:18px}
-.heroCard{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);border-radius:18px;padding:16px;box-shadow:0 22px 40px rgba(0,0,0,.35)}
-.heroTop{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
-.heroTitle{font-size:16px;font-weight:800}
-.quote{display:flex;gap:10px;max-width:420px}
-.quoteMark{font-size:32px;line-height:1;color:var(--gold)}
-.quoteText{font-size:13px;opacity:.9;line-height:1.35}
-.heroGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
-.kpi{border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.25);border-radius:16px;padding:12px}
-.kpiLabel{font-size:12px;opacity:.75}
-.kpiValue{font-size:18px;font-weight:900;margin-top:6px}
-.pos{color:#57ff9e}
-.neg{color:#ff6b6b}
-.chartKpi{padding-bottom:8px}
-.tinyChart{margin-top:6px}
-.lineMain{fill:none;stroke:rgba(255,215,0,.95);stroke-width:2.2}
-.lineDim{fill:none;stroke:rgba(255,255,255,.2);stroke-width:1.5}
-.heroFoot{margin-top:10px}
-.grid{display:grid;grid-template-columns:1fr;gap:14px}
-.card{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);border-radius:18px;padding:16px;box-shadow:0 18px 34px rgba(0,0,0,.32)}
-.full{grid-column:1/-1}
-.sectionHead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-.sectionTitle{font-size:15px;font-weight:900}
-.pairGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.pairCard{border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.22);border-radius:16px;padding:12px}
-.pairLabel{font-size:12px;opacity:.75}
-.pairCode{font-size:18px;font-weight:950;margin-top:6px}
-.pairMeta{margin-top:8px;display:flex;flex-direction:column;gap:4px}
-.note{margin-top:12px}
-.statsGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.stat{border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.22);border-radius:16px;padding:12px}
-.statLabel{font-size:12px;opacity:.75}
-.statValue{font-size:18px;font-weight:950;margin-top:6px}
-.statHint{font-size:12px;opacity:.75;margin-top:6px;line-height:1.35}
-.payRow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px}
-.payRow .finePrint{opacity:.8;font-size:12px;line-height:1.4}
-.primaryBtn{border:1px solid rgba(255,215,0,.35);background:linear-gradient(135deg,rgba(255,215,0,.26),rgba(255,215,0,.08));color:var(--text);padding:12px 14px;border-radius:14px;font-weight:900;cursor:pointer}
-.primaryBtn:disabled{opacity:.5;cursor:not-allowed}
-.ghostBtn{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:var(--text);padding:12px 14px;border-radius:14px;font-weight:850;cursor:pointer}
-.ghostBtn:hover{background:rgba(255,255,255,.08)}
-.ghostBtn:disabled{opacity:.5;cursor:not-allowed}
-
-.howToBox{margin-top:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);border-radius:16px;padding:12px}
-.howToTitle{font-weight:900;margin-bottom:8px}
-.howToList{margin:0;padding-left:18px;opacity:.92;font-size:13px;line-height:1.5}
-.howToList li{margin:6px 0}
-
-.link{color:rgba(255,215,0,.95);text-decoration:none}
-.link:hover{text-decoration:underline}
-.pillOk{display:inline-block;border:1px solid rgba(87,255,158,.35);background:rgba(87,255,158,.10);padding:4px 10px;border-radius:999px;font-size:12px}
-.pillWait{display:inline-block;border:1px solid rgba(255,215,0,.25);background:rgba(255,215,0,.08);padding:4px 10px;border-radius:999px;font-size:12px}
-
-
-.modalOverlay{position:fixed;inset:0;background:rgba(0,0,0,.68);display:flex;align-items:center;justify-content:center;padding:18px;z-index:60}
-.modal{width:min(720px,100%);border:1px solid rgba(255,255,255,.12);background:rgba(12,12,12,.92);backdrop-filter:blur(10px);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.55);padding:14px}
-.modalHead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}
-.modalTitle{font-size:16px;font-weight:950}
-.iconBtn{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:var(--text);border-radius:12px;padding:8px 10px;cursor:pointer}
-.iconBtn:hover{background:rgba(255,255,255,.1)}
-.modalBody{display:flex;flex-direction:column;gap:12px}
-.kv{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.25);border-radius:14px;padding:10px 12px}
-.kv .k{opacity:.75;font-size:12px}
-.kv .v{font-size:14px}
-.payBox{border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.22);border-radius:16px;padding:12px}
-.payBoxTitle{font-size:12px;opacity:.8;margin-bottom:6px}
-.big{font-size:18px;font-weight:950}
-.addrRow{display:flex;gap:10px;align-items:center;margin-top:8px}
-.addr{word-break:break-all;opacity:.9}
-.miniBtn{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:var(--text);border-radius:12px;padding:8px 10px;cursor:pointer;white-space:nowrap}
-.miniBtn:hover{background:rgba(255,255,255,.1)}
-.divider{height:1px;background:rgba(255,255,255,.12);margin:6px 0}
-.formRow{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
-.label{display:flex;flex-direction:column;gap:6px;font-size:12px;opacity:.9}
-.select,.input{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:var(--text);border-radius:12px;padding:10px 12px;outline:none}
-.input{width:100%}
-.modalActions{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
-.tableWrap{overflow:auto;border-radius:16px;border:1px solid rgba(255,255,255,.08)}
-.table{width:100%;border-collapse:collapse;min-width:640px}
-.table th,.table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);text-align:left}
-.table th{font-size:12px;opacity:.75}
-.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
-.foot{margin-top:12px}
-@media (max-width:980px){
-  .heroGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .pairGrid{grid-template-columns:1fr}
-  .statsGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-@media (max-width:520px){
-  .wrap{padding:14px}
-  .heroGrid{grid-template-columns:1fr}
-  .statsGrid{grid-template-columns:1fr}
-  .btn{width:100%}
-  .primaryBtn{width:100%}
-}
-/* --- Golden typography overrides --- */
-.sectionTitle,.modalTitle,.payTitle,.howToTitle,.kpiValue,.onbTitle{color:var(--gold)}
-.dim,.small,.finePrint{color:var(--muted)}
-.table th{color:rgba(243,210,122,.9)}
-`;

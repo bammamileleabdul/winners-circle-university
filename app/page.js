@@ -1,1284 +1,720 @@
 "use client";
 
 import { useState } from "react";
+import SiteHeader from "../components/SiteHeader";
+import Crest from "../components/Crest";
+import Scramble from "../components/Scramble";
+import MiniLelefx from "../components/MiniLelefx";
+import { SITE } from "../lib/site";
+
+const PRINCIPLES = [
+  { t: "Discipline Over Dopamine", d: "We remove impulse from execution. Calm is an edge." },
+  { t: "Risk Before Reward", d: "If protection isn’t clear, the trade doesn’t exist." },
+  { t: "Process Over Outcomes", d: "We judge decisions, not single results. Mastery compounds." },
+  { t: "Patience Compounds", d: "Waiting is a skill. Quality beats activity." },
+  { t: "Consistency Creates Inevitability", d: "Repeat what works. Remove what doesn’t. Stay aligned." },
+];
+
+const HUB = [
+  { href: "/get-started", k: "Start", t: "Get Started", d: "Open your Exness account and start copying in 3 steps.", icon: "M5 25h6v-6h6v-6h6V7h4" },
+  { href: "/copy-trading", k: "Copy", t: "Copy Trading", d: "How copying through Exness works. No passwords, ever.", icon: "M9 9h12v12H9zM13 5h14v14" },
+  { href: "/how", k: "Method", t: "How It Works", d: "The risk framework behind every trade.", icon: "M16 5a11 11 0 1 0 0 22 11 11 0 0 0 0-22Zm0 5v6l4 3" },
+  { href: "/simulator", k: "Replay", t: "Simulator", d: "Pick a starting amount and replay the strategy’s history.", icon: "M4 26h24M7 21l6-7 5 4 8-11M22 7h4v4" },
+  { href: "/client-portal", k: "Members", t: "Members Area", d: "Track the strategy, your fee maths and lessons.", icon: "M5 7h22v18H5zM5 12h22M10 20h4M18 20h4" },
+  { href: "/waitlist", k: "Access", t: "Join the Waitlist", d: "Founding members hear first when we open.", icon: "M16 5a11 11 0 1 0 0 22 11 11 0 0 0 0-22Zm0 6v10m-5-5h10", cta: true },
+];
 
 export default function Home() {
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  // Waitlist (we still keep state even though Formspree handles submit)
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState("");
-
-  // Interactive reveals
   const [manifestoOpen, setManifestoOpen] = useState(false);
   const [vvipOpen, setVvipOpen] = useState(false);
+  const [active, setActive] = useState(0);
+  const [wlState, setWlState] = useState("idle");
 
-  // MINI LELEFX
-  const [aiOpen, setAiOpen] = useState(false);
-  const [aiMessages, setAiMessages] = useState([
-    {
-      role: "assistant",
-      content:
-        "I am mini lelefx.\n\nI operate on discipline, risk structure, and probability — not prediction.\n\nAsk a question or enter your capital and I’ll simulate the framework (demo mode).",
-    },
-  ]);
-  const [aiInput, setAiInput] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
-
-  const sendAi = async () => {
-    const text = aiInput.trim();
-    if (!text || aiLoading) return;
-
-    const userMsg = { role: "user", content: text };
-    setAiMessages((m) => [...m, userMsg]);
-    setAiInput("");
-    setAiLoading(true);
-
+  const submitWaitlist = async (e) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const email = form.email.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setWlState("invalid");
+      return;
+    }
+    setWlState("sending");
     try {
-      const res = await fetch("/api/mini-lelefx", {
+      const r = await fetch(SITE.formspree, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMsg.content }),
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({ email, source: "Winners Circle Landing Page" }),
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setAiMessages((m) => [
-          ...m,
-          {
-            role: "assistant",
-            content:
-              data?.error ||
-              "mini lelefx hit a connection issue. Re-center, then try again in a moment.",
-          },
-        ]);
-      } else {
-        setAiMessages((m) => [
-          ...m,
-          {
-            role: "assistant",
-            content: data.reply || "…",
-          },
-        ]);
-      }
-    } catch (err) {
-      setAiMessages((m) => [
-        ...m,
-        {
-          role: "assistant",
-          content:
-            "mini lelefx hit a connection issue. Re-center, then try again in a moment.",
-        },
-      ]);
-    } finally {
-      setAiLoading(false);
+      if (!r.ok) throw new Error();
+      form.reset();
+      setWlState("done");
+    } catch {
+      setWlState("error");
     }
   };
 
   return (
     <>
-      {/* HEADER */}
-      <header className="header">
-        <a className="logo" href="/" aria-label="Winners Circle University">
-          <img
-            src="/emblem.jpg"
-            alt="Winners Circle Emblem"
-            className="logoImg"
-          />
-          <span className="logoText">Winners Circle University</span>
-        </a>
+      <SiteHeader />
 
-        {/* DESKTOP NAV (shows on laptops) */}
-        <nav className="desktopNav" aria-label="Main navigation">
-          <a href="#overview">Overview</a>
-          <a href="/how">How It Works</a>
-          <a href="/access-trading">Access &amp; Trading</a>
-          <a href="/get-started">Get Started</a>
-          <a href="/waitlist">Waitlist</a>
-
-          <span className="navDivider" />
-
-          <a className="navGold" href="/clientportal">Client Portal</a>
-          <a className="navGold" href="/login">Login</a>
-          <a className="navGold" href="/signup">Sign Up</a>
-        </nav>
-
-        <button className="menuBtn" onClick={() => setMenuOpen(true)}>
-          ☰
-        </button>
-      </header>
-
-      {/* MOBILE MENU */}
-      {menuOpen && (
-        <div className="menuOverlay">
-          <button className="menuClose" onClick={() => setMenuOpen(false)}>
-            × Close
-          </button>
-
-          <nav className="menuLinks">
-            <a href="#overview" onClick={() => setMenuOpen(false)}>
-              Overview
-            </a>
-            <a href="/how" onClick={() => setMenuOpen(false)}>
-              How It Works
-            </a>
-            <a href="/access-trading" onClick={() => setMenuOpen(false)}>
-              Access &amp; Trading
-            </a>
-            <a href="/get-started" onClick={() => setMenuOpen(false)}>
-              Get Started
-            </a>
-            <a href="/waitlist" onClick={() => setMenuOpen(false)}>
-              Waitlist
-            </a>
-            <a href="#principles" onClick={() => setMenuOpen(false)}>
-              Principles
-            </a>
-            <a href="#manifesto" onClick={() => setMenuOpen(false)}>
-              Manifesto
-            </a>
-            <a href="#vvip" onClick={() => setMenuOpen(false)}>
-              VVIP Access
-            </a>
-            <a href="/clientportal" onClick={() => setMenuOpen(false)}>
-              Client Portal
-            </a>
-
-            <div className="menuDivider" />
-
-            <a href="/login" onClick={() => setMenuOpen(false)}>
-              Login
-            </a>
-            <a href="/signup" onClick={() => setMenuOpen(false)}>
-              Sign Up
-            </a>
-          </nav>
-        </div>
-      )}
-
-      {/* HERO */}
-      <section id="overview" className="hero">
-        <img src="/emblem.jpg" alt="" className="heroEmblem" />
-
-        <div className="pill">EARLY ACCESS · LIMITED ONBOARDING</div>
-
-        <h1>Winners Circle University</h1>
-        <p className="heroP">
-          A performance-based gold trading framework combining structured AI
-          modelling with disciplined human execution.
-        </p>
-
-        {/* WAITLIST FORM via Formspree */}
-        <form
-          className="waitlistForm"
-          action="https://formspree.io/f/xpwveaza"
-          method="POST"
-        >
-          <input
-            className="waitlistInput"
-            type="email"
-            name="email"
-            placeholder="Enter your email"
-            required
-          />
-
-          <input
-            type="hidden"
-            name="source"
-            value="Winners Circle Landing Page"
-          />
-
-          <button className="goldBtn" type="submit">
-            Join the Waitlist
-          </button>
-        </form>
-
-        <div className="heroCtas">
-          <a className="ghostBtn" href="/get-started">
-            Get Started
-          </a>
-          <a className="ghostBtn" href="/access-trading">
-            Access &amp; Trading
-          </a>
-          <a className="ghostBtn" href="/clientportal">
-            Client Portal
-          </a>
-          <a className="ghostBtn" href="/login">
-            Login
-          </a>
-          <a className="ghostBtn" href="/signup">
-            Sign Up
-          </a>
-        </div>
-
-        <div className="hintRow">
-          <a className="ghostLink" href="/how">
-            See How It Works →
-          </a>
-        </div>
-      </section>
-
-      {/* PRINCIPLES */}
-      <section id="principles" className="section">
-        <h2>Our Principles</h2>
-
-        <div className="luxGrid">
-          {[
-            {
-              t: "Discipline Over Dopamine",
-              d: "We remove impulse from execution. Calm is an edge.",
-            },
-            {
-              t: "Risk Before Reward",
-              d: "If protection isn’t clear, the trade doesn’t exist.",
-            },
-            {
-              t: "Process Over Outcomes",
-              d: "We judge decisions, not single results. Mastery compounds.",
-            },
-            {
-              t: "Patience Compounds",
-              d: "Waiting is a skill. Quality beats activity.",
-            },
-            {
-              t: "Consistency Creates Inevitability",
-              d: "Repeat what works. Remove what doesn’t. Stay aligned.",
-            },
-          ].map((p) => (
-            <div key={p.t} className="luxCard">
-              <div className="luxTitle">{p.t}</div>
-              <div className="luxText">{p.d}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* MANIFESTO */}
-      <section id="manifesto" className="section">
-        <h2>Manifesto</h2>
-
-        {!manifestoOpen ? (
-          <button className="curtainBtn" onClick={() => setManifestoOpen(true)}>
-            This was not written for everyone
-          </button>
-        ) : (
-          <div className="manifestoCard">
-            <div className="manifestoHead">Founder’s Manifesto</div>
-            <div className="manifestoBody">
-              <p>
-                Winners Circle was not built for excitement. <br />
-                It was built for longevity.
-              </p>
-              <p>
-                I’ve seen what impatience does to talented people. <br />
-                I’ve seen discipline quietly outperform brilliance.
-              </p>
-              <p>
-                This framework exists to remove noise, emotion, and ego —
-                replacing them with structure, risk awareness, and clarity.
-              </p>
-              <p>
-                If you’re here to rush, impress, or gamble — this won’t work.{" "}
-                <br />
-                If you’re here to compound patiently — you’re in the right place.
+      <main>
+        {/* HERO */}
+        <section className="hero">
+          <div className="hero-in">
+            <div className="hero-copy">
+              <span className="fx-eyebrow">Early access · Limited onboarding</span>
+              <h1 className="hero-title">
+                <Scramble text="Winners Circle" className="fx-gradient-text hero-l1" />
+                <Scramble text="University" className="hero-l2" delay={250} />
+              </h1>
+              <p className="hero-p">
+                A disciplined gold trading strategy you can copy through Exness Social Trading. Your money stays in your
+                own Exness account, and a performance fee is only taken when your account is in profit.
               </p>
 
-              <div className="signature">— Lelefx, Founder</div>
-
-              <button
-                className="ghostBtn"
-                onClick={() => setManifestoOpen(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        )}
-      </section>
-
-      {/* PRICING */}
-      <section id="pricing" className="section">
-        <h2>Pricing</h2>
-        <p className="sectionP">
-          Transparent, performance-based fees. You keep the majority of profits — we only earn when you do.
-        </p>
-
-        <div className="pricingGrid">
-          <div className="pricingCard">
-            <div className="pricingTitle">Weekly performance fee</div>
-            <div className="pricingBig">30%</div>
-            <div className="pricingText">
-              Charged only on weekly profit. No profit = no fee.
-            </div>
-          </div>
-
-          <div className="pricingCard">
-            <div className="pricingTitle">Payment options</div>
-            <div className="pricingBigSmall">Stripe or Crypto</div>
-            <div className="pricingText">
-              Pay by card (Stripe) or pay with BTC / USDT (TRC20) directly from your dashboard.
-            </div>
-          </div>
-
-          <div className="pricingCard">
-            <div className="pricingTitle">Support</div>
-            <div className="pricingBigSmall">Fast help</div>
-            <div className="pricingText">
-              Having issues? Visit <a className="inlineLink" href="/support">Support</a> for FAQs or email us.
-            </div>
-          </div>
-        </div>
-
-        <div className="ctaRow">
-          <a className="ctaPrimary" href="/get-started">Get Started</a>
-          <a className="ctaGhost" href="/clientportal">Open Client Portal</a>
-        </div>
-      </section>
-
-
-      {/* VVIP */}
-      <section id="vvip" className="section last">
-        <h2>VVIP Access</h2>
-
-        {!vvipOpen ? (
-          <button className="vvipBtn" onClick={() => setVvipOpen(true)}>
-            Explore VVIP Access
-          </button>
-        ) : (
-          <div className="vvipCard">
-            <div className="vvipHead">Private • Invitation Only</div>
-
-            <p className="vvipText">
-              VVIP is not purchased. It is earned through consistency,
-              discipline, and alignment over time.
-            </p>
-
-            <div className="vvipDivider" />
-
-            <p className="vvipTextMuted">
-              Some members may be contacted discreetly.
-            </p>
-
-            <button className="ghostBtn" onClick={() => setVvipOpen(false)}>
-              Close
-            </button>
-          </div>
-        )}
-      </section>
-
-      {/* MINI LELEFX ROBOT FLOAT BUTTON */}
-      <button
-        className="aiFab"
-        type="button"
-        aria-label="Open mini lelefx"
-        onClick={() => setAiOpen(true)}
-      >
-        <span className="aiFabBot" aria-hidden="true">
-          <span className="aiFabBotFace" />
-          <span className="aiFabBotGlow" />
-          <span className="aiFabBotEye left" />
-          <span className="aiFabBotEye right" />
-        </span>
-      </button>
-
-      {aiOpen && (
-        <div className="aiOverlay" onClick={() => setAiOpen(false)}>
-          <div className="aiModal" onClick={(e) => e.stopPropagation()}>
-            <div className="aiHeader">
-              <div className="aiHeaderLeft">
-                <div className="aiRobot">
-                  <div className="aiRobotFace" />
-                  <div className="aiRobotGlow" />
+              <form className="wl" onSubmit={submitWaitlist} noValidate>
+                <label className="fx-label" htmlFor="hero-email">
+                  Join the waitlist
+                </label>
+                <div className="wl-row">
+                  <input id="hero-email" name="email" type="email" className="fx-input" placeholder="Enter your email" autoComplete="email" />
+                  <button type="submit" className="btn fx-mag" disabled={wlState === "sending"}>
+                    {wlState === "sending" ? "Joining…" : "Join the Waitlist"}
+                  </button>
                 </div>
-                <div>
-                  <div className="aiTitle">mini lelefx</div>
-                  <div className="aiSub">Calm. Precise. Demo mode.</div>
-                </div>
+                <p className={`wl-msg ${wlState}`} role="status" aria-live="polite">
+                  {wlState === "invalid" && "Enter a valid email address."}
+                  {wlState === "error" && "That didn’t go through. Check your connection and try again."}
+                  {wlState === "done" && "You’re on the list. Watch your inbox for launch news."}
+                </p>
+              </form>
+
+              <dl className="terms">
+                <div><dt>Copy from</dt><dd>${SITE.minInvestmentUsd}</dd></div>
+                <div><dt>Performance fee</dt><dd>{SITE.performanceFeePct}% of profit</dd></div>
+                <div><dt>Losing month</dt><dd>$0 fee</dd></div>
+                <div><dt>Stop copying</dt><dd>Any time</dd></div>
+              </dl>
+            </div>
+            <div className="hero-crest">
+              <Crest size={340} />
+            </div>
+          </div>
+        </section>
+
+        <div className="fx-marquee" aria-label="Our principles">
+          <div className="fx-marquee-track">
+            {[0, 1].map((n) =>
+              PRINCIPLES.map((p) => (
+                <span key={`${n}-${p.t}`} aria-hidden={n === 1 ? "true" : undefined}>
+                  {p.t}
+                </span>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* HUB */}
+        <section className="sec">
+          <div className="sec-in">
+            <div className="sec-head row">
+              <div>
+                <span className="fx-eyebrow">Command hub</span>
+                <Scramble as="h2" text="Choose where to go" className="sec-title" />
               </div>
-              <button className="aiClose" onClick={() => setAiOpen(false)}>
-                ×
-              </button>
+              <span className="hint">Select a module_</span>
             </div>
+            <div className="hub">
+              {HUB.map((h) => (
+                <a key={h.href} href={h.href} className={`tile fx-tilt ${h.cta ? "cta" : ""}`}>
+                  <svg viewBox="0 0 32 32" aria-hidden="true">
+                    <path d={h.icon} />
+                  </svg>
+                  <span className="t-k">{h.k}</span>
+                  <h3>{h.t}</h3>
+                  <p>{h.d}</p>
+                  <span className="t-go">Open</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
 
-            <div className="aiBody">
-              <div className="aiChat">
-                {aiMessages.map((m, i) => (
-                  <div
-                    key={i}
-                    className={`aiMsg ${m.role === "user" ? "user" : "bot"}`}
+        {/* PRINCIPLES */}
+        <section className="sec" id="principles">
+          <div className="sec-in">
+            <div className="sec-head">
+              <span className="fx-eyebrow">The code</span>
+              <Scramble as="h2" text="Our Principles" className="sec-title" />
+            </div>
+            <div className="pr">
+              <div className="pr-list" role="tablist" aria-label="Principles">
+                {PRINCIPLES.map((p, i) => (
+                  <button
+                    key={p.t}
+                    type="button"
+                    role="tab"
+                    aria-selected={active === i}
+                    className="pr-tab"
+                    onClick={() => setActive(i)}
+                    onPointerEnter={() => setActive(i)}
                   >
-                    {m.content}
-                  </div>
+                    <span className="pr-n">{String(i + 1).padStart(2, "0")}</span>
+                    {p.t}
+                  </button>
                 ))}
-                {aiLoading && <div className="aiMsg bot">Thinking…</div>}
               </div>
+              <div className="pr-panel fx-glass fx-hud" role="tabpanel">
+                <span className="pr-big">{String(active + 1).padStart(2, "0")}</span>
+                <Scramble key={active} as="h3" text={PRINCIPLES[active].t} className="pr-title" />
+                <p>{PRINCIPLES[active].d}</p>
+              </div>
+            </div>
+          </div>
+        </section>
 
-              <div className="aiInputRow">
-                <input
-                  className="aiInput"
-                  placeholder="Ask a question or enter capital…"
-                  value={aiInput}
-                  onChange={(e) => setAiInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && sendAi()}
-                />
-                <button className="aiSend" onClick={sendAi}>
-                  Send
+        {/* MANIFESTO */}
+        <section className="sec" id="manifesto">
+          <div className="sec-in narrow">
+            <div className="sec-head center">
+              <span className="fx-eyebrow">Founder</span>
+              <Scramble as="h2" text="Manifesto" className="sec-title" />
+            </div>
+            {!manifestoOpen ? (
+              <button type="button" className="seal" onClick={() => setManifestoOpen(true)}>
+                <span className="seal-ring" aria-hidden="true" />
+                <span className="seal-text">This was not written for everyone</span>
+                <span className="seal-hint">Tap to unseal</span>
+              </button>
+            ) : (
+              <div className="manifesto fx-glass fx-hud">
+                <span className="fx-eyebrow">Founder’s Manifesto</span>
+                <p>Winners Circle was not built for excitement. It was built for longevity.</p>
+                <p>I’ve seen what impatience does to talented people. I’ve seen discipline quietly outperform brilliance.</p>
+                <p>This framework exists to remove noise, emotion, and ego, replacing them with structure, risk awareness, and clarity.</p>
+                <p>If you’re here to rush, impress, or gamble, this won’t work. If you’re here to compound patiently, you’re in the right place.</p>
+                <div className="sig">— Lelefx, Founder</div>
+                <button type="button" className="btn-ghost" onClick={() => setManifestoOpen(false)}>
+                  Seal it again
                 </button>
               </div>
+            )}
+          </div>
+        </section>
 
-              <div className="aiNote">
-                Demo mode (no OpenAI API). This uses the local mini-lelefx rules.
+        {/* PRICING */}
+        <section className="sec" id="pricing">
+          <div className="sec-in">
+            <div className="sec-head">
+              <span className="fx-eyebrow">Pricing</span>
+              <Scramble as="h2" text="We only earn when you do" className="sec-title" />
+              <p className="sec-p">
+                No subscriptions and no upfront fees. Exness calculates and collects the performance fee for us, so you
+                never send money to Winners Circle directly.
+              </p>
+            </div>
+            <div className="price">
+              <div className="p-card fx-tilt fx-glass fx-hud">
+                <span className="t-k">Performance fee</span>
+                <div className="p-big fx-gradient-text">{SITE.performanceFeePct}%</div>
+                <p>Of new profit only. Charged by Exness at the end of each monthly period. A high-water mark means you never pay twice on the same gains.</p>
+              </div>
+              <div className="p-card fx-tilt fx-glass">
+                <span className="t-k">Your money</span>
+                <div className="p-mid">Stays with Exness</div>
+                <p>Funds sit in your own Exness account. Deposit, withdraw or stop copying whenever you choose from the Exness app.</p>
+              </div>
+              <div className="p-card fx-tilt fx-glass">
+                <span className="t-k">Support</span>
+                <div className="p-mid">Real people</div>
+                <p>
+                  Questions about setup or fees? Visit <a href="/support">Support</a> or email {SITE.supportEmail}.
+                </p>
               </div>
             </div>
+            <div className="btn-row center">
+              <a className="btn fx-mag" href="/get-started">Get Started</a>
+              <a className="btn-ghost fx-mag" href="/simulator">Try the Simulator</a>
+            </div>
           </div>
-        </div>
-      )}
+        </section>
 
-      {/* STYLES */}
+        {/* VVIP */}
+        <section className="sec last" id="vvip">
+          <div className="sec-in narrow">
+            <div className="sec-head center">
+              <span className="fx-eyebrow">Invitation only</span>
+              <Scramble as="h2" text="VVIP Access" className="sec-title" />
+            </div>
+            {!vvipOpen ? (
+              <button type="button" className="vault" onClick={() => setVvipOpen(true)}>
+                <span className="vault-dial" aria-hidden="true" />
+                <span>Explore VVIP Access</span>
+              </button>
+            ) : (
+              <div className="manifesto fx-glass fx-hud center-text">
+                <span className="fx-eyebrow">Private · Invitation only</span>
+                <p className="vv-big">VVIP is not purchased. It is earned through consistency, discipline, and alignment over time.</p>
+                <p className="muted">Some members may be contacted discreetly.</p>
+                <button type="button" className="btn-ghost" onClick={() => setVvipOpen(false)}>
+                  Close
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+
+      <MiniLelefx />
+
       <style jsx>{`
-        .header {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          z-index: 50;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 12px 14px;
-          background: rgba(0, 0, 0, 0.7);
-          backdrop-filter: blur(10px);
-          border-bottom: 1px solid rgba(230, 195, 106, 0.18);
+        .hero {
+          padding: 64px 16px 56px;
         }
-
-        
-        .logo {
-          display: inline-flex;
+        .hero-in {
+          max-width: 1120px;
+          margin: 0 auto;
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 40px;
           align-items: center;
-          gap: 10px;
-          text-decoration: none;
+        }
+        .hero-copy {
+          display: grid;
+          gap: 22px;
           min-width: 0;
         }
-
-        .logoText {
-          color: rgba(247, 240, 218, 0.92);
-          font-weight: 900;
-          letter-spacing: 0.02em;
-          font-size: 14px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 48vw;
-        }
-
-        .desktopNav {
-          display: none;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .desktopNav a {
-          color: rgba(247, 240, 218, 0.9);
-          text-decoration: none;
-          font-weight: 800;
-          font-size: 13px;
-          padding: 10px 10px;
-          border-radius: 12px;
-          border: 1px solid transparent;
-          white-space: nowrap;
-        }
-
-        .desktopNav a:hover {
-          border-color: rgba(230, 195, 106, 0.28);
-          background: rgba(230, 195, 106, 0.06);
-        }
-
-        .navGold {
-          color: rgba(230, 195, 106, 0.95) !important;
-          border: 1px solid rgba(230, 195, 106, 0.3) !important;
-          background: rgba(0, 0, 0, 0.35);
-        }
-
-        .navDivider {
-          width: 1px;
-          height: 24px;
-          background: rgba(230, 195, 106, 0.18);
-          margin: 0 2px;
-        }
-
-        @media (min-width: 980px) {
-          .desktopNav {
-            display: inline-flex;
-          }
-          .menuBtn {
-            display: none;
-          }
-          .logoText {
-            max-width: 260px;
-          }
-        }
-.logoImg {
-          width: 42px;
-          height: 42px;
-          border-radius: 14px;
-          box-shadow: 0 0 30px rgba(230, 195, 106, 0.25);
-        }
-
-        .menuBtn {
-          background: transparent;
-          color: #e6c36a;
-          border: 1px solid rgba(230, 195, 106, 0.35);
-          border-radius: 12px;
-          padding: 10px 12px;
-          font-size: 18px;
-          cursor: pointer;
-        }
-
-        .menuOverlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(0, 0, 0, 0.92);
-          z-index: 100;
-          padding: 18px;
-        }
-
-        .menuClose {
-          background: transparent;
-          border: 1px solid rgba(230, 195, 106, 0.35);
-          color: #e6c36a;
-          padding: 12px 14px;
-          border-radius: 14px;
-          font-weight: 800;
-          cursor: pointer;
-        }
-
-        .menuLinks {
-          margin-top: 16px;
+        .hero-title {
+          margin: 0;
           display: grid;
-          gap: 12px;
-        }
-
-        .menuLinks a {
-          text-decoration: none;
-          color: #f7f0da;
-          padding: 14px 14px;
-          border-radius: 16px;
-          border: 1px solid rgba(230, 195, 106, 0.18);
-          background: rgba(230, 195, 106, 0.06);
+          font-size: clamp(46px, 8.5vw, 100px);
+          line-height: 0.95;
           font-weight: 700;
+          letter-spacing: -0.01em;
         }
-
-        
-        .menuDivider {
-          height: 1px;
-          background: rgba(230, 195, 106, 0.22);
-          margin: 6px 0;
-          border-radius: 999px;
+        .hero-p {
+          margin: 0;
+          max-width: 56ch;
+          color: #cfc6b1;
+          font-size: 18px;
+          line-height: 1.65;
         }
-.hero {
-          min-height: 100vh;
-          padding: 110px 16px 60px;
-          background: radial-gradient(circle at top, #1a1408, #000);
-          color: #fff;
-          text-align: center;
-          position: relative;
-          overflow: hidden;
+        .wl {
+          max-width: 560px;
         }
-
-        .heroEmblem {
-          width: 110px;
-          height: 110px;
-          border-radius: 30px;
-          box-shadow: 0 0 80px rgba(230, 195, 106, 0.28);
-          margin: 0 auto 18px;
-          position: relative;
-          z-index: 1;
-        }
-
-        .pill {
-          display: inline-block;
-          padding: 7px 14px;
-          border-radius: 999px;
-          border: 1px solid rgba(230, 195, 106, 0.35);
-          color: #e6c36a;
-          font-size: 11px;
-          letter-spacing: 0.16em;
-          margin-bottom: 14px;
-          position: relative;
-          z-index: 1;
-        }
-
-        h1 {
-          font-size: 34px;
-          margin: 0 0 10px;
-          color: #e6c36a;
-          position: relative;
-          z-index: 1;
-        }
-
-        .heroP {
-          color: #cfcfcf;
-          max-width: 640px;
-          margin: 0 auto 26px;
-          line-height: 1.7;
-          font-size: 15px;
-          position: relative;
-          z-index: 1;
-        }
-
-        .waitlistForm {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          max-width: 380px;
-          margin: 0 auto;
-          position: relative;
-          z-index: 1;
-        }
-
-        .heroCtas {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          justify-content: center;
-          margin-top: 14px;
-          position: relative;
-          z-index: 1;
-        }
-
-        .heroCtas .ghostBtn {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          padding: 10px 14px;
-          border-radius: 999px;
-          border: 1px solid rgba(230, 195, 106, 0.32);
-          color: rgba(230, 195, 106, 0.95);
-          text-decoration: none;
-          font-size: 13px;
-          font-weight: 800;
-          background: rgba(0, 0, 0, 0.35);
-        }
-
-        .heroCtas .ghostBtn:hover {
-          background: rgba(230, 195, 106, 0.06);
-        }
-
-        .waitlistInput {
-          padding: 14px 16px;
-          border-radius: 16px;
-          border: 1px solid rgba(230, 195, 106, 0.35);
-          background: rgba(0, 0, 0, 0.55);
-          color: #fff;
-          font-size: 15px;
-          outline: none;
-        }
-
-        .goldBtn {
-          background: linear-gradient(135deg, #e6c36a, #b8963f);
-          border: none;
-          padding: 14px 18px;
-          border-radius: 999px;
-          font-size: 15px;
-          font-weight: 800;
-          color: #000;
-          cursor: pointer;
-        }
-
-        .status {
-          color: #e6c36a;
-          font-size: 13px;
-          margin: 6px 0 0;
-        }
-
-        .hintRow {
-          margin-top: 18px;
-          position: relative;
-          z-index: 1;
-        }
-
-        .ghostLink {
-          color: rgba(230, 195, 106, 0.9);
-          text-decoration: none;
-          font-size: 14px;
-          border-bottom: 1px solid rgba(230, 195, 106, 0.3);
-          padding-bottom: 2px;
-        }
-
-        .section {
-          padding: 80px 18px;
-          text-align: center;
-          background: radial-gradient(
-            circle at top,
-            rgba(230, 195, 106, 0.06),
-            #000
-          );
-        }
-
-        .section h2 {
-          color: #e6c36a;
-          margin-bottom: 34px;
-          font-size: 28px;
-        }
-
-        .luxGrid {
+        .wl-row {
           display: grid;
-          gap: 14px;
-          max-width: 700px;
-          margin: 0 auto;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 10px;
         }
-
-        .luxCard {
-          background: linear-gradient(
-            180deg,
-            rgba(230, 195, 106, 0.08),
-            rgba(0, 0, 0, 0.9)
-          );
-          border: 1px solid rgba(230, 195, 106, 0.32);
-          border-radius: 22px;
-          padding: 26px;
-          text-align: left;
-          box-shadow: 0 0 55px rgba(230, 195, 106, 0.1);
-        }
-
-        .luxTitle {
-          color: #e6c36a;
-          font-weight: 900;
-          font-size: 16px;
-          letter-spacing: 0.02em;
-          margin-bottom: 8px;
-        }
-
-        .luxText {
-          color: #d8d2b6;
+        .wl-msg {
+          margin: 8px 0 0;
+          min-height: 1.4em;
           font-size: 14px;
-          line-height: 1.7;
         }
-
-        .curtainBtn {
-          background: transparent;
-          border: 1px solid rgba(230, 195, 106, 0.55);
-          color: #e6c36a;
-          padding: 16px 22px;
-          border-radius: 999px;
-          font-weight: 900;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          box-shadow: 0 0 60px rgba(230, 195, 106, 0.1);
-          cursor: pointer;
+        .wl-msg.done {
+          color: var(--gold);
         }
-
-        .curtainBtn:hover {
-          background: rgba(230, 195, 106, 0.06);
+        .wl-msg.invalid,
+        .wl-msg.error {
+          color: var(--loss);
         }
-
-        .manifestoCard {
-          max-width: 760px;
-          margin: 0 auto;
-          position: relative;
-          overflow: hidden;
-          background: linear-gradient(
-            180deg,
-            rgba(230, 195, 106, 0.12),
-            rgba(0, 0, 0, 0.93)
-          );
-          border: 1px solid rgba(230, 195, 106, 0.38);
-          border-radius: 26px;
-          padding: 26px;
-          box-shadow: 0 0 90px rgba(230, 195, 106, 0.16);
-          text-align: left;
+        .terms {
+          margin: 0;
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          border: 1px solid var(--line);
+          background: rgba(8, 7, 5, 0.55);
+          max-width: 640px;
         }
-
-        .manifestoCard::before {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 16px;
-          right: 16px;
-          height: 1px;
-          background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(230, 195, 106, 0.55),
-            transparent
-          );
-          opacity: 0.9;
+        .terms div {
+          padding: 12px 14px;
+          border-right: 1px solid var(--line);
         }
-
-        .manifestoCard::after {
-          content: "";
-          position: absolute;
-          inset: -40%;
-          background: radial-gradient(
-            circle at top,
-            rgba(230, 195, 106, 0.12),
-            transparent 55%
-          );
-          pointer-events: none;
+        .terms div:last-child {
+          border-right: 0;
         }
-
-        .manifestoHead {
-          color: #e6c36a;
-          font-weight: 900;
-          font-size: 20px;
-          margin-bottom: 12px;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-        }
-
-        .manifestoBody p {
-          color: #d8d2b6;
-          line-height: 1.9;
-          font-size: 14px;
-          margin: 12px 0;
-          letter-spacing: 0.01em;
-        }
-
-        .signature {
-          margin-top: 16px;
-          color: #e6c36a;
-          font-weight: 800;
-        }
-
-        .vvipBtn {
-          background: linear-gradient(135deg, #e6c36a, #8f6b1f);
-          border: none;
-          padding: 16px 26px;
-          border-radius: 999px;
-          font-weight: 900;
-          color: #000;
-          box-shadow: 0 0 60px rgba(230, 195, 106, 0.15);
-          cursor: pointer;
-        }
-
-        .vvipCard {
-          max-width: 740px;
-          margin: 0 auto;
-          background: radial-gradient(
-            circle at top,
-            rgba(230, 195, 106, 0.12),
-            rgba(0, 0, 0, 0.92)
-          );
-          border: 1px solid rgba(230, 195, 106, 0.4);
-          border-radius: 26px;
-          padding: 28px;
-          box-shadow: 0 0 95px rgba(230, 195, 106, 0.18);
-          text-align: left;
-        }
-
-        .vvipHead {
-          color: #e6c36a;
-          font-weight: 900;
+        .terms dt {
+          font: 500 10px/1 var(--mono);
           letter-spacing: 0.14em;
           text-transform: uppercase;
-          font-size: 12px;
-          margin-bottom: 14px;
+          color: var(--muted);
+          margin-bottom: 8px;
+        }
+        .terms dd {
+          margin: 0;
+          font: 600 17px/1.1 var(--display);
+          color: var(--gold);
+        }
+        .hero-crest {
+          display: grid;
+          place-items: center;
+        }
+        @media (max-width: 860px) {
+          .hero {
+            padding-top: 32px;
+          }
+          .hero-in {
+            grid-template-columns: 1fr;
+            gap: 20px;
+          }
+          .hero-crest {
+            grid-row: 1;
+          }
+          .hero-crest :global(.fx-crest) {
+            --crest: 200px !important;
+          }
+        }
+        @media (max-width: 560px) {
+          .wl-row {
+            grid-template-columns: 1fr;
+          }
+          .terms {
+            grid-template-columns: 1fr 1fr;
+          }
+          .terms div:nth-child(2) {
+            border-right: 0;
+          }
+          .terms div:nth-child(-n + 2) {
+            border-bottom: 1px solid var(--line);
+          }
         }
 
-        .vvipText {
-          color: #d8d2b6;
-          line-height: 1.8;
-          font-size: 14px;
-          margin: 0 0 14px;
+        .sec {
+          padding: 72px 16px;
         }
-
-        .vvipDivider {
-          height: 1px;
-          background: rgba(230, 195, 106, 0.25);
-          margin: 14px 0;
-        }
-
-        .vvipTextMuted {
-          color: #a7a08a;
-          line-height: 1.7;
-          font-size: 13px;
-          margin: 0 0 14px;
-        }
-
-        .ghostBtn {
-          background: transparent;
-          border: 1px solid rgba(230, 195, 106, 0.35);
-          color: #e6c36a;
-          padding: 12px 18px;
-          border-radius: 999px;
-          font-weight: 800;
-          margin-top: 10px;
-          cursor: pointer;
-        }
-
-        .last {
+        .sec.last {
           padding-bottom: 110px;
         }
-
-        /* MINI LELEFX ROBOT BUTTON + MODAL */
-        .aiFab {
-          position: fixed;
-          right: 16px;
-          bottom: 16px;
-          z-index: 9998;
-          width: 62px;
-          height: 62px;
-          border-radius: 999px;
-          border: 1px solid rgba(230, 195, 106, 0.55);
-          background: radial-gradient(
-              circle at top,
-              rgba(230, 195, 106, 0.35),
-              rgba(0, 0, 0, 0.92)
-            ),
-            linear-gradient(
-              135deg,
-              rgba(230, 195, 106, 0.25),
-              rgba(143, 107, 31, 0.15)
-            );
-          box-shadow: 0 0 70px rgba(230, 195, 106, 0.22);
-          cursor: pointer;
+        .sec-in {
+          max-width: 1120px;
+          margin: 0 auto;
           display: grid;
-          place-items: center;
-          animation: aiFloat 3.8s ease-in-out infinite;
+          gap: 28px;
         }
-
-        .aiFab:active {
-          transform: translateY(1px);
+        .sec-in.narrow {
+          max-width: 760px;
         }
-
-        @keyframes aiFloat {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-4px);
-          }
-        }
-
-        .aiFabBot {
-          position: relative;
-          width: 34px;
-          height: 34px;
-          border-radius: 14px;
-          background: radial-gradient(
-            circle at top,
-            rgba(230, 195, 106, 0.55),
-            #120d05
-          );
+        .sec-head {
           display: grid;
-          place-items: center;
-          overflow: hidden;
+          gap: 12px;
         }
-
-        .aiFabBotFace {
-          width: 20px;
-          height: 20px;
-          border-radius: 7px;
-          border: 1px solid rgba(0, 0, 0, 0.8);
-          background: radial-gradient(circle at top, #fff7d1, #c6a858);
-          box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.25);
-        }
-
-        .aiFabBotEye {
-          position: absolute;
-          top: 16px;
-          width: 4px;
-          height: 4px;
-          border-radius: 999px;
-          background: rgba(0, 0, 0, 0.85);
-          box-shadow: 0 0 10px rgba(230, 195, 106, 0.45);
-        }
-
-        .aiFabBotEye.left {
-          left: 12px;
-        }
-
-        .aiFabBotEye.right {
-          right: 12px;
-        }
-
-        .aiFabBotGlow {
-          position: absolute;
-          inset: -30%;
-          background: radial-gradient(
-            circle at center,
-            rgba(230, 195, 106, 0.25),
-            transparent 60%
-          );
-          animation: aiGlow 2.8s ease-in-out infinite;
-        }
-
-        @keyframes aiGlow {
-          0%,
-          100% {
-            transform: scale(1);
-            opacity: 0.55;
-          }
-          50% {
-            transform: scale(1.08);
-            opacity: 0.8;
-          }
-        }
-
-        .aiOverlay {
-          position: fixed;
-          inset: 0;
-          z-index: 9999;
-          background: rgba(0, 0, 0, 0.82);
-          backdrop-filter: blur(10px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 18px;
-        }
-
-        .aiModal {
-          width: 100%;
-          max-width: 520px;
-          border-radius: 24px;
-          border: 1px solid rgba(230, 195, 106, 0.35);
-          background: linear-gradient(
-            180deg,
-            rgba(230, 195, 106, 0.08),
-            rgba(0, 0, 0, 0.95)
-          );
-          box-shadow: 0 0 110px rgba(230, 195, 106, 0.18);
-          overflow: hidden;
-        }
-
-        .aiHeader {
+        .sec-head.row {
           display: flex;
           justify-content: space-between;
-          align-items: center;
-          padding: 14px 16px;
-          border-bottom: 1px solid rgba(230, 195, 106, 0.18);
+          align-items: end;
+          gap: 16px;
+          flex-wrap: wrap;
         }
-
-        .aiHeaderLeft {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .aiRobot {
-          position: relative;
-          width: 32px;
-          height: 32px;
-          border-radius: 12px;
-          background: radial-gradient(
-            circle at top,
-            rgba(230, 195, 106, 0.5),
-            #120d05
-          );
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-        }
-
-        .aiRobotFace {
-          width: 18px;
-          height: 18px;
-          border-radius: 6px;
-          border: 1px solid rgba(0, 0, 0, 0.8);
-          background: radial-gradient(circle at top, #fff7d1, #c6a858);
-        }
-
-        .aiRobotGlow {
-          position: absolute;
-          inset: -30%;
-          background: radial-gradient(
-            circle at center,
-            rgba(230, 195, 106, 0.25),
-            transparent 60%
-          );
-          animation: aiGlow 2.8s ease-in-out infinite;
-        }
-
-        .aiTitle {
-          font-weight: 900;
-          color: #e6c36a;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          font-size: 12px;
-        }
-
-        .aiSub {
-          color: #bfae78;
-          font-size: 12px;
-          margin-top: 2px;
-        }
-
-        .aiClose {
-          background: transparent;
-          border: 1px solid rgba(230, 195, 106, 0.25);
-          color: #e6c36a;
-          width: 34px;
-          height: 34px;
-          border-radius: 12px;
-          font-size: 18px;
-          cursor: pointer;
-        }
-
-        .aiBody {
-          padding: 14px;
-        }
-
-        .aiChat {
-          max-height: 52vh;
-          overflow-y: auto;
-          display: grid;
-          gap: 10px;
-          padding-bottom: 12px;
-        }
-
-        .aiMsg {
-          padding: 12px 12px;
-          border-radius: 16px;
-          font-size: 13px;
-          line-height: 1.6;
-          white-space: pre-wrap;
-          border: 1px solid rgba(230, 195, 106, 0.16);
-        }
-
-        .aiMsg.bot {
-          background: rgba(230, 195, 106, 0.06);
-          color: #f7f0da;
-        }
-
-        .aiMsg.user {
-          background: rgba(255, 255, 255, 0.05);
-          color: #ffffff;
-          border-color: rgba(255, 255, 255, 0.12);
-        }
-
-        .aiInputRow {
-          display: grid;
-          grid-template-columns: 1fr auto;
-          gap: 10px;
-          align-items: center;
-        }
-
-        .aiInput {
-          padding: 12px 12px;
-          border-radius: 14px;
-          border: 1px solid rgba(230, 195, 106, 0.28);
-          background: rgba(0, 0, 0, 0.55);
-          color: #fff;
-          outline: none;
-        }
-
-        .aiSend {
-          padding: 12px 14px;
-          border-radius: 14px;
-          border: none;
-          background: linear-gradient(135deg, #e6c36a, #b8963f);
-          color: #000;
-          font-weight: 900;
-          cursor: pointer;
-        }
-
-        .aiNote {
-          padding: 0 14px 14px;
-          color: rgba(167, 160, 138, 0.9);
-          font-size: 12px;
-        }
-      
-
-        .sectionP {
-          max-width: 760px;
-          margin: -6px auto 18px;
-          opacity: 0.82;
-          line-height: 1.6;
+        .sec-head.center {
+          justify-items: center;
           text-align: center;
         }
+        .sec-head :global(.sec-title) {
+          display: block;
+          margin: 10px 0 0;
+          font-size: clamp(32px, 5vw, 52px);
+          font-weight: 600;
+          line-height: 1.05;
+        }
+        .sec-p {
+          margin: 0;
+          max-width: 62ch;
+          color: var(--muted);
+          font-size: 17px;
+          line-height: 1.6;
+        }
+        .hint {
+          font: 400 12px/1 var(--mono);
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--muted);
+        }
 
-        .pricingGrid {
+        .hub {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 14px;
-          margin-top: 16px;
         }
-
         @media (max-width: 900px) {
-          .pricingGrid {
+          .hub {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+        @media (max-width: 520px) {
+          .hub {
             grid-template-columns: 1fr;
           }
         }
+        .tile {
+          display: grid;
+          gap: 8px;
+          align-content: start;
+          min-height: 210px;
+          padding: 24px 22px 22px;
+          border: 1px solid var(--line);
+          border-radius: var(--radius);
+          background: rgba(15, 13, 10, 0.62);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          overflow: hidden;
+        }
+        .tile:hover,
+        .tile:focus-visible {
+          border-color: var(--gold);
+          background: rgba(28, 24, 15, 0.72);
+        }
+        .tile svg {
+          width: 34px;
+          height: 34px;
+          fill: none;
+          stroke: var(--gold);
+          stroke-width: 1.6;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+          margin-bottom: 6px;
+          transition: transform 0.3s, filter 0.3s;
+        }
+        .tile:hover svg {
+          transform: scale(1.12);
+          filter: drop-shadow(0 0 6px rgba(230, 195, 106, 0.6));
+        }
+        .t-k {
+          font: 500 11px/1 var(--mono);
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: var(--gold);
+        }
+        .tile h3 {
+          margin: 0;
+          font-size: 24px;
+          font-weight: 600;
+        }
+        .tile p {
+          margin: 0;
+          color: var(--muted);
+          font-size: 15px;
+          line-height: 1.5;
+        }
+        .t-go {
+          margin-top: auto;
+          padding-top: 12px;
+          font: 600 12px/1 var(--mono);
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--gold);
+        }
+        .t-go::after {
+          content: " →";
+          display: inline-block;
+          transition: transform 0.25s;
+        }
+        .tile:hover .t-go::after {
+          transform: translateX(5px);
+        }
+        .tile.cta {
+          border-color: var(--gold-deep);
+          background: linear-gradient(160deg, rgba(230, 195, 106, 0.2), rgba(15, 13, 10, 0.72) 70%);
+        }
 
-        .pricingCard {
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(0, 0, 0, 0.25);
-          border-radius: 16px;
-          padding: 16px;
+        .pr {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+          gap: 20px;
+          align-items: stretch;
+        }
+        @media (max-width: 800px) {
+          .pr {
+            grid-template-columns: 1fr;
+          }
+        }
+        .pr-list {
+          display: grid;
+          gap: 8px;
+        }
+        .pr-tab {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          width: 100%;
+          min-height: 58px;
+          padding: 0 18px;
+          text-align: left;
+          background: rgba(15, 13, 10, 0.62);
+          color: var(--fg);
+          border: 1px solid var(--line);
+          font: 600 17px/1.2 var(--display);
+          letter-spacing: 0.02em;
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+        }
+        .pr-tab:hover {
+          box-shadow: none;
+          border-color: var(--line-strong);
+        }
+        .pr-tab[aria-selected="true"] {
+          border-color: var(--gold);
+          background: rgba(230, 195, 106, 0.14);
+          color: var(--gold);
+        }
+        .pr-n {
+          font: 500 12px/1 var(--mono);
+          color: var(--gold);
+        }
+        .pr-panel {
+          position: relative;
+          display: grid;
+          align-content: center;
+          gap: 14px;
+          min-height: 320px;
+          padding: 36px 32px;
+          overflow: hidden;
+        }
+        .pr-big {
+          position: absolute;
+          right: 18px;
+          bottom: -24px;
+          font: 700 180px/1 var(--display);
+          color: rgba(230, 195, 106, 0.07);
+          pointer-events: none;
+        }
+        .pr-panel :global(.pr-title) {
+          margin: 0;
+          font-size: clamp(28px, 4vw, 40px);
+          color: var(--gold);
+        }
+        .pr-panel p {
+          margin: 0;
+          font-size: 20px;
+          line-height: 1.55;
+          max-width: 36ch;
+        }
+
+        .seal {
+          position: relative;
+          justify-self: center;
+          display: grid;
+          justify-items: center;
+          gap: 10px;
+          width: min(460px, 100%);
+          padding: 44px 24px;
+          background: rgba(12, 11, 8, 0.7);
+          color: var(--fg);
+          border: 1px solid var(--line-strong);
+          overflow: hidden;
+        }
+        .seal:hover {
+          box-shadow: 0 0 40px rgba(230, 195, 106, 0.25);
+        }
+        .seal-ring {
+          width: 64px;
+          height: 64px;
+          border-radius: 50%;
+          border: 1px dashed var(--gold);
+          box-shadow: inset 0 0 18px rgba(230, 195, 106, 0.35);
+        }
+        .seal-text {
+          font: 600 20px/1.2 var(--display);
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+        }
+        .seal-hint {
+          font: 500 11px/1 var(--mono);
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: var(--gold);
+        }
+        .manifesto {
+          display: grid;
+          gap: 16px;
+          padding: 32px 28px;
+          justify-items: start;
+        }
+        .manifesto p {
+          margin: 0;
+          font-size: 18px;
+          line-height: 1.7;
+          color: #ddd4bf;
+        }
+        .sig {
+          font: 600 italic 18px/1 var(--display);
+          color: var(--gold);
+        }
+        .center-text {
+          justify-items: center;
           text-align: center;
         }
-
-        .pricingTitle {
-          font-weight: 800;
-          letter-spacing: 0.2px;
-          margin-bottom: 10px;
+        .vv-big {
+          font: 600 22px/1.4 var(--display) !important;
+          color: var(--fg) !important;
+        }
+        .muted {
+          color: var(--muted) !important;
         }
 
-        .pricingBig {
-          font-size: 44px;
-          font-weight: 900;
-          background: linear-gradient(135deg, #f6e2a5, #c6a858);
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
-          margin: 6px 0 8px;
+        .price {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 16px;
         }
-
-        .pricingBigSmall {
-          font-size: 20px;
-          font-weight: 800;
-          margin: 8px 0 8px;
+        @media (max-width: 860px) {
+          .price {
+            grid-template-columns: 1fr;
+          }
         }
-
-        .pricingText {
-          opacity: 0.86;
-          line-height: 1.55;
-          font-size: 14px;
-        }
-
-        .inlineLink {
-          color: #f3d27a;
-          text-decoration: none;
-        }
-        .inlineLink:hover {
-          text-decoration: underline;
-        }
-
-        .ctaRow {
-          display: flex;
+        .p-card {
+          display: grid;
           gap: 12px;
+          align-content: start;
+          padding: 26px 24px;
+        }
+        .p-card p {
+          margin: 0;
+          color: var(--muted);
+          line-height: 1.6;
+        }
+        .p-card a {
+          color: var(--gold);
+        }
+        .p-big {
+          font: 700 72px/1 var(--display);
+        }
+        .p-mid {
+          font: 600 30px/1.1 var(--display);
+          min-height: 72px;
+          display: flex;
+          align-items: center;
+        }
+        .btn-row.center {
           justify-content: center;
-          margin-top: 18px;
-          flex-wrap: wrap;
         }
 
-        .ctaPrimary {
+        .vault {
+          justify-self: center;
           display: inline-flex;
           align-items: center;
-          justify-content: center;
-          border-radius: 14px;
-          padding: 12px 18px;
-          font-weight: 800;
-          background: linear-gradient(135deg, #c9a24d, #f3d27a);
-          color: #0b0b0b;
+          gap: 14px;
+          padding: 16px 26px 16px 16px;
+          font-size: 16px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
         }
-
-        .ctaGhost {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 14px;
-          padding: 12px 18px;
-          font-weight: 700;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(0, 0, 0, 0.2);
-          color: #f7f0d0;
+        .vault-dial {
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          border: 2px solid #0b0b0b;
+          background: repeating-conic-gradient(#0b0b0b 0 4deg, transparent 4deg 30deg);
         }
-
-`}</style>
+        @media (prefers-reduced-motion: no-preference) {
+          .seal-ring {
+            animation: fx-spin 12s linear infinite;
+          }
+          .vault:hover .vault-dial {
+            animation: fx-spin 1.2s ease-in-out;
+          }
+        }
+      `}</style>
     </>
   );
 }

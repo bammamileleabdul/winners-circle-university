@@ -1,139 +1,296 @@
 "use client";
 
+import { useMemo, useState } from "react";
+import PageShell from "../../components/PageShell";
+import { SITE } from "../../lib/site";
+
+const TABS = [
+  {
+    k: "risk",
+    t: "Capital and risk",
+    body: (
+      <>
+        <p>
+          Every decision starts with risk. Capital is split into <b>14 equal risk units</b>, and no single trade risks
+          more than one unit. On <b>£500</b> that’s about <b>£35.70</b> at risk per position.
+        </p>
+        <p>
+          Each position is planned at <b>1:1 reward to risk</b>: risk £35.70 to aim for £35.70. If the stop loss isn’t
+          clear before entry, the trade doesn’t happen.
+        </p>
+      </>
+    ),
+  },
+  {
+    k: "week",
+    t: "A trading week",
+    body: (
+      <>
+        <p>
+          Some trades lose. That’s built into the plan, not a surprise. We judge a week by whether every trade followed
+          the rules, not by any single result.
+        </p>
+        <p>
+          When conditions aren’t clean we don’t trade. No revenge trades, no doubling up after a loss, and no forcing
+          setups to hit a target.
+        </p>
+      </>
+    ),
+  },
+  {
+    k: "split",
+    t: "The split",
+    body: (
+      <>
+        <p>
+          You copy the strategy through Exness Social Trading. On new profit, you keep <b>{100 - SITE.performanceFeePct}%</b>{" "}
+          and Winners Circle receives <b>{SITE.performanceFeePct}%</b>, calculated and collected by Exness at the end of
+          each monthly period.
+        </p>
+        <p>No profit means no fee. Your money stays in your own Exness account the whole time.</p>
+      </>
+    ),
+  },
+];
+
 export default function How() {
+  const [tab, setTab] = useState("risk");
+  const [capital, setCapital] = useState(500);
+  const [streak, setStreak] = useState(4);
+
+  const perTrade = capital / 14;
+  const bars = useMemo(() => {
+    // Balance after each loss in a row, re-sizing risk to the new balance each time.
+    let b = capital;
+    const out = [b];
+    for (let n = 0; n < streak; n++) {
+      b -= b / 14;
+      out.push(b);
+    }
+    return out;
+  }, [capital, streak]);
+  const lost = capital - bars[bars.length - 1];
+
+  const current = TABS.find((t) => t.k === tab);
+
   return (
-    <>
-      <div className="wrap">
-        <header className="header">
-          <a href="/" className="logoBlock">
-            <img
-              src="/emblem.jpg"
-              alt="Winners Circle University"
-              className="logoImg"
-            />
-            <span className="logoText">Back to main site</span>
-          </a>
-        </header>
-
-        <main className="main">
-          <h1>How It Works – In Practice</h1>
-          <p>
-            We operate on a simple idea: protect capital first, then let
-            consistency compound. Every decision starts with risk.
-          </p>
-
-          <h2>1. Capital and Risk</h2>
-          <p>
-            Example: you start with <strong>£500</strong>. We divide this into{" "}
-            <strong>14 buckets</strong>. That gives around{" "}
-            <strong>£35.70</strong> risk per position. Each position targets{" "}
-            <strong>1:1 R:R</strong> – risk £35.70 to make £35.70.
-          </p>
-
-          <h2>2. A Normal Week</h2>
-          <p>
-            Most weeks finish in the range of <strong>7–9 clean TPs left</strong>{" "}
-            after SLs. That’s roughly <strong>+£250 to +£321</strong> on this
-            example capital.
-          </p>
-
-          <h2>3. Bad and Worst Weeks</h2>
-          <p>
-            On a bad week we still aim to close with around{" "}
-            <strong>7 TPs left</strong>. On a worst-case week we work with about{" "}
-            <strong>4 TPs left</strong>, which is still around{" "}
-            <strong>+£142 profit</strong> at the same risk.
-          </p>
-
-          <h2>4. The Split</h2>
-          <p>
-            From realised profit, you keep <strong>70%</strong> and Winners
-            Circle receives <strong>30%</strong>. No profit = no fee. You are
-            always in full control of your capital.
-          </p>
-
-          <p className="disclaimer">
-            This is not a guarantee or promise of returns. It’s a transparent
-            explanation of the framework we work from, so you know exactly what
-            we’re aiming for before you join.
-          </p>
-        </main>
+    <PageShell
+      eyebrow="How it works"
+      title="How it works, in practice"
+      intro="We operate on a simple idea: protect capital first, then let consistency compound."
+    >
+      <div className="seg" role="tablist" aria-label="Topics">
+        {TABS.map((t) => (
+          <button key={t.k} type="button" role="tab" aria-selected={tab === t.k} onClick={() => setTab(t.k)}>
+            {t.t}
+          </button>
+        ))}
+      </div>
+      <div className="pane fx-glass fx-hud" key={tab}>
+        <h2>{current.t}</h2>
+        {current.body}
       </div>
 
+      <div className="lab fx-glass">
+        <div className="lab-head">
+          <span className="fx-eyebrow">Risk lab</span>
+          <h2>What a losing streak does</h2>
+          <p>Move the sliders to see risk per trade, and how the balance holds up through losses in a row.</p>
+        </div>
+        <div className="lab-grid">
+          <div className="ctrls">
+            <div>
+              <label className="fx-label" htmlFor="cap">
+                Capital <output>£{capital.toLocaleString("en-GB")}</output>
+              </label>
+              <input id="cap" type="range" min="50" max="10000" step="50" value={capital} onChange={(e) => setCapital(+e.target.value)} />
+            </div>
+            <div>
+              <label className="fx-label" htmlFor="streak">
+                Losses in a row <output>{streak}</output>
+              </label>
+              <input id="streak" type="range" min="1" max="10" step="1" value={streak} onChange={(e) => setStreak(+e.target.value)} />
+            </div>
+            <div className="nums">
+              <div>
+                <span>Risk per trade</span>
+                <b>£{perTrade.toFixed(2)}</b>
+              </div>
+              <div>
+                <span>Balance after streak</span>
+                <b>£{bars[bars.length - 1].toFixed(2)}</b>
+              </div>
+              <div>
+                <span>Drawdown</span>
+                <b className="down">−{((lost / capital) * 100).toFixed(1)}%</b>
+              </div>
+            </div>
+          </div>
+          <div className="chart" aria-label={`Balance falls from £${capital} to £${bars[bars.length - 1].toFixed(2)} over ${streak} losses`}>
+            {bars.map((v, n) => (
+              <div key={n} className="col">
+                <div className="bar" style={{ height: `${(v / capital) * 100}%` }} />
+                <span>{n === 0 ? "Start" : `L${n}`}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <p className="fx-notice">
+        <b>Note</b>
+        <span>
+          This is not a guarantee or a promise of returns. It explains the framework we trade by, so you know exactly
+          how risk is handled before you copy us.
+        </span>
+      </p>
+
       <style jsx>{`
-        .wrap {
-          min-height: 100vh;
-          background: radial-gradient(circle at top, #2a1f0f, #000);
-          padding: 18px 14px 40px;
-          color: #f7f0d0;
-        }
-
-        .header {
+        .seg {
           display: flex;
-          align-items: center;
-          margin-bottom: 24px;
+          flex-wrap: wrap;
+          width: max-content;
+          max-width: 100%;
+          border: 1px solid var(--line);
+          background: rgba(8, 7, 5, 0.6);
         }
-
-        .logoBlock {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          text-decoration: none;
+        .seg button {
+          background: transparent;
+          color: var(--muted);
+          border-radius: 0;
+          padding: 14px 18px;
+          font: 600 13px/1 var(--body);
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
         }
-
-        .logoImg {
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
-          object-fit: contain;
-          box-shadow: 0 0 24px rgba(230, 195, 106, 0.5);
+        .seg button:hover {
+          box-shadow: none;
+          color: var(--gold);
         }
-
-        .logoText {
-          font-size: 13px;
-          color: #e6c36a;
+        .seg button[aria-selected="true"] {
+          background: var(--gold);
+          color: #0b0b0b;
         }
-
-        .main {
-          max-width: 720px;
-          margin: 0 auto;
+        .pane {
+          padding: 28px;
+          display: grid;
+          gap: 14px;
+          animation: fx-rise 0.4s ease-out;
         }
-
-        h1 {
-          font-size: 26px;
-          margin-bottom: 12px;
-          color: #e6c36a;
+        .pane h2 {
+          margin: 0;
+          font-size: 30px;
+          color: var(--gold);
         }
-
-        h2 {
-          margin-top: 22px;
-          margin-bottom: 6px;
+        .pane :global(p) {
+          margin: 0;
           font-size: 18px;
-          color: #f4d47c;
-        }
-
-        p {
           line-height: 1.7;
-          color: #c8c2aa;
-          font-size: 14px;
+          color: #ddd4bf;
+          max-width: 64ch;
         }
-
-        .disclaimer {
-          margin-top: 20px;
-          font-size: 12px;
-          color: #9c9478;
+        .pane :global(b) {
+          color: var(--gold);
         }
-
-        @media (min-width: 900px) {
-          .wrap {
-            padding: 28px 40px 40px;
+        .lab {
+          padding: 28px;
+          display: grid;
+          gap: 24px;
+        }
+        .lab-head {
+          display: grid;
+          gap: 8px;
+        }
+        .lab-head h2 {
+          margin: 0;
+          font-size: 30px;
+        }
+        .lab-head p {
+          margin: 0;
+          color: var(--muted);
+        }
+        .lab-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+          gap: 28px;
+          align-items: stretch;
+        }
+        @media (max-width: 760px) {
+          .lab-grid {
+            grid-template-columns: 1fr;
           }
-
-          h1 {
-            font-size: 30px;
-          }
+        }
+        .ctrls {
+          display: grid;
+          gap: 22px;
+          align-content: start;
+        }
+        .ctrls output {
+          float: right;
+          color: var(--gold);
+        }
+        input[type="range"] {
+          width: 100%;
+          accent-color: var(--gold);
+        }
+        .nums {
+          display: grid;
+          gap: 1px;
+          background: var(--line);
+          border: 1px solid var(--line);
+        }
+        .nums div {
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          padding: 12px 14px;
+          background: rgba(8, 7, 5, 0.7);
+        }
+        .nums span {
+          font: 500 11px/1 var(--mono);
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--muted);
+        }
+        .nums b {
+          font: 600 20px/1 var(--display);
+          font-variant-numeric: tabular-nums;
+        }
+        .down {
+          color: var(--loss);
+        }
+        .chart {
+          display: flex;
+          align-items: flex-end;
+          gap: 6px;
+          height: 240px;
+          padding: 10px 4px 26px;
+          border-bottom: 1px solid var(--line);
+        }
+        .col {
+          flex: 1;
+          height: 100%;
+          position: relative;
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+        }
+        .bar {
+          width: min(38px, 80%);
+          border-radius: 4px 4px 0 0;
+          background: linear-gradient(180deg, var(--gold), var(--gold-deep));
+          transition: height 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+        }
+        .col:not(:first-child) .bar {
+          background: linear-gradient(180deg, #c98a6f, #7a4a36);
+        }
+        .col span {
+          position: absolute;
+          bottom: -22px;
+          font: 400 11px/1 var(--mono);
+          color: var(--muted);
         }
       `}</style>
-    </>
+    </PageShell>
   );
 }
