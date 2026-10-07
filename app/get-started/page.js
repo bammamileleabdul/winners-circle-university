@@ -51,8 +51,8 @@ export default function GetStartedPage() {
 
       <a className="newbie fx-glass fx-tilt" href="/learn">
         <span className="fx-eyebrow">New to trading?</span>
-        <b>Read Foundations first: eight short chapters, from pips to copy trading.</b>
-        <i>Start learning →</i>
+        <b>Level up in the Academy first: 8 quick missions, 2 games, rank from Rookie to Winner.</b>
+        <i>Enter the Academy →</i>
       </a>
 
       <div className="steps">

@@ -16,7 +16,7 @@ const PRINCIPLES = [
 ];
 
 const HUB = [
-  { href: "/learn", k: "Foundations", t: "Learn Trading", d: "New to trading? Eight short chapters from zero, with tools to try.", icon: "M4 8l12-4 12 4-12 4zM8 10v7c0 2 4 4 8 4s8-2 8-4v-7M28 8v8" },
+  { href: "/learn", k: "Academy", t: "Learn Trading", d: "Missions, mini-games and XP. Rookie to Winner, no boring lectures.", icon: "M4 8l12-4 12 4-12 4zM8 10v7c0 2 4 4 8 4s8-2 8-4v-7M28 8v8" },
   { href: "/get-started", k: "Start", t: "Get Started", d: "Open your Exness account and start copying in 3 steps.", icon: "M5 25h6v-6h6v-6h6V7h4" },
   { href: "/copy-trading", k: "Copy", t: "Copy Trading", d: "How copying through Exness works. No passwords, ever.", icon: "M9 9h12v12H9zM13 5h14v14" },
   { href: "/how", k: "Method", t: "How It Works", d: "The risk framework behind every trade.", icon: "M16 5a11 11 0 1 0 0 22 11 11 0 0 0 0-22Zm0 5v6l4 3" },
@@ -92,7 +92,7 @@ export default function Home() {
               </form>
 
               <a className="newbie" href="/learn">
-                <span>New to trading?</span> Start with the basics →
+                <span>New to trading?</span> Enter the Academy →
               </a>
 
               <dl className="terms">

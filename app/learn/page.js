@@ -1,1081 +1,1030 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import PageShell from "../../components/PageShell";
+import { useEffect, useState } from "react";
+import SiteHeader from "../../components/SiteHeader";
 import Scramble from "../../components/Scramble";
-import PipCalculator from "../../components/learn/PipCalculator";
-import LeverageLab from "../../components/learn/LeverageLab";
-import RiskRewardLab from "../../components/learn/RiskRewardLab";
-import SessionClock from "../../components/learn/SessionClock";
-import CandleAnatomy from "../../components/learn/CandleAnatomy";
+import Overlay from "../../components/learn/Overlay";
+import MissionPlayer, { TOOLS } from "../../components/learn/MissionPlayer";
+import CallIt from "../../components/learn/CallIt";
+import ScamOrLegit from "../../components/learn/ScamOrLegit";
 import Glossary from "../../components/learn/Glossary";
-import Quiz from "../../components/learn/Quiz";
+import ToolStyles from "../../components/learn/ToolStyles";
+import { MISSIONS, RANKS, XP_MISSION, XP_CORRECT, rankOf } from "../../components/learn/missions";
 
-const CHAPTERS = [
-  {
-    id: "ch-1",
-    title: "What trading actually is",
-    mins: 3,
-    body: () => (
-      <>
-        <p>
-          Trading means buying and selling to profit from price changes. In forex you trade one currency against another.
-          With gold, you trade the price of gold in US dollars.
-        </p>
-        <h3>Two directions</h3>
-        <ul>
-          <li><b>Buy (go long)</b> if you think the price will rise.</li>
-          <li><b>Sell (go short)</b> if you think it will fall.</li>
-        </ul>
-        <p>You can make or lose money either way. Being right about direction is only part of it; how much you risk matters more.</p>
-        <h3>Who’s involved</h3>
-        <p>
-          A <b>broker</b> such as Exness gives you access to the market, holds your money and runs the platform (MT5 or
-          the Exness app). Most people trade <b>CFDs</b>: you don’t own any gold, you trade the change in its price.
-        </p>
-      </>
-    ),
-    takeaways: ["You can profit from prices rising or falling.", "Your broker holds your money, so use a regulated one.", "Trading is not a salary. Losing weeks are normal."],
-  },
-  {
-    id: "ch-2",
-    title: "Forex and gold",
-    mins: 4,
-    body: () => (
-      <>
-        <p>
-          Currencies trade in <b>pairs</b>. EUR/USD at 1.1000 means one euro buys 1.10 US dollars. The first currency is the
-          <b> base</b>, the second the <b>quote</b>. If EUR/USD rises, the euro has strengthened against the dollar.
-        </p>
-        <p>
-          The most traded pairs, like EUR/USD, GBP/USD and USD/JPY, are called <b>majors</b>. They usually have the lowest
-          costs.
-        </p>
-        <h3>Gold: XAU/USD</h3>
-        <p>
-          XAU is the code for gold. XAU/USD is the price of one ounce of gold in US dollars. Gold tends to react to:
-        </p>
-        <ul>
-          <li>US interest rate expectations and the strength of the dollar</li>
-          <li>Inflation data</li>
-          <li>Fear in markets, when investors look for safety</li>
-          <li>Central banks buying or selling gold</li>
-        </ul>
-        <p>These are tendencies, not rules. Gold can and does move against all of them.</p>
-        <h3>When it trades</h3>
-        <p>Forex and gold trade around the clock from Sunday evening to Friday evening, and close at the weekend.</p>
-      </>
-    ),
-    takeaways: ["EUR/USD = how many dollars one euro buys.", "XAU/USD = the dollar price of one ounce of gold.", "Gold reacts to rates, the dollar and fear, but nothing is guaranteed."],
-  },
-  {
-    id: "ch-3",
-    title: "Pips, lots and money",
-    mins: 5,
-    body: () => (
-      <>
-        <p>
-          A <b>pip</b> is the standard unit of price movement. On most pairs it’s the fourth decimal: EUR/USD moving from
-          1.1000 to 1.1010 is 10 pips. On yen pairs it’s the second decimal. Gold is easiest to think about in dollars per
-          ounce.
-        </p>
-        <p>
-          A <b>lot</b> is your trade size. One standard lot is 100,000 units of currency. A mini lot is 0.1 and a micro lot
-          is 0.01. For gold, one lot is 100 ounces on most brokers.
-        </p>
-        <h3>Turning it into money</h3>
-        <ul>
-          <li>EUR/USD: 1 lot ≈ $10 per pip. 0.01 lot ≈ $0.10 per pip.</li>
-          <li>Gold: 1 lot = $100 per $1 move. 0.01 lot = $1 per $1 move.</li>
-        </ul>
-        <p>
-          Every trade also has a <b>spread</b>: the small gap between the buy and sell price. It’s a cost you pay the moment
-          you enter.
-        </p>
-      </>
-    ),
-    tool: PipCalculator,
-    takeaways: ["Lot size decides how much each move is worth.", "0.01 lot of gold = $1 per $1 move.", "The spread is a cost on every trade."],
-  },
-  {
-    id: "ch-4",
-    title: "Leverage and margin",
-    mins: 5,
-    body: () => (
-      <>
-        <p>
-          <b>Leverage</b> lets you open a position bigger than your deposit. At 1:100, $1,000 of your money can hold a
-          position worth $100,000.
-        </p>
-        <p>
-          The money set aside to hold the trade is called <b>margin</b>. What’s left over is <b>free margin</b>. If losses
-          eat through it, the broker sends a <b>margin call</b> and then closes your trades automatically, called a{" "}
-          <b>stop out</b>.
-        </p>
-        <h3>The part most beginners miss</h3>
-        <p>
-          Leverage doesn’t change how much you make or lose per pip. Lot size does. High leverage simply lets you open
-          much bigger lots with little money, which is how accounts get wiped out fast.
-        </p>
-      </>
-    ),
-    tool: LeverageLab,
-    takeaways: ["Leverage changes margin, not money per move.", "Oversized lots, not leverage itself, are what blow accounts.", "If free margin runs out, the broker closes your trades."],
-  },
-  {
-    id: "ch-5",
-    title: "Risk management",
-    mins: 6,
-    body: () => (
-      <>
-        <p>Before any trade, decide three things: where you get in, where you’re wrong, and where you take profit.</p>
-        <ul>
-          <li><b>Stop loss</b>: closes the trade automatically at a set loss.</li>
-          <li><b>Take profit</b>: closes it automatically at a set profit.</li>
-          <li><b>Position size</b>: worked out so that if the stop loss is hit, you lose a fixed, planned amount.</li>
-        </ul>
-        <p>
-          Many professionals risk 1–2% of their account per trade. Winners Circle uses a fixed unit of capital ÷ 14 per
-          trade, and never adds to a losing position.
-        </p>
-        <h3>Why protecting capital comes first</h3>
-        <div className="dd">
-          {[10, 20, 30, 50, 75].map((l) => (
-            <div key={l}>
-              <span>Lose {l}%</span>
-              <b>Need +{((1 / (1 - l / 100) - 1) * 100).toFixed(0)}%</b>
+const KEY = "wcu-academy";
+const TABS = [
+  { k: "missions", t: "Missions", d: "8 missions" },
+  { k: "arena", t: "Arena", d: "2 games" },
+  { k: "toolkit", t: "Toolkit", d: "5 tools" },
+  { k: "decoder", t: "Decoder", d: "Trading words" },
+];
+const GAMES = [
+  { k: "callit", t: "Call It", d: "10 rounds. Up or down? Find out if you can really predict the market.", xp: "+50 XP" },
+  { k: "scam", t: "Scam or Legit", d: "Swipe through 8 offers. Spot the scams before they spot you.", xp: "Up to +80 XP" },
+];
+
+export default function AcademyPage() {
+  const [p, setP] = useState({ done: [], xp: 0, games: {} });
+  const [tab, setTab] = useState("missions");
+  const [open, setOpen] = useState(null); // { type: "mission"|"game"|"tool", id }
+  const [toast, setToast] = useState(null);
+  const [rankUp, setRankUp] = useState(null);
+
+  useEffect(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (s && Array.isArray(s.done)) setP({ done: s.done, xp: s.xp || 0, games: s.games || {} });
+    } catch {}
+  }, []);
+
+  const save = (next) => {
+    setP(next);
+    try {
+      localStorage.setItem(KEY, JSON.stringify(next));
+    } catch {}
+  };
+
+  // Add XP, apply a progress change, and celebrate (toast, rank-up).
+  const award = (xp, patch, quiet = false) => {
+    const before = rankOf(p.xp).i;
+    const next = { ...p, ...patch(p), xp: p.xp + xp };
+    save(next);
+    if (xp > 0) {
+      if (!quiet) setToast({ xp, id: Date.now() });
+      const after = rankOf(next.xp).i;
+      if (after > before) setTimeout(() => setRankUp(RANKS[after].name), 900);
+    }
+  };
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2200);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  const r = rankOf(p.xp);
+  const doneCount = p.done.length;
+  const nextIdx = MISSIONS.findIndex((m) => !p.done.includes(m.id));
+  const unlocked = (i) => i === 0 || p.done.includes(MISSIONS[i - 1].id) || p.done.includes(MISSIONS[i].id);
+  const gamesDone = GAMES.filter((g) => p.games[g.k]).length;
+
+  const startMission = (i) => {
+    if (!unlocked(i)) {
+      setToast({ msg: `Complete Mission ${String(i).padStart(2, "0")} to unlock this one.`, id: Date.now() });
+      return;
+    }
+    setOpen({ type: "mission", id: i });
+  };
+
+  const missionIdx = open?.type === "mission" ? open.id : null;
+  const mission = missionIdx !== null ? MISSIONS[missionIdx] : null;
+
+  return (
+    <>
+      <SiteHeader />
+      <ToolStyles />
+
+      <main className="ac">
+        {/* HUD */}
+        <section className="hud">
+          <div className="hud-copy">
+            <span className="fx-eyebrow">Winners Circle Academy</span>
+            <h1 className="hud-title">
+              <Scramble text="From Rookie" className="l1" />
+              <Scramble text="to Winner." className="l2 fx-gradient-text" delay={250} />
+            </h1>
+            <p className="hud-p">
+              No boring lectures. Short missions, mini-games and real tools. Learn how the market actually works, earn XP
+              and rank up.
+            </p>
+            <div className="btn-row">
+              <button type="button" className="btn fx-mag big" onClick={() => startMission(nextIdx === -1 ? 0 : nextIdx)}>
+                {doneCount === 0 ? "Start Mission 01" : nextIdx === -1 ? "Replay missions" : `Continue: Mission ${String(nextIdx + 1).padStart(2, "0")}`}
+              </button>
+              <button type="button" className="btn-ghost fx-mag big" onClick={() => setTab("arena")}>
+                Play the Arena
+              </button>
+            </div>
+          </div>
+
+          <div className="card-rank fx-hud fx-tilt" data-tilt="5">
+            <div className="badge" aria-hidden="true">
+              <svg viewBox="0 0 100 110">
+                <polygon points="50,4 95,29 95,81 50,106 5,81 5,29" className="hex-o" />
+                <polygon points="50,16 84,35 84,75 50,94 16,75 16,35" className="hex-i" />
+              </svg>
+              <span className="badge-n">{r.i + 1}</span>
+            </div>
+            <div className="rk">
+              <span className="fx-eyebrow">Your rank</span>
+              <b className="rk-name">{r.cur.name}</b>
+              <span className="rk-xp">{p.xp} XP</span>
+            </div>
+            <div className="xpbar" aria-label={r.next ? `${r.next.xp - p.xp} XP to ${r.next.name}` : "Top rank reached"}>
+              <i style={{ width: `${r.pct}%` }} />
+            </div>
+            <span className="rk-next">{r.next ? `${r.next.xp - p.xp} XP to ${r.next.name}` : "Top rank. You’re a Winner."}</span>
+            <div className="rk-stats">
+              <div><b>{doneCount}/8</b><span>Missions</span></div>
+              <div><b>{gamesDone}/2</b><span>Games</span></div>
+              <div><b>{p.xp}</b><span>XP</span></div>
+            </div>
+          </div>
+        </section>
+
+        {/* Rank ladder */}
+        <div className="ladder" aria-label="Ranks">
+          {RANKS.map((rk, k) => (
+            <div key={rk.name} className={`rung ${k <= r.i ? "on" : ""} ${k === r.i ? "cur" : ""}`}>
+              <i />
+              <b>{rk.name}</b>
+              <span>{rk.xp} XP</span>
             </div>
           ))}
         </div>
-        <p>The deeper the loss, the harder the climb back. That’s why risk is planned before reward.</p>
-      </>
-    ),
-    tool: RiskRewardLab,
-    takeaways: ["Set the stop loss before you enter, every time.", "Size the trade so a loss is a planned, fixed amount.", "A 50% loss needs a 100% gain to recover."],
-  },
-  {
-    id: "ch-6",
-    title: "When markets move",
-    mins: 4,
-    body: () => (
-      <>
-        <p>
-          The market runs in sessions as financial centres open and close: <b>Sydney</b>, <b>Tokyo</b>, <b>London</b> and{" "}
-          <b>New York</b>. When London and New York overlap, volume and volatility are usually at their highest. Gold
-          often makes its biggest moves then.
-        </p>
-        <h3>News that moves prices</h3>
-        <ul>
-          <li>US jobs data (Non-Farm Payrolls), usually the first Friday of the month</li>
-          <li>Inflation figures (CPI)</li>
-          <li>Interest rate decisions from central banks like the US Federal Reserve</li>
-        </ul>
-        <p>
-          Around big news, prices can jump and spreads can widen. Orders may fill at a worse price than expected, called{" "}
-          <b>slippage</b>. Many disciplined traders stay out during the release.
-        </p>
-      </>
-    ),
-    tool: SessionClock,
-    takeaways: ["The London–New York overlap is usually the busiest time.", "Big news can cause jumps, wide spreads and slippage.", "Markets close at the weekend and can gap on reopen."],
-  },
-  {
-    id: "ch-7",
-    title: "Reading the chart",
-    mins: 6,
-    body: () => (
-      <>
-        <p>
-          Most traders use <b>candlestick charts</b>. Each candle shows four prices for a period of time (one minute, one
-          hour, one day): open, high, low and close.
-        </p>
-        <h3>Market structure</h3>
-        <p>
-          A run of <b>higher highs and higher lows</b> is an uptrend. <b>Lower highs and lower lows</b> is a downtrend. When
-          that pattern breaks, the trend may be changing.
-        </p>
-        <h3>Liquidity</h3>
-        <p>
-          Lots of stop losses sit just above old highs and just below old lows. Price often reaches into those areas before
-          turning. Traders call this a liquidity sweep.
-        </p>
-        <h3>Imbalances</h3>
-        <p>
-          A very fast move can leave a gap between candle wicks, often called a <b>fair value gap</b>. Price frequently
-          comes back to fill part of it.
-        </p>
-        <p>
-          A common approach is to use a higher timeframe for direction and a lower one for timing. None of these are
-          rules the market must follow. They are probabilities you combine with strict risk.
-        </p>
-      </>
-    ),
-    tool: CandleAnatomy,
-    takeaways: ["Each candle shows open, high, low and close.", "Higher highs and higher lows = uptrend.", "Liquidity and imbalances are tendencies, never certainties."],
-  },
-  {
-    id: "ch-8",
-    title: "Copy trading and staying safe",
-    mins: 5,
-    body: () => (
-      <>
-        <p>
-          Copy trading lets you follow another trader’s strategy automatically. With Exness Social Trading, you invest an
-          amount in a strategy, and every trade is copied to your account in proportion to it. You can stop copying or
-          withdraw at any time, and the performance fee is only taken from profit.
-        </p>
-        <h3>The honest numbers</h3>
-        <p>
-          In the UK and EU, brokers must publish the share of retail accounts that lose money on CFDs. It’s typically
-          between 60% and 80%. Copying an experienced trader can still lose money, because you copy their losses too.
-        </p>
-        <h3>Red flags: walk away if someone</h3>
-        <ul>
-          <li>Asks for your trading or broker password</li>
-          <li>Promises fixed or guaranteed returns, like “10% a week”</li>
-          <li>Asks you to send money to their personal bank account or wallet</li>
-          <li>Shows screenshots instead of a verified track record</li>
-          <li>Pushes you to recruit friends to earn</li>
-        </ul>
-        <p>Winners Circle will never do any of these.</p>
-      </>
-    ),
-    takeaways: ["Copying copies losses as well as gains.", "Never share your password. Real copy trading doesn’t need it.", "Only invest what you can afford to lose."],
-  },
-];
 
-const EXTRA = [
-  { id: "glossary", title: "Glossary", k: "Reference" },
-  { id: "quiz", title: "Quick quiz", k: "Check yourself" },
-];
-
-const KEY = "wcu-learn";
-
-export default function LearnPage() {
-  const [current, setCurrent] = useState("ch-1");
-  const [read, setRead] = useState([]);
-  const [quizDone, setQuizDone] = useState(false);
-  const articleRef = useRef(null);
-  const first = useRef(true);
-
-  // Restore progress and any #chapter link
-  useEffect(() => {
-    try {
-      const s = JSON.parse(localStorage.getItem(KEY) || "{}");
-      if (Array.isArray(s.read)) setRead(s.read);
-      if (s.quizDone) setQuizDone(true);
-    } catch {}
-    const h = window.location.hash.slice(1);
-    if ([...CHAPTERS, ...EXTRA].some((c) => c.id === h)) setCurrent(h);
-  }, []);
-
-  // Mark chapters read, remember progress, keep the URL shareable
-  useEffect(() => {
-    if (current.startsWith("ch-")) setRead((r) => (r.includes(current) ? r : [...r, current]));
-    try {
-      window.history.replaceState(null, "", `#${current}`);
-    } catch {}
-    if (first.current) {
-      first.current = false;
-      return;
-    }
-    const el = articleRef.current;
-    if (el && el.getBoundingClientRect().top < 0) el.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [current]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(KEY, JSON.stringify({ read, quizDone }));
-    } catch {}
-  }, [read, quizDone]);
-
-  const idx = CHAPTERS.findIndex((c) => c.id === current);
-  const ch = CHAPTERS[idx];
-  const extra = EXTRA.find((e) => e.id === current);
-  const order = [...CHAPTERS.map((c) => c.id), ...EXTRA.map((e) => e.id)];
-  const pos = order.indexOf(current);
-  const prevId = order[pos - 1];
-  const nextId = order[pos + 1];
-  const titleOf = (id) => CHAPTERS.find((c) => c.id === id)?.title || EXTRA.find((e) => e.id === id)?.title;
-  const pct = Math.round((read.length / CHAPTERS.length) * 100);
-  const Tool = ch?.tool;
-
-  return (
-    <PageShell
-      wide
-      eyebrow="Foundations"
-      title="Trading, from zero"
-      intro="New to trading? Start here. Eight short chapters take you from what a pip is to how copy trading works, with tools you can play with along the way."
-    >
-      <div className="prog fx-glass">
-        <div className="prog-text">
-          <b>{read.length} of {CHAPTERS.length}</b> chapters read
-          {quizDone && <span className="badge">Quiz complete</span>}
-        </div>
-        <div className="prog-bar" aria-hidden="true">
-          <i style={{ width: `${pct}%` }} />
-        </div>
-      </div>
-
-      <div className="learn">
-        <nav className="toc" aria-label="Chapters">
-          <span className="toc-k">Chapters</span>
-          {CHAPTERS.map((c, i) => (
-            <button
-              key={c.id}
-              type="button"
-              className={`toc-item ${current === c.id ? "on" : ""} ${read.includes(c.id) ? "read" : ""}`}
-              aria-current={current === c.id ? "true" : undefined}
-              onClick={() => setCurrent(c.id)}
-            >
-              <span className="toc-n">{String(i + 1).padStart(2, "0")}</span>
-              <span className="toc-t">{c.title}</span>
-              <span className="toc-tick" aria-label={read.includes(c.id) ? "Read" : undefined}>{read.includes(c.id) ? "✓" : ""}</span>
+        {/* Tabs */}
+        <div className="tabs" role="tablist" aria-label="Academy sections" id="missions">
+          {TABS.map((t) => (
+            <button key={t.k} type="button" role="tab" aria-selected={tab === t.k} className="tab" onClick={() => setTab(t.k)}>
+              <b>{t.t}</b>
+              <span>{t.d}</span>
             </button>
           ))}
-          <span className="toc-k">More</span>
-          {EXTRA.map((e) => (
-            <button key={e.id} type="button" className={`toc-item ${current === e.id ? "on" : ""}`} onClick={() => setCurrent(e.id)}>
-              <span className="toc-n">{e.id === "quiz" ? "?" : "Aa"}</span>
-              <span className="toc-t">{e.title}</span>
-              <span className="toc-tick">{e.id === "quiz" && quizDone ? "✓" : ""}</span>
-            </button>
-          ))}
-        </nav>
+        </div>
 
-        <article className="art fx-glass fx-hud" ref={articleRef} key={current}>
-          {ch ? (
-            <>
-              <div className="art-meta">
-                <span className="fx-eyebrow">Chapter {idx + 1} of {CHAPTERS.length}</span>
-                <span className="mins">{ch.mins} min read</span>
-              </div>
-              <Scramble as="h2" text={ch.title} className="art-title" />
-              <div className="art-body">{ch.body()}</div>
-              {Tool && <Tool />}
-              <div className="take">
-                <span className="fx-eyebrow">Key takeaways</span>
-                <ul>
-                  {ch.takeaways.map((t) => (
-                    <li key={t}>{t}</li>
-                  ))}
-                </ul>
-              </div>
-            </>
+        {tab === "missions" && (
+          <section className="pane" key="missions">
+            <div className="track" aria-hidden="true">
+              {MISSIONS.map((m) => (
+                <i key={m.id} className={p.done.includes(m.id) ? "on" : ""} />
+              ))}
+            </div>
+            <div className="mgrid">
+              {MISSIONS.map((m, i) => {
+                const isDone = p.done.includes(m.id);
+                const isOpen = unlocked(i);
+                const isNext = i === nextIdx;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    className={`mcard fx-tilt ${isDone ? "done" : ""} ${isOpen ? "" : "locked"} ${isNext ? "next" : ""}`}
+                    onClick={() => startMission(i)}
+                  >
+                    <span className="m-n">{String(i + 1).padStart(2, "0")}</span>
+                    <svg viewBox="0 0 32 32" aria-hidden="true">
+                      <path d={isOpen ? m.icon : "M9 14V10a7 7 0 0 1 14 0v4M7 14h18v13H7z"} />
+                    </svg>
+                    <span className="m-code">{m.code}</span>
+                    <b className="m-title">{m.title}</b>
+                    <span className="m-foot">
+                      <span>+{XP_MISSION + XP_CORRECT} XP</span>
+                      <span className="m-state">{isDone ? "Complete ✓" : isOpen ? (isNext ? "Play now" : "Ready") : "Locked"}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {tab === "arena" && (
+          <section className="pane arena" key="arena">
+            {GAMES.map((g) => (
+              <button key={g.k} type="button" className={`gcard fx-tilt ${g.k}`} onClick={() => setOpen({ type: "game", id: g.k })}>
+                <div className="g-art" aria-hidden="true">
+                  {g.k === "callit" ? (
+                    <svg viewBox="0 0 200 90">
+                      {Array.from({ length: 14 }).map((_, k) => {
+                        const up = [1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0][k];
+                        const base = 60 - k * 2.2 + (up ? 0 : 6);
+                        return (
+                          <g key={k}>
+                            <line x1={10 + k * 13} x2={10 + k * 13} y1={base - 18} y2={base + 10} stroke={up ? "#e6c36a" : "#e08a6f"} />
+                            <rect x={6 + k * 13} y={base - 12} width="8" height="16" fill={up ? "#e6c36a" : "#e08a6f"} />
+                          </g>
+                        );
+                      })}
+                      <text x="190" y="40" textAnchor="end" fontSize="34" fill="#e6c36a" fontFamily="Saira, sans-serif">?</text>
+                    </svg>
+                  ) : (
+                    <div className="stack">
+                      <i />
+                      <i />
+                      <i>✕ / ✓</i>
+                    </div>
+                  )}
+                </div>
+                <span className="fx-eyebrow">{p.games[g.k] ? "Played ✓" : g.xp}</span>
+                <b>{g.t}</b>
+                <p>{g.d}</p>
+                <span className="g-play">Play</span>
+              </button>
+            ))}
+          </section>
+        )}
+
+        {tab === "toolkit" && (
+          <section className="pane tools" key="toolkit">
+            {Object.entries(TOOLS).map(([k, t]) => (
+              <button key={k} type="button" className="tcard fx-tilt" onClick={() => setOpen({ type: "tool", id: k })}>
+                <span className="fx-eyebrow">Tool</span>
+                <b>{t.name}</b>
+                <span className="g-play">Open</span>
+              </button>
+            ))}
+          </section>
+        )}
+
+        {tab === "decoder" && (
+          <section className="pane decoder fx-glass" key="decoder">
+            <span className="fx-eyebrow">Decoder</span>
+            <h2>Crack the trading lingo</h2>
+            <Glossary />
+          </section>
+        )}
+
+        <p className="fx-notice note">
+          <b>Real talk</b>
+          <span>This is education, not financial advice. Trading is high risk and you can lose the money you invest.</span>
+        </p>
+      </main>
+
+      {mission && (
+        <Overlay label={`Mission ${missionIdx + 1}`} onClose={() => setOpen(null)}>
+          <MissionPlayer
+            key={mission.id}
+            mission={mission}
+            number={missionIdx + 1}
+            total={MISSIONS.length}
+            alreadyDone={p.done.includes(mission.id)}
+            onFinish={(xp) => award(xp, (prev) => ({ done: prev.done.includes(mission.id) ? prev.done : [...prev.done, mission.id] }), true)}
+            onNext={missionIdx + 1 < MISSIONS.length ? () => setOpen({ type: "mission", id: missionIdx + 1 }) : null}
+          />
+        </Overlay>
+      )}
+
+      {open?.type === "game" && (
+        <Overlay label={open.id === "callit" ? "Call It" : "Scam or Legit"} onClose={() => setOpen(null)} wide={open.id === "callit"}>
+          {open.id === "callit" ? (
+            <CallIt
+              onClose={() => setOpen(null)}
+              onFinish={() => !p.games.callit && award(50, (prev) => ({ games: { ...prev.games, callit: true } }))}
+            />
           ) : (
-            <>
-              <div className="art-meta">
-                <span className="fx-eyebrow">{extra.k}</span>
-              </div>
-              <Scramble as="h2" text={extra.title} className="art-title" />
-              {current === "glossary" ? <Glossary /> : <Quiz onComplete={() => setQuizDone(true)} />}
-            </>
+            <ScamOrLegit
+              onClose={() => setOpen(null)}
+              onFinish={(score) => !p.games.scam && award(score * 10, (prev) => ({ games: { ...prev.games, scam: true } }))}
+            />
           )}
+        </Overlay>
+      )}
 
-          <div className="art-nav">
-            {prevId ? (
-              <button type="button" className="nav-btn" onClick={() => setCurrent(prevId)}>
-                <span>Previous</span>
-                <b>{titleOf(prevId)}</b>
-              </button>
-            ) : (
-              <span />
-            )}
-            {nextId ? (
-              <button type="button" className="nav-btn next" onClick={() => setCurrent(nextId)}>
-                <span>Next</span>
-                <b>{titleOf(nextId)}</b>
-              </button>
-            ) : (
-              <a className="nav-btn next" href="/copy-trading">
-                <span>Ready?</span>
-                <b>How copying works</b>
-              </a>
-            )}
+      {open?.type === "tool" && (
+        <Overlay label={TOOLS[open.id].name} onClose={() => setOpen(null)} wide>
+          <div className="tool-ov">
+            {(() => {
+              const C = TOOLS[open.id].C;
+              return <C />;
+            })()}
           </div>
-        </article>
-      </div>
+        </Overlay>
+      )}
 
-      <p className="fx-notice">
-        <b>Note</b>
-        <span>
-          This guide is education, not financial advice. Trading is high risk and you can lose the money you invest.
-        </span>
-      </p>
+      {toast && (
+        <div className="toast" key={toast.id} role="status">
+          {toast.xp ? <b className="fx-gradient-text">+{toast.xp} XP</b> : <span>{toast.msg}</span>}
+        </div>
+      )}
 
-      <style jsx>{`
-        .prog {
+      {rankUp && (
+        <div className="rankup" role="dialog" aria-label="Rank up" onClick={() => setRankUp(null)}>
+          <div className="ru-in">
+            <span className="fx-eyebrow">Rank up</span>
+            <b className="fx-gradient-text">{rankUp}</b>
+            <button type="button" className="btn" onClick={() => setRankUp(null)}>Keep going</button>
+          </div>
+        </div>
+      )}
+
+      <style jsx global>{`
+        .ac {
+          max-width: 1180px;
+          margin: 0 auto;
+          padding: 40px 16px 100px;
           display: grid;
-          gap: 10px;
-          padding: 16px 18px;
+          gap: 26px;
         }
-        .prog-text {
-          display: flex;
+        .ac > * {
+          min-width: 0;
+        }
+
+        /* HUD */
+        .hud {
+          display: grid;
+          grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+          gap: 32px;
           align-items: center;
-          gap: 12px;
-          flex-wrap: wrap;
-          font-size: 15px;
-          color: var(--muted);
         }
-        .prog-text b {
-          color: var(--fg);
+        @media (max-width: 880px) {
+          .hud {
+            grid-template-columns: 1fr;
+          }
+        }
+        .hud-copy {
+          display: grid;
+          gap: 20px;
+        }
+        .hud-title {
+          margin: 0;
+          display: grid;
+          font: 700 clamp(46px, 7vw, 84px) / 0.95 var(--display);
+          letter-spacing: -0.01em;
+        }
+        .hud-p {
+          margin: 0;
+          max-width: 46ch;
+          font-size: 19px;
+          line-height: 1.55;
+          color: #cfc6b1;
+        }
+        .btn.big,
+        .btn-ghost.big {
+          min-height: 56px;
+          padding: 0 26px;
+          font-size: 14px;
+        }
+        .card-rank {
+          display: grid;
+          grid-template-columns: auto minmax(0, 1fr);
+          gap: 14px 18px;
+          align-items: center;
+          padding: 24px;
+          border: 1px solid var(--line-strong);
+          background: linear-gradient(160deg, rgba(230, 195, 106, 0.14), rgba(12, 11, 8, 0.8) 60%);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
         }
         .badge {
-          font: 500 11px/1 var(--mono);
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
+          position: relative;
+          width: 92px;
+          height: 100px;
+          display: grid;
+          place-items: center;
+        }
+        .badge svg {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+        }
+        .hex-o {
+          fill: none;
+          stroke: var(--gold);
+          stroke-width: 2;
+          filter: drop-shadow(0 0 8px rgba(230, 195, 106, 0.6));
+        }
+        .hex-i {
+          fill: rgba(230, 195, 106, 0.14);
+          stroke: rgba(230, 195, 106, 0.4);
+          stroke-dasharray: 4 4;
+        }
+        .badge-n {
+          position: relative;
+          font: 700 40px/1 var(--display);
           color: var(--gold);
-          border: 1px solid var(--gold-deep);
-          padding: 6px 8px;
         }
-        .prog-bar {
-          height: 4px;
-          background: var(--line);
+        .rk {
+          display: grid;
+          gap: 6px;
         }
-        .prog-bar i {
+        .rk-name {
+          font: 700 clamp(30px, 4vw, 40px) / 1 var(--display);
+        }
+        .rk-xp {
+          font: 500 14px/1 var(--mono);
+          color: var(--gold);
+        }
+        .xpbar {
+          grid-column: 1 / -1;
+          height: 10px;
+          background: rgba(230, 195, 106, 0.12);
+          border: 1px solid var(--line);
+          overflow: hidden;
+        }
+        .xpbar i {
           display: block;
           height: 100%;
           background: linear-gradient(90deg, var(--gold-deep), var(--gold), var(--gold-hi));
-          box-shadow: 0 0 10px var(--gold);
-          transition: width 0.5s ease;
+          box-shadow: 0 0 14px var(--gold);
+          transition: width 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
         }
-        .learn {
-          display: grid;
-          grid-template-columns: 290px minmax(0, 1fr);
-          gap: 20px;
-          align-items: start;
-        }
-        .toc {
-          position: sticky;
-          top: 20px;
-          display: grid;
-          gap: 6px;
-        }
-        .toc-k {
-          margin: 8px 0 2px;
-          font: 500 11px/1 var(--mono);
-          letter-spacing: 0.16em;
-          text-transform: uppercase;
-          color: var(--muted);
-        }
-        .toc-item {
-          display: grid;
-          grid-template-columns: 30px minmax(0, 1fr) 16px;
-          align-items: center;
-          gap: 8px;
-          width: 100%;
-          min-height: 48px;
-          padding: 8px 12px;
-          text-align: left;
-          background: rgba(15, 13, 10, 0.62);
-          color: var(--fg);
-          border: 1px solid var(--line);
-          font: 600 15px/1.25 var(--display);
-          letter-spacing: 0.01em;
-          backdrop-filter: blur(6px);
-          -webkit-backdrop-filter: blur(6px);
-        }
-        .toc-item:hover {
-          box-shadow: none;
-          border-color: var(--line-strong);
-        }
-        .toc-item.on {
-          border-color: var(--gold);
-          background: rgba(230, 195, 106, 0.14);
-          color: var(--gold);
-        }
-        .toc-n {
-          font: 500 12px/1 var(--mono);
-          color: var(--gold);
-        }
-        .toc-tick {
-          color: var(--gold);
-          font-size: 13px;
-        }
-        @media (max-width: 900px) {
-          .learn {
-            grid-template-columns: 1fr;
-          }
-          .toc {
-            position: static;
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding-bottom: 6px;
-            scroll-snap-type: x mandatory;
-          }
-          .toc-k {
-            display: none;
-          }
-          .toc-item {
-            flex: none;
-            width: auto;
-            max-width: 240px;
-            scroll-snap-align: start;
-          }
-        }
-        .art {
-          display: grid;
-          gap: 18px;
-          padding: 28px;
-          min-width: 0;
-          scroll-margin-top: 80px;
-          animation: fx-rise 0.4s ease-out;
-        }
-        .art-meta {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 10px;
-        }
-        .mins {
+        .rk-next {
+          grid-column: 1 / -1;
           font: 400 12px/1 var(--mono);
           color: var(--muted);
         }
-        .art :global(.art-title) {
-          display: block;
-          margin: 0;
-          font-size: clamp(30px, 4.5vw, 44px);
-          line-height: 1.08;
-        }
-        .take {
+        .rk-stats {
+          grid-column: 1 / -1;
           display: grid;
-          gap: 10px;
-          padding: 18px 20px;
-          border-left: 2px solid var(--gold);
-          background: rgba(230, 195, 106, 0.06);
-        }
-        .take ul {
-          margin: 0;
-          padding-left: 18px;
-          display: grid;
-          gap: 6px;
-          line-height: 1.5;
-        }
-        .take li::marker {
-          color: var(--gold);
-        }
-        .art-nav {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-          padding-top: 6px;
-        }
-        .nav-btn {
-          display: grid;
-          gap: 6px;
-          padding: 14px 16px;
-          text-align: left;
-          background: rgba(8, 7, 5, 0.6);
-          color: var(--fg);
-          border: 1px solid var(--line);
-          border-radius: var(--radius);
-        }
-        .nav-btn:hover {
-          box-shadow: none;
-          border-color: var(--gold);
-        }
-        .nav-btn.next {
-          text-align: right;
-          grid-column: 2;
-        }
-        .nav-btn span {
-          font: 500 11px/1 var(--mono);
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          color: var(--gold);
-        }
-        .nav-btn b {
-          font: 600 17px/1.2 var(--display);
-        }
-        @media (max-width: 560px) {
-          .art {
-            padding: 20px 18px;
-          }
-          .nav-btn b {
-            font-size: 15px;
-          }
-        }
-      `}</style>
-
-      <style jsx global>{`
-        .art-body {
-          display: grid;
-          gap: 14px;
-        }
-        .art-body p {
-          margin: 0;
-          font-size: 17px;
-          line-height: 1.75;
-          color: #ddd4bf;
-          max-width: 68ch;
-        }
-        .art-body h3 {
-          margin: 8px 0 0;
-          font-size: 22px;
-          color: var(--gold);
-        }
-        .art-body ul {
-          margin: 0;
-          padding-left: 20px;
-          display: grid;
-          gap: 6px;
-          font-size: 17px;
-          line-height: 1.6;
-          color: #ddd4bf;
-        }
-        .art-body li::marker {
-          color: var(--gold);
-        }
-        .art-body b {
-          color: var(--fg);
-        }
-        .dd {
-          display: grid;
-          grid-template-columns: repeat(5, minmax(0, 1fr));
+          grid-template-columns: repeat(3, 1fr);
           border: 1px solid var(--line);
         }
-        .dd div {
+        .rk-stats div {
           display: grid;
           gap: 6px;
           padding: 12px;
-          background: rgba(8, 7, 5, 0.55);
           border-right: 1px solid var(--line);
+          background: rgba(8, 7, 5, 0.5);
         }
-        .dd div:last-child {
+        .rk-stats div:last-child {
           border-right: 0;
         }
-        .dd span {
-          font: 500 11px/1 var(--mono);
-          color: var(--muted);
+        .rk-stats b {
+          font: 700 22px/1 var(--display);
+        }
+        .rk-stats span {
+          font: 500 10px/1 var(--mono);
+          letter-spacing: 0.14em;
           text-transform: uppercase;
-          letter-spacing: 0.08em;
-        }
-        .dd b {
-          font: 600 18px/1 var(--display);
-          color: var(--loss) !important;
-        }
-        @media (max-width: 620px) {
-          .dd {
-            grid-template-columns: 1fr 1fr;
-          }
-          .dd div {
-            border-bottom: 1px solid var(--line);
-          }
+          color: var(--muted);
         }
 
-        /* Interactive tools */
-        .lab {
+        /* Ladder */
+        .ladder {
           display: grid;
-          gap: 18px;
-          padding: 22px;
-          border: 1px solid var(--line-strong);
-          border-radius: var(--radius);
-          background: rgba(6, 5, 4, 0.6);
+          grid-template-columns: repeat(5, 1fr);
+          position: relative;
         }
-        .lab-head {
+        .ladder::before {
+          content: "";
+          position: absolute;
+          left: 10%;
+          right: 10%;
+          top: 7px;
+          height: 2px;
+          background: var(--line);
+        }
+        .rung {
+          position: relative;
           display: grid;
-          gap: 8px;
+          justify-items: center;
+          gap: 6px;
+          text-align: center;
         }
-        .lab-head h3 {
-          margin: 0;
-          font-size: 22px;
+        .rung i {
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #1a1610;
+          border: 2px solid var(--line-strong);
         }
-        .lab-grid {
+        .rung.on i {
+          background: var(--gold);
+          border-color: var(--gold);
+        }
+        .rung.cur i {
+          box-shadow: 0 0 0 5px rgba(230, 195, 106, 0.18), 0 0 16px var(--gold);
+          animation: fx-pulse 2s infinite;
+        }
+        .rung b {
+          font: 600 15px/1 var(--display);
+          color: var(--muted);
+        }
+        .rung.on b {
+          color: var(--fg);
+        }
+        .rung span {
+          font: 400 11px/1 var(--mono);
+          color: var(--muted);
+        }
+
+        /* Tabs */
+        .tabs {
           display: grid;
-          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-          gap: 22px;
-          align-items: start;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 10px;
+          scroll-margin-top: 90px;
         }
-        @media (max-width: 760px) {
-          .lab-grid {
-            grid-template-columns: 1fr;
+        @media (max-width: 640px) {
+          .tabs {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
           }
         }
-        .lab-ctrls {
+        .tab {
           display: grid;
-          gap: 18px;
-        }
-        .lab-ctrls output {
-          float: right;
-          color: var(--gold);
-        }
-        .lab input[type="range"] {
-          width: 100%;
-          accent-color: var(--gold);
-        }
-        .two-in {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 10px;
-        }
-        .chips {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-        .chips.tight {
-          margin-top: 10px;
-        }
-        .chips.center {
-          justify-content: center;
-        }
-        .chip {
-          padding: 10px 13px;
-          background: transparent;
+          gap: 6px;
+          padding: 16px 18px;
+          text-align: left;
+          background: rgba(15, 13, 10, 0.66);
           color: var(--fg);
           border: 1px solid var(--line);
-          font: 500 13px/1 var(--mono);
-          letter-spacing: 0;
-          text-transform: none;
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+          clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
         }
-        .chip:hover {
+        .tab:hover {
           box-shadow: none;
           border-color: var(--line-strong);
         }
-        .chip[aria-pressed="true"] {
-          border-color: var(--gold);
-          color: var(--gold);
-          background: var(--gold-soft);
+        .tab b {
+          font: 700 22px/1 var(--display);
         }
-        .lab-out {
-          display: grid;
-          gap: 1px;
-          background: var(--line);
-          border: 1px solid var(--line);
-        }
-        .lab-out > div {
-          display: flex;
-          justify-content: space-between;
-          align-items: baseline;
-          gap: 12px;
-          padding: 14px 16px;
-          background: rgba(8, 7, 5, 0.8);
-        }
-        .lab-out > div.col {
-          display: grid;
-          gap: 8px;
-        }
-        .lab-out > div.hl {
-          background: rgba(230, 195, 106, 0.1);
-        }
-        .lab-out span {
-          font: 500 11px/1.3 var(--mono);
+        .tab span {
+          font: 500 11px/1 var(--mono);
           letter-spacing: 0.12em;
           text-transform: uppercase;
           color: var(--muted);
         }
-        .lab-out b {
-          font: 600 24px/1 var(--display);
-          font-variant-numeric: tabular-nums;
+        .tab[aria-selected="true"] {
+          background: linear-gradient(135deg, var(--gold-deep), var(--gold) 60%, var(--gold-hi));
+          border-color: var(--gold);
+          color: #0b0b0b;
         }
-        .lab-out .up {
-          color: var(--gold);
+        .tab[aria-selected="true"] span {
+          color: rgba(11, 11, 11, 0.7);
         }
-        .lab-out .down {
-          color: var(--loss);
-        }
-        .lab-out .parts {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-          padding: 12px 16px;
-          background: rgba(8, 7, 5, 0.8);
-          justify-content: flex-start;
-        }
-        .lab-note {
-          margin: 0;
-          padding: 12px 16px;
-          background: rgba(8, 7, 5, 0.8);
-          font-size: 14px;
-          line-height: 1.55;
-          color: var(--muted);
-        }
-        .gl .lab-note,
-        .sc + .lab-note {
-          border: 1px solid var(--line);
-        }
-        .meter {
-          position: relative;
-          height: 14px;
-          margin-top: 26px;
-          background: var(--line);
-        }
-        .meter-fill {
-          height: 100%;
-          background: linear-gradient(90deg, var(--gold-deep), var(--gold));
-          transition: width 0.3s;
-        }
-        .meter-mark {
-          position: absolute;
-          top: -6px;
-          bottom: -6px;
-          width: 2px;
-          background: var(--fg);
-          transition: left 0.3s;
-        }
-        .meter-mark span {
-          position: absolute;
-          bottom: calc(100% + 4px);
-          left: 50%;
-          transform: translateX(-50%);
-          white-space: nowrap;
-          font: 500 11px/1 var(--mono);
-          color: var(--fg);
+        .pane {
+          animation: fx-rise 0.45s ease-out;
         }
 
-        /* Session clock */
-        .sc {
-          display: grid;
-          gap: 8px;
+        /* Missions */
+        .track {
+          display: flex;
+          gap: 6px;
+          margin-bottom: 14px;
         }
-        .sc-row {
-          display: grid;
-          grid-template-columns: 12px 100px 100px 110px minmax(60px, 1fr) 70px;
-          align-items: center;
-          gap: 12px;
-          padding: 12px 14px;
-          border: 1px solid var(--line);
-          background: rgba(8, 7, 5, 0.6);
-          font-size: 14px;
-        }
-        .sc-row.on {
-          border-color: var(--gold-deep);
-          background: rgba(230, 195, 106, 0.08);
-        }
-        .sc-dot {
-          width: 9px;
-          height: 9px;
-          border-radius: 50%;
-          background: #3a3325;
-        }
-        .sc-row.on .sc-dot {
-          background: var(--gold);
-          animation: fx-pulse 2s infinite;
-        }
-        .sc-row b {
-          font: 600 16px/1 var(--display);
-        }
-        .sc-time,
-        .sc-hours {
-          font: 400 12px/1 var(--mono);
-          color: var(--muted);
-        }
-        .sc-bar {
+        .track i {
+          flex: 1;
           height: 4px;
           background: var(--line);
         }
-        .sc-bar i {
-          display: block;
-          height: 100%;
+        .track i.on {
           background: var(--gold);
+          box-shadow: 0 0 10px var(--gold);
         }
-        .sc-state {
-          justify-self: end;
-          font: 500 11px/1 var(--mono);
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: var(--muted);
-        }
-        .sc-row.on .sc-state {
-          color: var(--gold);
-        }
-        @media (max-width: 620px) {
-          .sc-row {
-            grid-template-columns: 12px 1fr auto;
-            row-gap: 6px;
-          }
-          .sc-hours,
-          .sc-bar {
-            display: none;
-          }
-          .sc-time {
-            grid-column: 2;
-            grid-row: 2;
-          }
-          .sc-state {
-            grid-column: 3;
-            grid-row: 1 / span 2;
-          }
-        }
-
-        /* Candle diagram */
-        .ca-fig {
+        .mgrid {
           display: grid;
-          gap: 12px;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 14px;
         }
-        .ca-fig svg {
-          width: 100%;
-          max-width: 360px;
-          justify-self: center;
-          height: auto;
-          overflow: visible;
+        @media (max-width: 980px) {
+          .mgrid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
         }
-        .ca-text {
-          margin: 0;
-          font-size: 16px;
-          line-height: 1.6;
-          color: var(--fg);
-        }
-
-        /* Glossary */
-        .gl {
-          display: grid;
-          gap: 8px;
-        }
-        .gl-grid {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 8px;
-          margin-top: 10px;
-        }
-        @media (max-width: 700px) {
-          .gl-grid {
+        @media (max-width: 480px) {
+          .mgrid {
             grid-template-columns: 1fr;
           }
         }
-        .gl-item {
+        .mcard {
+          position: relative;
           display: grid;
-          gap: 6px;
-          padding: 14px 16px;
+          gap: 8px;
+          align-content: start;
+          min-height: 230px;
+          padding: 22px 20px 18px;
           text-align: left;
-          background: rgba(8, 7, 5, 0.6);
+          background: rgba(15, 13, 10, 0.7);
           color: var(--fg);
           border: 1px solid var(--line);
           font-weight: 400;
           letter-spacing: 0;
-        }
-        .gl-item:hover {
-          box-shadow: none;
-          border-color: var(--line-strong);
-        }
-        .gl-item b {
-          font: 600 17px/1.2 var(--display);
-          color: var(--gold);
-        }
-        .gl-item span {
-          font-size: 14px;
-          line-height: 1.55;
-          color: var(--muted);
-          display: -webkit-box;
-          -webkit-line-clamp: 1;
-          -webkit-box-orient: vertical;
           overflow: hidden;
+          clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 22px 100%, 0 calc(100% - 22px));
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
         }
-        .gl-item.open {
+        .mcard:hover {
+          box-shadow: none;
           border-color: var(--gold);
+          background: rgba(28, 24, 15, 0.8);
         }
-        .gl-item.open span {
-          -webkit-line-clamp: unset;
-          color: var(--fg);
+        .m-n {
+          position: absolute;
+          right: 14px;
+          top: 6px;
+          font: 700 64px/1 var(--display);
+          color: rgba(230, 195, 106, 0.1);
         }
-
-        /* Quiz */
-        .qz {
-          display: grid;
-          gap: 16px;
+        .mcard svg {
+          width: 34px;
+          height: 34px;
+          fill: none;
+          stroke: var(--gold);
+          stroke-width: 1.7;
+          stroke-linecap: round;
+          stroke-linejoin: round;
         }
-        .qz-top {
+        .m-code {
+          font: 500 11px/1 var(--mono);
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: var(--gold);
+          margin-top: 6px;
+        }
+        .m-title {
+          font: 700 22px/1.15 var(--display);
+        }
+        .m-foot {
+          margin-top: auto;
+          padding-top: 14px;
           display: flex;
           justify-content: space-between;
-          align-items: center;
-          gap: 10px;
-        }
-        .qz-dots {
-          display: flex;
-          gap: 6px;
-        }
-        .qz-dots i {
-          width: 22px;
-          height: 3px;
-          background: var(--line);
-        }
-        .qz-dots i.past {
-          background: var(--gold-deep);
-        }
-        .qz-dots i.now {
-          background: var(--gold);
-          box-shadow: 0 0 8px var(--gold);
-        }
-        .qz-q {
-          margin: 0;
-          font-size: clamp(20px, 3vw, 26px);
-          line-height: 1.3;
-        }
-        .qz-opts {
-          display: grid;
           gap: 8px;
+          font: 500 12px/1 var(--mono);
+          color: var(--muted);
         }
-        .qz-opt {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-          width: 100%;
-          min-height: 54px;
-          padding: 10px 16px;
+        .m-state {
+          color: var(--gold);
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+        }
+        .mcard.locked {
+          opacity: 0.5;
+        }
+        .mcard.locked svg {
+          stroke: var(--muted);
+        }
+        .mcard.locked .m-state {
+          color: var(--muted);
+        }
+        .mcard.done {
+          border-color: var(--gold-deep);
+          background: linear-gradient(160deg, rgba(230, 195, 106, 0.16), rgba(15, 13, 10, 0.75) 65%);
+        }
+        .mcard.next {
+          border-color: var(--gold);
+          box-shadow: inset 0 0 0 1px var(--gold), 0 0 30px rgba(230, 195, 106, 0.25);
+        }
+        .mcard.next::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(115deg, transparent 30%, rgba(246, 223, 160, 0.14) 50%, transparent 70%);
+          transform: translateX(-100%);
+          animation: sweep 2.6s ease-in-out infinite;
+          pointer-events: none;
+        }
+        @keyframes sweep {
+          60%,
+          100% {
+            transform: translateX(100%);
+          }
+        }
+
+        /* Arena */
+        .arena {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 16px;
+        }
+        @media (max-width: 760px) {
+          .arena {
+            grid-template-columns: 1fr;
+          }
+        }
+        .gcard,
+        .tcard {
+          display: grid;
+          gap: 10px;
+          align-content: start;
+          padding: 22px;
           text-align: left;
-          background: rgba(8, 7, 5, 0.6);
+          background: rgba(15, 13, 10, 0.7);
           color: var(--fg);
           border: 1px solid var(--line);
-          font: 500 16px/1.4 var(--body);
+          font-weight: 400;
           letter-spacing: 0;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
         }
-        .qz-opt:hover {
+        .gcard:hover,
+        .tcard:hover {
           box-shadow: none;
-          border-color: var(--line-strong);
+          border-color: var(--gold);
         }
-        .qz-l {
-          flex: none;
-          width: 28px;
-          height: 28px;
+        .gcard b,
+        .tcard b {
+          font: 700 30px/1.1 var(--display);
+        }
+        .tcard b {
+          font-size: 22px;
+        }
+        .gcard p {
+          margin: 0;
+          color: var(--muted);
+          line-height: 1.55;
+          font-size: 16px;
+        }
+        .g-art {
+          height: 130px;
+          display: grid;
+          place-items: center;
+          border: 1px solid var(--line);
+          background: radial-gradient(circle at 50% 60%, rgba(230, 195, 106, 0.14), rgba(8, 7, 5, 0.6) 70%);
+          margin-bottom: 6px;
+        }
+        .g-art svg {
+          width: 80%;
+          height: auto;
+        }
+        .stack {
+          position: relative;
+          width: 150px;
+          height: 96px;
+        }
+        .stack i {
+          position: absolute;
+          inset: 0;
           display: grid;
           place-items: center;
           border: 1px solid var(--line-strong);
-          font: 500 12px/1 var(--mono);
+          background: #14110c;
+          font: 700 22px/1 var(--display);
+          font-style: normal;
           color: var(--gold);
         }
-        .qz-opt.right {
-          border-color: var(--gold);
-          background: rgba(230, 195, 106, 0.14);
+        .stack i:nth-child(1) {
+          transform: rotate(-8deg) translateX(-14px);
+          opacity: 0.5;
         }
-        .qz-opt.wrong {
-          border-color: var(--loss);
-          background: rgba(224, 138, 111, 0.12);
+        .stack i:nth-child(2) {
+          transform: rotate(5deg) translateX(10px);
+          opacity: 0.75;
         }
-        .qz-opt.dim {
-          opacity: 0.45;
-        }
-        .qz-exp {
-          padding: 14px 16px;
-          border-left: 2px solid var(--gold);
-          background: rgba(230, 195, 106, 0.06);
-          line-height: 1.6;
-        }
-        .qz-exp b {
+        .g-play {
+          margin-top: 6px;
+          font: 600 12px/1 var(--mono);
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
           color: var(--gold);
         }
-        .qz-ctrl {
+        .g-play::after {
+          content: " →";
+        }
+        .tools {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 14px;
+        }
+        .tcard {
+          min-height: 150px;
+        }
+        .tool-ov {
+          padding: 56px 20px 20px;
+        }
+        .decoder {
+          display: grid;
+          gap: 12px;
+          padding: 24px;
+        }
+        .decoder h2 {
+          margin: 0 0 6px;
+          font-size: clamp(28px, 4vw, 40px);
+        }
+        .note {
+          margin: 0;
+        }
+
+        /* Games */
+        .game {
+          display: grid;
+          gap: 16px;
+          padding: 24px;
+        }
+        .g-top {
           display: flex;
-          justify-content: flex-end;
+          justify-content: space-between;
+          align-items: center;
+          gap: 12px;
+          padding-right: 48px;
         }
-        .qz.done {
+        .g-score {
+          font: 500 13px/1 var(--mono);
+          color: var(--muted);
+        }
+        .g-score b {
+          color: var(--gold);
+          font-size: 18px;
+        }
+        .g-q {
+          margin: 0;
+          font: 700 clamp(26px, 4vw, 38px) / 1.1 var(--display);
+        }
+        .g-chart {
+          border: 1px solid var(--line);
+          background: rgba(6, 5, 4, 0.7);
+          padding: 8px;
+        }
+        .g-chart svg {
+          display: block;
+          width: 100%;
+          height: auto;
+        }
+        .g-chart .rev {
+          animation: fx-rise 0.4s ease-out both;
+        }
+        .g-btns {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+          align-items: center;
+        }
+        .g-btns.one {
+          grid-template-columns: 1fr;
+        }
+        .g-btn {
+          min-height: 64px;
+          font: 700 20px/1 var(--display);
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+        }
+        .g-btn.up {
+          background: linear-gradient(135deg, var(--gold-deep), var(--gold));
+          color: #0b0b0b;
+        }
+        .g-btn.down {
+          background: linear-gradient(135deg, #7a3f2c, var(--loss));
+          color: #0b0b0b;
+        }
+        .g-res {
+          margin: 0;
+          font: 600 17px/1.3 var(--display);
+        }
+        .g-res.ok {
+          color: var(--gold);
+        }
+        .g-res.no {
+          color: var(--loss);
+        }
+        .done-g {
           justify-items: center;
           text-align: center;
-          padding: 10px 0;
+          padding: 48px 24px 32px;
         }
-        .qz-score {
-          font: 700 72px/1 var(--display);
-        }
-        .qz.done p {
+        .done-g h3 {
           margin: 0;
-          max-width: 46ch;
-          color: #ddd4bf;
+          font: 700 clamp(24px, 3.6vw, 32px) / 1.2 var(--display);
+        }
+        .done-g p {
+          margin: 0;
+          max-width: 52ch;
+          color: #cfc6b1;
           line-height: 1.6;
+        }
+        .big-score {
+          font: 700 clamp(70px, 14vw, 120px) / 1 var(--display);
         }
         .btn-row.center {
           justify-content: center;
         }
+        .sw-zone {
+          position: relative;
+          display: grid;
+          place-items: center;
+          min-height: 280px;
+          overflow: hidden;
+        }
+        .sw-hint {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          font: 700 22px/1 var(--display);
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          opacity: 0.25;
+          transition: opacity 0.2s;
+        }
+        .sw-hint.l {
+          left: 6px;
+          color: var(--loss);
+        }
+        .sw-hint.r {
+          right: 6px;
+          color: var(--gold);
+        }
+        .sw-hint.on {
+          opacity: 1;
+        }
+        .sw-card {
+          width: min(440px, 76%);
+          min-height: 240px;
+          display: grid;
+          align-content: center;
+          gap: 14px;
+          padding: 26px;
+          border: 1px solid var(--line-strong);
+          background: linear-gradient(160deg, #1c180f, #0d0b08);
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+          touch-action: pan-y;
+          cursor: grab;
+          user-select: none;
+          transition: transform 0.15s ease-out, border-color 0.2s;
+        }
+        .sw-card p {
+          margin: 0;
+          font: 600 clamp(19px, 2.6vw, 23px) / 1.4 var(--display);
+        }
+        .sw-card.ok {
+          border-color: var(--gold);
+        }
+        .sw-card.no {
+          border-color: var(--loss);
+        }
+        .sw-verdict {
+          display: grid;
+          gap: 6px;
+          padding-top: 12px;
+          border-top: 1px solid var(--line);
+          font-size: 15px;
+          line-height: 1.5;
+          color: #cfc6b1;
+        }
+        .sw-card.ok .sw-verdict b {
+          color: var(--gold);
+        }
+        .sw-card.no .sw-verdict b {
+          color: var(--loss);
+        }
+        .sw-tip {
+          margin: 0;
+          text-align: center;
+          font: 400 12px/1 var(--mono);
+          color: var(--muted);
+        }
+
+        /* Toast + rank up */
+        .toast {
+          position: fixed;
+          left: 50%;
+          bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+          z-index: 10010;
+          transform: translateX(-50%);
+          padding: 14px 22px;
+          background: rgba(12, 11, 8, 0.95);
+          border: 1px solid var(--gold);
+          box-shadow: 0 0 40px rgba(230, 195, 106, 0.35);
+          font-size: 15px;
+          max-width: calc(100vw - 32px);
+          animation: toast 2.2s ease forwards;
+        }
+        .toast b {
+          font: 700 30px/1 var(--display);
+        }
+        @keyframes toast {
+          0% {
+            transform: translate(-50%, 20px);
+            opacity: 0;
+          }
+          12%,
+          80% {
+            transform: translate(-50%, 0);
+            opacity: 1;
+          }
+          100% {
+            transform: translate(-50%, -20px);
+            opacity: 0;
+          }
+        }
+        .rankup {
+          position: fixed;
+          inset: 0;
+          z-index: 10020;
+          display: grid;
+          place-items: center;
+          background: radial-gradient(circle, rgba(230, 195, 106, 0.25), rgba(3, 3, 2, 0.92) 60%);
+          animation: fx-rise 0.4s ease-out;
+        }
+        .ru-in {
+          display: grid;
+          justify-items: center;
+          gap: 18px;
+          text-align: center;
+        }
+        .ru-in b {
+          font: 700 clamp(64px, 14vw, 140px) / 1 var(--display);
+          animation: xp-pop 0.7s cubic-bezier(0.2, 1.4, 0.4, 1);
+        }
+        @keyframes xp-pop {
+          from {
+            transform: scale(0.4);
+          }
+          to {
+            transform: scale(1);
+          }
+        }
+        .no-fx .pane,
+        .no-fx .mcard.next::before,
+        .no-fx .rung.cur i,
+        .no-fx .toast,
+        .no-fx .rankup,
+        .no-fx .ru-in b {
+          animation: none !important;
+        }
       `}</style>
-    </PageShell>
+    </>
   );
 }
