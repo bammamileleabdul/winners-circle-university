@@ -16,11 +16,13 @@ const PRINCIPLES = [
 ];
 
 const HUB = [
+  { href: "/learn", k: "Academy", t: "Learn Trading", d: "Missions, mini-games and XP. Rookie to Winner, no boring lectures.", icon: "M4 8l12-4 12 4-12 4zM8 10v7c0 2 4 4 8 4s8-2 8-4v-7M28 8v8" },
   { href: "/get-started", k: "Start", t: "Get Started", d: "Open your Exness account and start copying in 3 steps.", icon: "M5 25h6v-6h6v-6h6V7h4" },
   { href: "/copy-trading", k: "Copy", t: "Copy Trading", d: "How copying through Exness works. No passwords, ever.", icon: "M9 9h12v12H9zM13 5h14v14" },
   { href: "/how", k: "Method", t: "How It Works", d: "The risk framework behind every trade.", icon: "M16 5a11 11 0 1 0 0 22 11 11 0 0 0 0-22Zm0 5v6l4 3" },
   { href: "/simulator", k: "Replay", t: "Simulator", d: "Replay 75 real signals from our Telegram, wins and losses.", icon: "M4 26h24M7 21l6-7 5 4 8-11M22 7h4v4" },
   { href: "/client-portal", k: "Members", t: "Members Area", d: "Track the strategy, your fee maths and lessons.", icon: "M5 7h22v18H5zM5 12h22M10 20h4M18 20h4" },
+  { href: "/ai", k: "Assistant", t: "Ask mini lelefx", d: "Quick answers on copying, fees and the principles.", icon: "M7 9h18v12H7zM12 14h1M19 14h1M16 5v4M11 25h10" },
   { href: "/waitlist", k: "Access", t: "Join the Waitlist", d: "Founding members hear first when we open.", icon: "M16 5a11 11 0 1 0 0 22 11 11 0 0 0 0-22Zm0 6v10m-5-5h10", cta: true },
 ];
 
@@ -88,6 +90,10 @@ export default function Home() {
                   {wlState === "done" && "You’re on the list. Watch your inbox for launch news."}
                 </p>
               </form>
+
+              <a className="newbie" href="/learn">
+                <span>New to trading?</span> Enter the Academy →
+              </a>
 
               <dl className="terms">
                 <div><dt>Copy from</dt><dd>${SITE.minInvestmentUsd}</dd></div>
@@ -270,6 +276,7 @@ export default function Home() {
       <style jsx>{`
         .hero {
           padding: 64px 16px 56px;
+          overflow-x: clip;
         }
         .hero-in {
           max-width: 1120px;
@@ -318,6 +325,20 @@ export default function Home() {
         .wl-msg.invalid,
         .wl-msg.error {
           color: var(--loss);
+        }
+        .newbie {
+          justify-self: start;
+          margin-top: -10px;
+          font: 500 14px/1.4 var(--body);
+          color: var(--gold);
+          border-bottom: 1px solid var(--line-strong);
+          padding-bottom: 2px;
+        }
+        .newbie span {
+          color: var(--muted);
+        }
+        .newbie:hover {
+          border-color: var(--gold);
         }
         .terms {
           margin: 0;
@@ -433,10 +454,10 @@ export default function Home() {
 
         .hub {
           display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
+          grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 14px;
         }
-        @media (max-width: 900px) {
+        @media (max-width: 1000px) {
           .hub {
             grid-template-columns: repeat(2, minmax(0, 1fr));
           }

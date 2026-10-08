@@ -49,6 +49,12 @@ export default function GetStartedPage() {
         </a>
       </div>
 
+      <a className="newbie fx-glass fx-tilt" href="/learn">
+        <span className="fx-eyebrow">New to trading?</span>
+        <b>Level up in the Academy first: 8 quick missions, 2 games, rank from Rookie to Winner.</b>
+        <i>Enter the Academy →</i>
+      </a>
+
       <div className="steps">
         {STEPS.map((s) => (
           <div key={s.n} className="step fx-glass fx-tilt">
@@ -86,6 +92,22 @@ export default function GetStartedPage() {
       </p>
 
       <style jsx>{`
+        .newbie {
+          display: grid;
+          gap: 8px;
+          padding: 18px 22px;
+          border-color: var(--gold-deep);
+        }
+        .newbie b {
+          font: 600 20px/1.3 var(--display);
+        }
+        .newbie i {
+          font: 600 12px/1 var(--mono);
+          font-style: normal;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--gold);
+        }
         .steps {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));

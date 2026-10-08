@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 const LINKS = [
+  { href: "/learn", label: "Academy" },
   { href: "/how", label: "How It Works" },
   { href: "/copy-trading", label: "Copy Trading" },
   { href: "/simulator", label: "Simulator" },
@@ -119,11 +120,12 @@ export default function SiteHeader() {
         }
         .sh-nav {
           display: none;
-          gap: 4px;
+          gap: 2px;
           margin-left: auto;
         }
         .sh-nav a {
-          padding: 10px 12px;
+          padding: 10px 9px;
+          white-space: nowrap;
           font: 600 12px/1 var(--body);
           letter-spacing: 0.08em;
           text-transform: uppercase;
@@ -166,7 +168,7 @@ export default function SiteHeader() {
           box-shadow: none;
           background: var(--gold-soft);
         }
-        @media (min-width: 1020px) {
+        @media (min-width: 1180px) {
           .sh-nav,
           .sh-auth {
             display: flex;
