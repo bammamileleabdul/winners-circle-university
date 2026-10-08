@@ -29,11 +29,22 @@ export default function SimulatorPage() {
   const amt = parseFloat(amount);
   const valid = amt >= SITE.minInvestmentUsd;
   const trades = useMemo(() => TRADES.filter((t) => t.t >= PERIODS.find((p) => p.k === period).from), [period]);
-  const res = useMemo(() => (valid ? replayTrades(amt, trades, div, SITE.performanceFeePct, mode) : null), [amt, trades, div, valid, mode]);
-  const level = RISK_LEVELS.find((r) => r.div === div);
+  // "Best growth" = the Kelly fraction for 1:1 trades: win rate minus loss rate, from the trades in this period
+  const pWin = trades.length ? trades.filter((t) => t.win).length / trades.length : 0;
+  const kelly = Math.max(0, 2 * pWin - 1);
+  const isKelly = div === "kelly";
+  const effMode = isKelly ? "compound" : mode;
+  const effDiv = isKelly ? (kelly > 0 ? 1 / kelly : Infinity) : div;
+  const res = useMemo(
+    () => (valid ? replayTrades(amt, trades, effDiv, SITE.performanceFeePct, effMode) : null),
+    [amt, trades, effDiv, valid, effMode]
+  );
+  const level = isKelly
+    ? { label: "Best growth", pct: `${(kelly * 100).toFixed(0)}%`, tone: "Maximum risk" }
+    : RISK_LEVELS.find((r) => r.div === div);
   // Five losses in a row at the very start, under the chosen rule
-  const fiveLoss = mode === "step" ? Math.min(100, (5 / div) * 100) : (1 - Math.pow(1 - 1 / div, 5)) * 100;
-  const startRisk = valid ? amt / div : 0;
+  const fiveLoss = effMode === "step" ? Math.min(100, (5 / effDiv) * 100) : (1 - Math.pow(1 - 1 / effDiv, 5)) * 100;
+  const startRisk = valid ? amt / effDiv : 0;
   const gain = res ? res.end - amt : 0;
 
   return (
@@ -82,27 +93,33 @@ export default function SimulatorPage() {
               {RISK_LEVELS.map((r) => (
                 <button key={r.div} type="button" className={`risk r${r.div}`} aria-pressed={div === r.div} onClick={() => setDiv(r.div)}>
                   <b>Capital {r.label}</b>
-                  <span>{mode === "step" && valid ? `${money(amt / r.div)} per trade to start` : `${r.pct} of balance per trade`}</span>
+                  <span>{effMode === "step" && valid ? `${money(amt / r.div)} per trade to start` : `${r.pct} of balance per trade`}</span>
                   <i>{r.tone}</i>
                 </button>
               ))}
+              <button type="button" className="risk rk" aria-pressed={isKelly} onClick={() => setDiv("kelly")}>
+                <b>Best growth</b>
+                <span>{kelly > 0 ? `${(kelly * 100).toFixed(0)}% of balance per trade (Kelly)` : "No edge in this period"}</span>
+                <i>Maximum risk</i>
+              </button>
             </div>
           </div>
 
           <div>
             <span className="fx-label">How risk grows</span>
             <div className="modes">
-              <button type="button" className="mode" aria-pressed={mode === "step"} onClick={() => setMode("step")}>
+              <button type="button" className="mode" aria-pressed={effMode === "step"} disabled={isKelly} onClick={() => setMode("step")}>
                 <b>Double at 2×</b>
                 <span>
                   Risk starts at {valid ? money(startRisk) : "capital " + level.label} and doubles each time the account doubles.
                 </span>
               </button>
-              <button type="button" className="mode" aria-pressed={mode === "compound"} onClick={() => setMode("compound")}>
+              <button type="button" className="mode" aria-pressed={effMode === "compound"} onClick={() => setMode("compound")}>
                 <b>Grow every trade</b>
                 <span>Risk is {level.pct} of the current balance on every trade.</span>
               </button>
             </div>
+            {isKelly && <p className="mode-note">Best growth always works on the current balance, so “Double at 2×” is off.</p>}
           </div>
 
           <div>
@@ -126,7 +143,7 @@ export default function SimulatorPage() {
           {res && (
             <div className="result">
               <span className="fx-eyebrow">Ending balance</span>
-              <span className="big">{money(res.end)}</span>
+              <span className="big" style={money(res.end).length > 10 ? { fontSize: "clamp(30px, 4.2vw, 40px)" } : undefined}>{money(res.end)}</span>
               <span className={`sub ${gain >= 0 ? "" : "neg"}`}>
                 {gain >= 0 ? "+" : "-"}
                 {money(Math.abs(gain)).replace("-", "")} ({pct((gain / amt) * 100)}) after {money(res.fees)} in fees, over {res.played} trades
@@ -134,9 +151,26 @@ export default function SimulatorPage() {
             </div>
           )}
 
-          <p className={`warn r${div}`}>
+          {isKelly && (
+            <p className="kelly">
+              {kelly > 0 ? (
+                <>
+                  <b>Why {level.pct}?</b> For 1:1 trades, growth is fastest when you risk your win rate minus your loss
+                  rate: {(pWin * 100).toFixed(0)}% − {((1 - pWin) * 100).toFixed(0)}% = {level.pct}. It’s only the best in
+                  hindsight on these trades. If the real win rate turns out lower, this much risk shrinks the account, so
+                  professionals usually use half of it or less.
+                </>
+              ) : (
+                <>
+                  <b>No edge here.</b> In this period the win rate is {(pWin * 100).toFixed(0)}%, so at 1:1 the best growth
+                  comes from not trading at all.
+                </>
+              )}
+            </p>
+          )}
+          <p className={`warn r${isKelly ? "k" : div}`}>
             <b>{level.tone}.</b>{" "}
-            {mode === "step"
+            {effMode === "step"
               ? fiveLoss >= 100
                 ? `Risking ${money(startRisk)} a trade, 5 losses in a row at the start would wipe out the account.`
                 : `Risking ${money(startRisk)} a trade, 5 losses in a row at the start would cut the account by ${fiveLoss.toFixed(0)}%.`
@@ -148,7 +182,7 @@ export default function SimulatorPage() {
         <div className="panel fx-glass">
           <div className="head">
             <h2>Simulated balance</h2>
-            <span>{res ? res.played : trades.length} trades · {level.label} · {mode === "step" ? "double at 2×" : "grow every trade"}</span>
+            <span>{res ? res.played : trades.length} trades · {isKelly ? `best growth ${level.pct}` : level.label} · {effMode === "step" ? "double at 2×" : "grow every trade"}</span>
           </div>
           {res && (
             <BalanceChart
@@ -157,7 +191,7 @@ export default function SimulatorPage() {
               marks={res.doublings.map((d, k) => ({ index: d.index, text: `${2 ** (k + 1)}×` }))}
             />
           )}
-          {res && mode === "step" && (
+          {res && effMode === "step" && (
             <p className="dbl">
               {res.doublings.length
                 ? <>Risk doubled {res.doublings.length} time{res.doublings.length > 1 ? "s" : ""}: {res.doublings.map((d, k) => `${d.label.split(" · ")[0]} → ${money(d.risk)}`).join(", ")} per trade.</>
@@ -167,7 +201,7 @@ export default function SimulatorPage() {
           {res && (
             <div className="stats">
               <div><span>Wins / losses</span><b>{res.wins} / {res.losses}</b></div>
-              <div><span>{mode === "step" ? "Risk now" : "Win rate"}</span><b>{mode === "step" ? money(res.endRisk) : `${res.played ? Math.round((res.wins / res.played) * 100) : 0}%`}</b></div>
+              <div><span>{effMode === "step" ? "Risk now" : "Win rate"}</span><b>{effMode === "step" ? money(res.endRisk) : `${res.played ? Math.round((res.wins / res.played) * 100) : 0}%`}</b></div>
               <div><span>Max drawdown</span><b className="neg">-{(res.maxDD * 100).toFixed(1)}%</b></div>
               <div><span>Longest losing run</span><b>{res.worstStreak}</b></div>
             </div>
@@ -401,6 +435,13 @@ export default function SimulatorPage() {
         .risk.r5 i {
           color: #ef6f5a;
         }
+        .risk.rk i {
+          color: #ff5a4a;
+        }
+        .risk.rk[aria-pressed="true"] {
+          border-color: #ff5a4a;
+          background: rgba(255, 90, 74, 0.12);
+        }
         .risk[aria-pressed="true"] {
           border-color: var(--gold);
           background: var(--gold-soft);
@@ -467,8 +508,13 @@ export default function SimulatorPage() {
           font: 400 13px/1.5 var(--mono);
           color: #d9d1bd;
         }
+        .result > * {
+          min-width: 0;
+          overflow-wrap: anywhere;
+        }
         .result {
           display: grid;
+          grid-template-columns: minmax(0, 1fr);
           gap: 6px;
           padding-top: 14px;
           border-top: 1px solid var(--line);
@@ -492,6 +538,31 @@ export default function SimulatorPage() {
         }
         .warn.r10 {
           border-color: #e39b6f;
+        }
+        .warn.rk {
+          border-color: #ff5a4a;
+          background: rgba(255, 90, 74, 0.12);
+        }
+        .kelly {
+          margin: 0;
+          padding: 12px 14px;
+          border: 1px solid var(--line-strong);
+          background: rgba(8, 7, 5, 0.6);
+          font-size: 14px;
+          line-height: 1.55;
+          color: #d9d1bd;
+        }
+        .kelly b {
+          color: var(--gold);
+        }
+        .mode:disabled {
+          opacity: 0.35;
+          cursor: not-allowed;
+        }
+        .mode-note {
+          margin: 8px 0 0;
+          font: 400 12px/1.4 var(--mono);
+          color: var(--muted);
         }
         .warn.r5 {
           border-color: #ef6f5a;
