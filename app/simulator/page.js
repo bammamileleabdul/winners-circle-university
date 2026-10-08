@@ -22,15 +22,18 @@ const fmtDate = (t) =>
 export default function SimulatorPage() {
   const [amount, setAmount] = useState("250");
   const [div, setDiv] = useState(14);
+  const [mode, setMode] = useState("step");
   const [period, setPeriod] = useState("all");
   const [showLog, setShowLog] = useState(false);
 
   const amt = parseFloat(amount);
   const valid = amt >= SITE.minInvestmentUsd;
   const trades = useMemo(() => TRADES.filter((t) => t.t >= PERIODS.find((p) => p.k === period).from), [period]);
-  const res = useMemo(() => (valid ? replayTrades(amt, trades, div, SITE.performanceFeePct) : null), [amt, trades, div, valid]);
+  const res = useMemo(() => (valid ? replayTrades(amt, trades, div, SITE.performanceFeePct, mode) : null), [amt, trades, div, valid, mode]);
   const level = RISK_LEVELS.find((r) => r.div === div);
-  const fiveLoss = (1 - Math.pow(1 - 1 / div, 5)) * 100;
+  // Five losses in a row at the very start, under the chosen rule
+  const fiveLoss = mode === "step" ? Math.min(100, (5 / div) * 100) : (1 - Math.pow(1 - 1 / div, 5)) * 100;
+  const startRisk = valid ? amt / div : 0;
   const gain = res ? res.end - amt : 0;
 
   return (
@@ -79,10 +82,26 @@ export default function SimulatorPage() {
               {RISK_LEVELS.map((r) => (
                 <button key={r.div} type="button" className={`risk r${r.div}`} aria-pressed={div === r.div} onClick={() => setDiv(r.div)}>
                   <b>Capital {r.label}</b>
-                  <span>{r.pct} per trade</span>
+                  <span>{mode === "step" && valid ? `${money(amt / r.div)} per trade to start` : `${r.pct} of balance per trade`}</span>
                   <i>{r.tone}</i>
                 </button>
               ))}
+            </div>
+          </div>
+
+          <div>
+            <span className="fx-label">How risk grows</span>
+            <div className="modes">
+              <button type="button" className="mode" aria-pressed={mode === "step"} onClick={() => setMode("step")}>
+                <b>Double at 2×</b>
+                <span>
+                  Risk starts at {valid ? money(startRisk) : "capital " + level.label} and doubles each time the account doubles.
+                </span>
+              </button>
+              <button type="button" className="mode" aria-pressed={mode === "compound"} onClick={() => setMode("compound")}>
+                <b>Grow every trade</b>
+                <span>Risk is {level.pct} of the current balance on every trade.</span>
+              </button>
             </div>
           </div>
 
@@ -98,40 +117,64 @@ export default function SimulatorPage() {
           </div>
 
           {!valid && <p className="err">Enter at least ${SITE.minInvestmentUsd}, the minimum investment.</p>}
+          {res && res.blown && (
+            <p className="blown">
+              <b>Account wiped out</b> on trade {res.played} ({res.points[res.played].label}). With a fixed risk of{" "}
+              {money(startRisk)}, a losing run took the whole balance.
+            </p>
+          )}
           {res && (
             <div className="result">
               <span className="fx-eyebrow">Ending balance</span>
               <span className="big">{money(res.end)}</span>
               <span className={`sub ${gain >= 0 ? "" : "neg"}`}>
                 {gain >= 0 ? "+" : "-"}
-                {money(Math.abs(gain)).replace("-", "")} ({pct((gain / amt) * 100)}) after {money(res.fees)} in fees, over {trades.length} trades
+                {money(Math.abs(gain)).replace("-", "")} ({pct((gain / amt) * 100)}) after {money(res.fees)} in fees, over {res.played} trades
               </span>
             </div>
           )}
 
           <p className={`warn r${div}`}>
-            <b>{level.tone}.</b> At {level.pct} per trade, 5 losses in a row would cut the account by {fiveLoss.toFixed(0)}%. Losing
-            streaks happen even in good strategies.
+            <b>{level.tone}.</b>{" "}
+            {mode === "step"
+              ? fiveLoss >= 100
+                ? `Risking ${money(startRisk)} a trade, 5 losses in a row at the start would wipe out the account.`
+                : `Risking ${money(startRisk)} a trade, 5 losses in a row at the start would cut the account by ${fiveLoss.toFixed(0)}%.`
+              : `At ${level.pct} per trade, 5 losses in a row would cut the account by ${fiveLoss.toFixed(0)}%.`}{" "}
+            Losing streaks happen even in good strategies.
           </p>
         </div>
 
         <div className="panel fx-glass">
           <div className="head">
             <h2>Simulated balance</h2>
-            <span>{trades.length} trades · {level.label}</span>
+            <span>{res ? res.played : trades.length} trades · {level.label} · {mode === "step" ? "double at 2×" : "grow every trade"}</span>
           </div>
-          {res && <BalanceChart values={res.points.map((p) => p.bal)} labels={res.points.map((p) => p.label)} />}
+          {res && (
+            <BalanceChart
+              values={res.points.map((p) => p.bal)}
+              labels={res.points.map((p) => p.label)}
+              marks={res.doublings.map((d, k) => ({ index: d.index, text: `${2 ** (k + 1)}×` }))}
+            />
+          )}
+          {res && mode === "step" && (
+            <p className="dbl">
+              {res.doublings.length
+                ? <>Risk doubled {res.doublings.length} time{res.doublings.length > 1 ? "s" : ""}: {res.doublings.map((d, k) => `${d.label.split(" · ")[0]} → ${money(d.risk)}`).join(", ")} per trade.</>
+                : <>The account never reached 2× in this period, so risk stayed at {money(startRisk)} per trade.</>}
+            </p>
+          )}
           {res && (
             <div className="stats">
               <div><span>Wins / losses</span><b>{res.wins} / {res.losses}</b></div>
-              <div><span>Win rate</span><b>{trades.length ? Math.round((res.wins / trades.length) * 100) : 0}%</b></div>
+              <div><span>{mode === "step" ? "Risk now" : "Win rate"}</span><b>{mode === "step" ? money(res.endRisk) : `${res.played ? Math.round((res.wins / res.played) * 100) : 0}%`}</b></div>
               <div><span>Max drawdown</span><b className="neg">-{(res.maxDD * 100).toFixed(1)}%</b></div>
               <div><span>Longest losing run</span><b>{res.worstStreak}</b></div>
             </div>
           )}
           <p className="fine">
-            Hypothetical: assumes every signal was taken at exactly its entry, take profit and stop loss, risking the
-            chosen share of the balance each time, with the fee charged at each month end. Real copied results will
+            Hypothetical: assumes every signal was taken at exactly its entry, take profit and stop loss, with risk set by the
+            chosen rule (in “Double at 2×” it never steps back down after a loss) and the fee charged at each month end. Real copied results will
             differ because of spreads, slippage, timing and position sizing. Past results don’t guarantee future ones.
             You can lose your whole investment.
           </p>
@@ -261,6 +304,7 @@ export default function SimulatorPage() {
         }
         .panel {
           display: grid;
+          grid-template-columns: minmax(0, 1fr);
           gap: 18px;
           padding: 22px;
           min-width: 0;
@@ -369,6 +413,59 @@ export default function SimulatorPage() {
           margin: 0;
           color: var(--loss);
           font-size: 14px;
+        }
+        .modes {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 8px;
+        }
+        .mode {
+          display: grid;
+          gap: 6px;
+          align-content: start;
+          padding: 12px;
+          text-align: left;
+          background: rgba(8, 7, 5, 0.6);
+          color: var(--fg);
+          border: 1px solid var(--line);
+          letter-spacing: 0;
+        }
+        .mode:hover {
+          box-shadow: none;
+          border-color: var(--line-strong);
+        }
+        .mode b {
+          font: 700 16px/1.1 var(--display);
+        }
+        .mode span {
+          font: 400 12px/1.4 var(--body);
+          color: var(--muted);
+        }
+        .mode[aria-pressed="true"] {
+          border-color: var(--gold);
+          background: var(--gold-soft);
+        }
+        .mode[aria-pressed="true"] b {
+          color: var(--gold);
+        }
+        .blown {
+          margin: 0;
+          padding: 12px 14px;
+          border: 1px solid #ef6f5a;
+          background: rgba(239, 111, 90, 0.12);
+          font-size: 14px;
+          line-height: 1.5;
+        }
+        .blown b {
+          color: #ef6f5a;
+        }
+        .dbl {
+          margin: 0;
+          padding: 10px 14px;
+          border-left: 2px solid var(--gold-hi);
+          background: rgba(246, 223, 160, 0.06);
+          font: 400 13px/1.5 var(--mono);
+          color: #d9d1bd;
         }
         .result {
           display: grid;
