@@ -123,18 +123,18 @@ export default function CopyTradingPage() {
 
       <div className="btn-row">
         {hasSignup ? (
-          <a className="btn fx-mag" href={SITE.exnessSignupUrl} target="_blank" rel="noopener noreferrer">
+          <a className="btn" href={SITE.exnessSignupUrl} target="_blank" rel="noopener noreferrer">
             Open Exness account
           </a>
         ) : (
           <span className="btn is-off" aria-disabled="true">Exness link coming soon</span>
         )}
         {hasStrategy ? (
-          <a className="btn-ghost fx-mag" href={SITE.strategyUrl} target="_blank" rel="noopener noreferrer">
+          <a className="btn-ghost" href={SITE.strategyUrl} target="_blank" rel="noopener noreferrer">
             View our strategy
           </a>
         ) : (
-          <a className="btn-ghost fx-mag" href="/waitlist">
+          <a className="btn-ghost" href="/waitlist">
             Get notified at launch
           </a>
         )}

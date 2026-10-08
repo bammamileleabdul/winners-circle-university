@@ -29,6 +29,7 @@ export default function AcademyPage() {
   const [open, setOpen] = useState(null); // { type: "mission"|"game"|"tool", id }
   const [toast, setToast] = useState(null);
   const [rankUp, setRankUp] = useState(null);
+  const [pending, setPending] = useState(null); // celebration waiting for a panel to close
 
   useEffect(() => {
     try {
@@ -44,17 +45,39 @@ export default function AcademyPage() {
     } catch {}
   };
 
-  // Add XP, apply a progress change, and celebrate (toast, rank-up).
-  const award = (xp, patch, quiet = false) => {
+  // Add XP and apply a progress change. Returns the new rank's name if this XP ranked the player up.
+  // inline: the caller (a mission's finish screen) shows the XP and rank itself.
+  // While a panel is open (a game), the XP pop-up and rank-up wait until it closes,
+  // then play one after the other so they never sit on top of each other.
+  const award = (xp, patch, inline = false) => {
     const before = rankOf(p.xp).i;
     const next = { ...p, ...patch(p), xp: p.xp + xp };
     save(next);
-    if (xp > 0) {
-      if (!quiet) setToast({ xp, id: Date.now() });
-      const after = rankOf(next.xp).i;
-      if (after > before) setTimeout(() => setRankUp(RANKS[after].name), 900);
+    if (xp <= 0) return null;
+    const after = rankOf(next.xp).i;
+    const rankName = after > before ? RANKS[after].name : null;
+    if (inline) return rankName;
+    if (open) setPending({ xp, rank: rankName });
+    else celebrate(xp, rankName);
+    return rankName;
+  };
+
+  const celebrate = (xp, rankName) => {
+    setToast({ xp, id: Date.now() });
+    if (rankName) {
+      setTimeout(() => {
+        setToast(null);
+        setRankUp(rankName);
+      }, 1600);
     }
   };
+
+  useEffect(() => {
+    if (open || !pending) return;
+    celebrate(pending.xp, pending.rank);
+    setPending(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, pending]);
 
   useEffect(() => {
     if (!toast) return;
@@ -98,10 +121,10 @@ export default function AcademyPage() {
               and rank up.
             </p>
             <div className="btn-row">
-              <button type="button" className="btn fx-mag big" onClick={() => startMission(nextIdx === -1 ? 0 : nextIdx)}>
+              <button type="button" className="btn big" onClick={() => startMission(nextIdx === -1 ? 0 : nextIdx)}>
                 {doneCount === 0 ? "Start Mission 01" : nextIdx === -1 ? "Replay missions" : `Continue: Mission ${String(nextIdx + 1).padStart(2, "0")}`}
               </button>
-              <button type="button" className="btn-ghost fx-mag big" onClick={() => setTab("arena")}>
+              <button type="button" className="btn-ghost big" onClick={() => setTab("arena")}>
                 Play the Arena
               </button>
             </div>

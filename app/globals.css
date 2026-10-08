@@ -22,6 +22,9 @@
 
 * { box-sizing: border-box; }
 
+/* Keep the scrollbar's space reserved so pages don't jump sideways when a panel locks scrolling */
+html { scrollbar-gutter: stable; }
+
 body {
   margin: 0;
   background: var(--bg);
@@ -180,8 +183,7 @@ input, select, textarea { font-family: var(--body); }
 /* ---------- Effects ---------- */
 .fx-tilt {
   position: relative;
-  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
-  transition: transform 0.25s ease-out, border-color 0.25s, box-shadow 0.3s, background 0.25s;
+  transition: border-color 0.25s, box-shadow 0.3s, background 0.25s;
 }
 .fx-tilt::after {
   content: "";
@@ -194,7 +196,6 @@ input, select, textarea { font-family: var(--body); }
   transition: opacity 0.3s;
 }
 .fx-tilt:hover::after { opacity: 1; }
-.fx-mag { transform: translate(var(--tx, 0), var(--ty, 0)); }
 
 .fx-hud { position: relative; }
 .fx-hud::before {
@@ -360,7 +361,7 @@ input, select, textarea { font-family: var(--body); }
 }
 .no-fx .fx-crest .ring, .no-fx .fx-crest .ticks, .no-fx .fx-gradient-text,
 .no-fx .fx-marquee-track, .no-fx .shell-in > *, .no-fx .btn::after { animation: none !important; }
-.no-fx .fx-tilt, .no-fx .fx-mag { transform: none !important; }
+.no-fx .fx-tilt::after { display: none; }
 
 @keyframes fx-spin { to { transform: rotate(360deg); } }
 @keyframes fx-sheen { 0%, 100% { background-position: 0% 0; } 50% { background-position: 100% 0; } }

@@ -256,8 +256,8 @@ export default function SimulatorPage() {
       </div>
 
       <div className="btn-row">
-        <a className="btn fx-mag" href="/copy-trading">How to copy us</a>
-        <a className="btn-ghost fx-mag" href="/how">The risk framework</a>
+        <a className="btn" href="/copy-trading">How to copy us</a>
+        <a className="btn-ghost" href="/how">The risk framework</a>
       </div>
 
       <style jsx>{`

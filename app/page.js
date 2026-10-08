@@ -80,7 +80,7 @@ export default function Home() {
                 </label>
                 <div className="wl-row">
                   <input id="hero-email" name="email" type="email" className="fx-input" placeholder="Enter your email" autoComplete="email" />
-                  <button type="submit" className="btn fx-mag" disabled={wlState === "sending"}>
+                  <button type="submit" className="btn" disabled={wlState === "sending"}>
                     {wlState === "sending" ? "Joining…" : "Join the Waitlist"}
                   </button>
                 </div>
@@ -239,8 +239,8 @@ export default function Home() {
               </div>
             </div>
             <div className="btn-row center">
-              <a className="btn fx-mag" href="/get-started">Get Started</a>
-              <a className="btn-ghost fx-mag" href="/simulator">Try the Simulator</a>
+              <a className="btn" href="/get-started">Get Started</a>
+              <a className="btn-ghost" href="/simulator">Try the Simulator</a>
             </div>
           </div>
         </section>

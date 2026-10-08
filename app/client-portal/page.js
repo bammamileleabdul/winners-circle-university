@@ -113,13 +113,13 @@ export default function MembersArea() {
           </div>
           <div className="btn-row">
             {SITE.strategyUrl ? (
-              <a className="btn fx-mag" href={SITE.strategyUrl} target="_blank" rel="noopener noreferrer">
+              <a className="btn" href={SITE.strategyUrl} target="_blank" rel="noopener noreferrer">
                 Open our strategy
               </a>
             ) : (
               <span className="btn is-off">Strategy link coming soon</span>
             )}
-            <a className="btn-ghost fx-mag" href="/simulator">
+            <a className="btn-ghost" href="/simulator">
               Simulator
             </a>
           </div>

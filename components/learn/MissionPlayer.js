@@ -94,6 +94,7 @@ export default function MissionPlayer({ mission, number, total, alreadyDone: don
   const [picked, setPicked] = useState(null);
   const [claimed, setClaimed] = useState(false);
   const [showTool, setShowTool] = useState(false);
+  const [newRank, setNewRank] = useState(null);
 
   const onChallenge = step === steps;
   const onDone = step === steps + 1;
@@ -113,7 +114,8 @@ export default function MissionPlayer({ mission, number, total, alreadyDone: don
     setStep(steps + 1);
     if (!claimed) {
       setClaimed(true);
-      onFinish(gained);
+      const rank = onFinish(gained);
+      if (rank) setNewRank(rank);
     }
   };
 
@@ -166,13 +168,26 @@ export default function MissionPlayer({ mission, number, total, alreadyDone: don
 
       {onDone && (
         <div className="mp-stage done" key="done">
-          <div className="burst" aria-hidden="true">
-            {Array.from({ length: 14 }).map((_, k) => (
-              <i key={k} style={{ "--a": `${k * (360 / 14)}deg` }} />
-            ))}
-          </div>
           <span className="fx-eyebrow">Mission complete</span>
-          <div className="xp fx-gradient-text">{gained ? `+${gained} XP` : "Replayed"}</div>
+          <div className="xp-wrap">
+            <div className="burst" aria-hidden="true">
+              {Array.from({ length: 14 }).map((_, k) => (
+                <i key={k} style={{ "--a": `${k * (360 / 14)}deg` }} />
+              ))}
+            </div>
+            <div className="xp fx-gradient-text">{gained ? `+${gained} XP` : "Replayed"}</div>
+          </div>
+          {newRank && (
+            <div className="rank-up">
+              <svg viewBox="0 0 100 110" aria-hidden="true">
+                <polygon points="50,4 95,29 95,81 50,106 5,81 5,29" />
+              </svg>
+              <span>
+                <i>Rank up</i>
+                <b>{newRank}</b>
+              </span>
+            </div>
+          )}
           <p>{gained ? (correct ? "Clean run: mission and challenge bonus." : "Mission XP banked. Nail the challenge next time for the bonus.") : "You’d already completed this one. No extra XP, but the reps count."}</p>
           {Tool && !showTool && (
             <button type="button" className="btn-ghost" onClick={() => setShowTool(true)}>
@@ -499,28 +514,13 @@ export default function MissionPlayer({ mission, number, total, alreadyDone: don
         .ch-opt.right {
           border-color: var(--gold);
           background: rgba(230, 195, 106, 0.16);
-          animation: ch-pop 0.35s ease-out;
         }
         .ch-opt.wrong {
           border-color: var(--loss);
           background: rgba(224, 138, 111, 0.12);
-          animation: ch-shake 0.35s ease-out;
         }
         .ch-opt.dim {
           opacity: 0.4;
-        }
-        @keyframes ch-pop {
-          50% {
-            transform: scale(1.02);
-          }
-        }
-        @keyframes ch-shake {
-          25% {
-            transform: translateX(-6px);
-          }
-          75% {
-            transform: translateX(6px);
-          }
         }
         .ch-exp {
           margin: 0;
@@ -551,13 +551,50 @@ export default function MissionPlayer({ mission, number, total, alreadyDone: don
           width: 100%;
           text-align: left;
         }
+        .xp-wrap {
+          position: relative;
+          display: grid;
+          place-items: center;
+          padding: 18px 0;
+        }
         .burst {
           position: absolute;
           left: 50%;
-          top: 42%;
+          top: 50%;
           width: 0;
           height: 0;
           pointer-events: none;
+        }
+        .rank-up {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 10px 18px 10px 12px;
+          border: 1px solid var(--gold);
+          background: rgba(230, 195, 106, 0.12);
+        }
+        .rank-up svg {
+          width: 34px;
+          height: 38px;
+          fill: rgba(230, 195, 106, 0.2);
+          stroke: var(--gold);
+          stroke-width: 4;
+        }
+        .rank-up span {
+          display: grid;
+          gap: 4px;
+          text-align: left;
+        }
+        .rank-up i {
+          font: 500 10px/1 var(--mono);
+          font-style: normal;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: var(--muted);
+        }
+        .rank-up b {
+          font: 700 24px/1 var(--display);
+          color: var(--gold);
         }
         .burst i {
           position: absolute;
@@ -571,6 +608,9 @@ export default function MissionPlayer({ mission, number, total, alreadyDone: don
         @media (prefers-reduced-motion: no-preference) {
           .burst i {
             animation: burst 0.9s ease-out forwards;
+          }
+          .rank-up {
+            animation: fx-rise 0.5s 0.5s ease-out both;
           }
           .done .xp {
             animation: xp-pop 0.6s cubic-bezier(0.2, 1.4, 0.4, 1);

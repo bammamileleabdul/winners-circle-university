@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 // Site-wide futuristic layer: live gold background, cursor glow, scroll bar,
-// 3D tilt on .fx-tilt cards, magnetic .fx-mag buttons and a Motion switch.
+// a cursor-following glow on .fx-tilt cards and a Motion switch.
 export default function FxLayer() {
   const canvasRef = useRef(null);
   const barRef = useRef(null);
@@ -165,29 +165,18 @@ export default function FxLayer() {
     window.addEventListener("scroll", prog, { passive: true });
     prog();
 
+    // Hover glow on .fx-tilt cards: a soft light follows the cursor. Nothing moves, so the
+    // card's position never changes under the pointer (moving cards caused a jitter loop).
     const fine = window.matchMedia("(pointer: fine)").matches;
     const onPoint = (e) => {
       if (!fxRef.current || !fine || !e.target.closest) return;
       const el = e.target.closest(".fx-tilt");
-      if (el) {
-        const r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
-        const k = Number(el.dataset.tilt || 7);
-        el.style.setProperty("--rx", ((0.5 - y) * k).toFixed(2) + "deg");
-        el.style.setProperty("--ry", ((x - 0.5) * k).toFixed(2) + "deg");
-        el.style.setProperty("--sx", x * 100 + "%"); el.style.setProperty("--sy", y * 100 + "%");
-      }
-      const m = e.target.closest(".fx-mag");
-      if (m) {
-        const r = m.getBoundingClientRect();
-        m.style.setProperty("--tx", ((e.clientX - r.left - r.width / 2) * 0.18).toFixed(1) + "px");
-        m.style.setProperty("--ty", ((e.clientY - r.top - r.height / 2) * 0.28).toFixed(1) + "px");
-      }
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      el.style.setProperty("--sx", (((e.clientX - r.left) / r.width) * 100).toFixed(1) + "%");
+      el.style.setProperty("--sy", (((e.clientY - r.top) / r.height) * 100).toFixed(1) + "%");
     };
-    const onOut = (e) => {
-      const el = e.target.closest && e.target.closest(".fx-tilt, .fx-mag");
-      if (!el || el.contains(e.relatedTarget)) return;
-      ["--rx", "--ry", "--tx", "--ty"].forEach((p) => el.style.removeProperty(p));
-    };
+    const onOut = () => {};
     document.addEventListener("pointermove", onPoint, { passive: true });
     document.addEventListener("pointerout", onOut);
     return () => {

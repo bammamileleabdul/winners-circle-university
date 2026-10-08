@@ -33,18 +33,18 @@ export default function GetStartedPage() {
     >
       <div className="btn-row">
         {hasSignup ? (
-          <a className="btn fx-mag" href={SITE.exnessSignupUrl} target="_blank" rel="noopener noreferrer">
+          <a className="btn" href={SITE.exnessSignupUrl} target="_blank" rel="noopener noreferrer">
             Open Exness account
           </a>
         ) : (
-          <a className="btn fx-mag" href="/waitlist">
+          <a className="btn" href="/waitlist">
             Join the waitlist
           </a>
         )}
-        <a className="btn-ghost fx-mag" href="/copy-trading">
+        <a className="btn-ghost" href="/copy-trading">
           See the full walkthrough
         </a>
-        <a className="btn-ghost fx-mag" href="/signup">
+        <a className="btn-ghost" href="/signup">
           Create members account
         </a>
       </div>
