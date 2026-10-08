@@ -19,7 +19,7 @@ const HUB = [
   { href: "/get-started", k: "Start", t: "Get Started", d: "Open your Exness account and start copying in 3 steps.", icon: "M5 25h6v-6h6v-6h6V7h4" },
   { href: "/copy-trading", k: "Copy", t: "Copy Trading", d: "How copying through Exness works. No passwords, ever.", icon: "M9 9h12v12H9zM13 5h14v14" },
   { href: "/how", k: "Method", t: "How It Works", d: "The risk framework behind every trade.", icon: "M16 5a11 11 0 1 0 0 22 11 11 0 0 0 0-22Zm0 5v6l4 3" },
-  { href: "/simulator", k: "Replay", t: "Simulator", d: "Pick a starting amount and replay the strategy’s history.", icon: "M4 26h24M7 21l6-7 5 4 8-11M22 7h4v4" },
+  { href: "/simulator", k: "Replay", t: "Simulator", d: "Replay 75 real signals from our Telegram, wins and losses.", icon: "M4 26h24M7 21l6-7 5 4 8-11M22 7h4v4" },
   { href: "/client-portal", k: "Members", t: "Members Area", d: "Track the strategy, your fee maths and lessons.", icon: "M5 7h22v18H5zM5 12h22M10 20h4M18 20h4" },
   { href: "/waitlist", k: "Access", t: "Join the Waitlist", d: "Founding members hear first when we open.", icon: "M16 5a11 11 0 1 0 0 22 11 11 0 0 0 0-22Zm0 6v10m-5-5h10", cta: true },
 ];

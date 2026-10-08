@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabaseBrowser";
 import Scramble from "../../components/Scramble";
 import BalanceChart from "../../components/BalanceChart";
-import { SITE, WEEKLY_RETURNS, RETURNS_ARE_SAMPLE } from "../../lib/site";
-import { replay, money, pct } from "../../lib/replay";
+import { SITE } from "../../lib/site";
+import { TRACK, TRADES } from "../../lib/track";
+import { replayTrades, money, pct } from "../../lib/replay";
 
 const QUOTES = [
   "Discipline over dopamine.",
@@ -57,9 +58,8 @@ export default function MembersArea() {
     router.push("/login");
   };
 
-  // Strategy growth of $1,000 across the history, before fees
-  const growth = useMemo(() => replay(1000, WEEKLY_RETURNS, 0), []);
-  const labels = ["Start", ...WEEKLY_RETURNS.map((_, i) => `Week ${i + 1}`)];
+  // Growth of $1,000 across the real public signals at capital ÷ 14 per trade, before fees
+  const growth = useMemo(() => replayTrades(1000, TRADES, 14, 0), []);
   const totalReturn = (growth.end / 1000 - 1) * 100;
 
   const fee = useMemo(() => {
@@ -135,24 +135,25 @@ export default function MembersArea() {
 
         {tab === "strategy" && (
           <section className="pane" key="strategy">
-            {RETURNS_ARE_SAMPLE && (
-              <p className="fx-notice">
-                <b>Sample</b>
-                <span>These figures are placeholders until the verified Exness strategy history is published.</span>
-              </p>
-            )}
+            <p className="fx-notice">
+              <b>Real trades</b>
+              <span>
+                The {TRACK.trades} free signals posted in the {TRACK.channel} Telegram channel, {TRACK.from} – {TRACK.to}, each
+                posted before its result. Check every one in the <a href="/simulator">simulator’s trade log</a>.
+              </span>
+            </p>
             <div className="stats">
-              <div className="stat fx-tilt"><span>Total return</span><b className={totalReturn >= 0 ? "up" : "down"}>{pct(totalReturn)}</b><small>Before fees</small></div>
-              <div className="stat fx-tilt"><span>Weeks tracked</span><b>{WEEKLY_RETURNS.length}</b><small>Weekly closes</small></div>
-              <div className="stat fx-tilt"><span>Losing weeks</span><b>{growth.losing}</b><small>of {WEEKLY_RETURNS.length}</small></div>
-              <div className="stat fx-tilt"><span>Max drawdown</span><b className="down">-{(growth.maxDD * 100).toFixed(2)}%</b><small>Largest dip from a peak</small></div>
+              <div className="stat fx-tilt"><span>Win rate</span><b className="up">{Math.round((TRACK.wins / TRACK.trades) * 100)}%</b><small>At 1:1 reward to risk</small></div>
+              <div className="stat fx-tilt"><span>Wins / losses</span><b>{TRACK.wins} / {TRACK.losses}</b><small>{TRACK.trades} signals</small></div>
+              <div className="stat fx-tilt"><span>Growth at ÷14</span><b className={totalReturn >= 0 ? "up" : "down"}>{pct(totalReturn)}</b><small>Before fees</small></div>
+              <div className="stat fx-tilt"><span>Max drawdown</span><b className="down">-{(growth.maxDD * 100).toFixed(1)}%</b><small>Largest dip from a peak</small></div>
             </div>
             <div className="panel fx-glass">
               <div className="panel-head">
                 <h2>Growth of $1,000</h2>
-                <span>Before fees</span>
+                <span>Capital ÷ 14 per trade · before fees</span>
               </div>
-              <BalanceChart values={growth.points.map((p) => p.bal)} labels={labels} />
+              <BalanceChart values={growth.points.map((p) => p.bal)} labels={growth.points.map((p) => p.label)} />
             </div>
           </section>
         )}
