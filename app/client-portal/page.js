@@ -58,8 +58,8 @@ export default function MembersArea() {
     router.push("/login");
   };
 
-  // Growth of $1,000 across the real public signals at capital ÷ 14 per trade, before fees
-  const growth = useMemo(() => replayTrades(1000, TRADES, 14, 0), []);
+  // Growth of $1,000 across the real public signals: risk starts at $1,000 ÷ 14 and doubles each time the account doubles, before fees
+  const growth = useMemo(() => replayTrades(1000, TRADES, 14, 0, "step"), []);
   const totalReturn = (growth.end / 1000 - 1) * 100;
 
   const fee = useMemo(() => {
@@ -151,9 +151,9 @@ export default function MembersArea() {
             <div className="panel fx-glass">
               <div className="panel-head">
                 <h2>Growth of $1,000</h2>
-                <span>Capital ÷ 14 per trade · before fees</span>
+                <span>Capital ÷ 14, doubled at 2× · before fees</span>
               </div>
-              <BalanceChart values={growth.points.map((p) => p.bal)} labels={growth.points.map((p) => p.label)} />
+              <BalanceChart values={growth.points.map((p) => p.bal)} labels={growth.points.map((p) => p.label)} marks={growth.doublings.map((d, k) => ({ index: d.index, text: `${2 ** (k + 1)}×` }))} />
             </div>
           </section>
         )}

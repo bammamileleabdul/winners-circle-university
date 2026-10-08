@@ -3,8 +3,9 @@
 import { useRef, useState } from "react";
 import { money } from "../lib/replay";
 
-// Single-series area chart with a crosshair tooltip.
-export default function BalanceChart({ values, labels, height = 260 }) {
+// Single-series area chart with a crosshair tooltip. Optional marks = [{ index, text }] draws
+// labelled diamonds on the line (used for the points where risk doubled).
+export default function BalanceChart({ values, labels, height = 260, marks = [] }) {
   const W = 720, H = height, L = 64, R = 16, T = 16, B = 30;
   const svgRef = useRef(null);
   const [hover, setHover] = useState(null);
@@ -12,7 +13,7 @@ export default function BalanceChart({ values, labels, height = 260 }) {
 
   const min = Math.min(...values), max = Math.max(...values);
   const pad = (max - min) * 0.12 || 1;
-  const y0 = min - pad, y1 = max + pad;
+  const y0 = min >= 0 ? Math.max(0, min - pad) : min - pad, y1 = max + pad;
   const last = values.length - 1;
   const x = (i) => L + ((W - L - R) * i) / last;
   const y = (v) => T + (H - T - B) * (1 - (v - y0) / (y1 - y0));
@@ -58,6 +59,23 @@ export default function BalanceChart({ values, labels, height = 260 }) {
         <path d={area} fill="url(#bc-fill)" />
         <path d={line} fill="none" stroke="#e6c36a" strokeWidth="2" strokeLinejoin="round" />
         <circle cx={x(last)} cy={y(values[last])} r="5" fill="#e6c36a" stroke="#0b0b0b" strokeWidth="2" />
+        {marks.map((m, k) => (
+          <g key={k}>
+            <rect
+              x={x(m.index) - 5}
+              y={y(values[m.index]) - 5}
+              width="10"
+              height="10"
+              transform={`rotate(45 ${x(m.index)} ${y(values[m.index])})`}
+              fill="#0b0b0b"
+              stroke="#f6dfa0"
+              strokeWidth="2"
+            />
+            <text x={x(m.index)} y={y(values[m.index]) - 12} textAnchor="middle" fontSize="11" fill="#f6dfa0" fontFamily="JetBrains Mono, monospace">
+              {m.text}
+            </text>
+          </g>
+        ))}
         {hover && (
           <>
             <line x1={x(hover.i)} x2={x(hover.i)} y1={T} y2={H - B} stroke="#a79e89" strokeDasharray="3 3" />
