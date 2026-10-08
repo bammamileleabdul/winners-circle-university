@@ -3,6 +3,15 @@
 import { useRef, useState } from "react";
 import { money } from "../lib/replay";
 
+// Short axis labels so large balances fit: $950, $12.5K, $2.4M
+const axisMoney = (v) => {
+  const a = Math.abs(v);
+  const sign = v < 0 ? "-" : "";
+  if (a >= 1e6) return `${sign}$${(a / 1e6).toFixed(a >= 1e7 ? 0 : 1)}M`;
+  if (a >= 1e4) return `${sign}$${(a / 1e3).toFixed(a >= 1e5 ? 0 : 1)}K`;
+  return `${sign}$${Math.round(a).toLocaleString("en-US")}`;
+};
+
 // Single-series area chart with a crosshair tooltip. Optional marks = [{ index, text }] draws
 // labelled diamonds on the line (used for the points where risk doubled).
 export default function BalanceChart({ values, labels, height = 260, marks = [] }) {
@@ -50,7 +59,7 @@ export default function BalanceChart({ values, labels, height = 260, marks = [] 
           <g key={k}>
             <line x1={L} x2={W - R} y1={y(t)} y2={y(t)} stroke="rgba(230,195,106,.14)" />
             <text x={L - 10} y={y(t) + 4} textAnchor="end" fontSize="11" fill="#a79e89" fontFamily="JetBrains Mono, monospace">
-              ${Math.round(t).toLocaleString("en-US")}
+              {axisMoney(t)}
             </text>
           </g>
         ))}
