@@ -4,6 +4,7 @@ import { useState } from "react";
 import SiteHeader from "../components/SiteHeader";
 import Crest from "../components/Crest";
 import AceFan from "../components/AceFan";
+import PlayingCard from "../components/PlayingCard";
 import Scramble from "../components/Scramble";
 import MiniLelefx from "../components/MiniLelefx";
 import { SITE } from "../lib/site";
@@ -17,7 +18,7 @@ const PRINCIPLES = [
 ];
 
 const HUB = [
-  { href: "/learn", k: "Academy", t: "Learn Trading", d: "Missions, mini-games and pips. Rookie to Winner, no boring lectures.", icon: "M4 8l12-4 12 4-12 4zM8 10v7c0 2 4 4 8 4s8-2 8-4v-7M28 8v8" },
+  { href: "/learn", k: "Academy", t: "Learn Trading", d: "Missions, blackjack and mini-games. Earn pips and rank from Rookie to Winner.", icon: "M4 8l12-4 12 4-12 4zM8 10v7c0 2 4 4 8 4s8-2 8-4v-7M28 8v8" },
   { href: "/get-started", k: "Start", t: "Get Started", d: "Open your Exness account and start copying in 3 steps.", icon: "M5 25h6v-6h6v-6h6V7h4" },
   { href: "/copy-trading", k: "Copy", t: "Copy Trading", d: "How copying through Exness works. No passwords, ever.", icon: "M9 9h12v12H9zM13 5h14v14" },
   { href: "/how", k: "Method", t: "How It Works", d: "The risk framework behind every trade.", icon: "M16 5a11 11 0 1 0 0 22 11 11 0 0 0 0-22Zm0 5v6l4 3" },
@@ -123,6 +124,30 @@ export default function Home() {
             )}
           </div>
         </div>
+
+        {/* ARENA */}
+        <section className="sec arena-sec">
+          <div className="sec-in">
+            <div className="promo fx-glass">
+              <div className="promo-art" aria-hidden="true">
+                <PlayingCard rank="A" suit="s" />
+                <PlayingCard rank="K" suit="h" />
+              </div>
+              <div className="promo-copy">
+                <span className="fx-eyebrow">New in the Arena</span>
+                <h2>Blackjack</h2>
+                <p>
+                  Ten hands against the dealer with play chips. Earn pips for textbook moves and see why the house always
+                  wins.
+                </p>
+              </div>
+              <div className="promo-cta">
+                <a className="btn" href="/learn#blackjack">Play blackjack</a>
+                <a className="btn-ghost" href="/learn#arena">All games</a>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* HUB */}
         <section className="sec">
@@ -456,6 +481,70 @@ export default function Home() {
           color: var(--muted);
         }
 
+        .arena-sec {
+          padding-bottom: 0;
+        }
+        .promo {
+          display: grid;
+          grid-template-columns: auto minmax(0, 1fr) auto;
+          align-items: center;
+          gap: 28px;
+          padding: 22px 28px;
+          border-color: var(--gold-deep);
+        }
+        .promo-art {
+          display: flex;
+          align-items: center;
+          padding: 6px 10px 6px 4px;
+        }
+        .promo-art :global(.pcard) {
+          width: 74px;
+          filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.65));
+        }
+        .promo-art :global(.pcard:first-child) {
+          transform: rotate(-10deg) translateY(4px);
+        }
+        .promo-art :global(.pcard + .pcard) {
+          margin-left: -20px;
+          transform: rotate(8deg);
+        }
+        .promo-copy {
+          display: grid;
+          gap: 8px;
+        }
+        .promo-copy h2 {
+          margin: 0;
+          font: 700 clamp(28px, 3.4vw, 40px) / 1 var(--display);
+        }
+        .promo-copy p {
+          margin: 0;
+          max-width: 56ch;
+          color: #cfc6b1;
+          line-height: 1.55;
+        }
+        .promo-cta {
+          display: grid;
+          gap: 10px;
+        }
+        @media (max-width: 860px) {
+          .promo {
+            grid-template-columns: auto minmax(0, 1fr);
+            gap: 18px 20px;
+            padding: 20px;
+          }
+          .promo-cta {
+            grid-column: 1 / -1;
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+        @media (max-width: 480px) {
+          .promo-art :global(.pcard) {
+            width: 56px;
+          }
+          .promo-cta {
+            grid-template-columns: 1fr;
+          }
+        }
         .hub {
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));

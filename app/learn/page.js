@@ -40,6 +40,13 @@ export default function AcademyPage() {
       const s = JSON.parse(localStorage.getItem(KEY) || "null");
       if (s && Array.isArray(s.done)) setP({ done: s.done, xp: s.xp || 0, games: s.games || {} });
     } catch {}
+    // Links like /learn#arena open the Arena tab; /learn#blackjack opens that game straight away
+    const h = window.location.hash.slice(1);
+    if (h === "arena" || GAME_NAMES[h]) {
+      setTab("arena");
+      if (GAME_NAMES[h]) setOpen({ type: "game", id: h });
+      document.getElementById("missions")?.scrollIntoView({ block: "start" });
+    }
   }, []);
 
   const save = (next) => {
