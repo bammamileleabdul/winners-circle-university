@@ -86,7 +86,7 @@ function Slide({ s, n }) {
   );
 }
 
-// Story-style mission: tap through cards, answer the challenge, claim XP.
+// Story-style mission: tap through cards, answer the challenge, claim pips.
 export default function MissionPlayer({ mission, number, total, alreadyDone: doneAtStart, onFinish, onNext }) {
   const steps = mission.slides.length;
   const [alreadyDone] = useState(doneAtStart);
@@ -175,7 +175,7 @@ export default function MissionPlayer({ mission, number, total, alreadyDone: don
                 <i key={k} style={{ "--a": `${k * (360 / 14)}deg` }} />
               ))}
             </div>
-            <div className="xp fx-gradient-text">{gained ? `+${gained} XP` : "Replayed"}</div>
+            <div className="xp fx-gradient-text">{gained ? `+${gained} pips` : "Replayed"}</div>
           </div>
           {newRank && (
             <div className="rank-up">
@@ -188,7 +188,7 @@ export default function MissionPlayer({ mission, number, total, alreadyDone: don
               </span>
             </div>
           )}
-          <p>{gained ? (correct ? "Clean run: mission and challenge bonus." : "Mission XP banked. Nail the challenge next time for the bonus.") : "You’d already completed this one. No extra XP, but the reps count."}</p>
+          <p>{gained ? (correct ? "Clean run: mission and challenge bonus." : "Mission pips banked. Nail the challenge next time for the bonus.") : "You’d already completed this one. No extra pips, but the reps count."}</p>
           {Tool && !showTool && (
             <button type="button" className="btn-ghost" onClick={() => setShowTool(true)}>
               Practise: {TOOLS[mission.tool].name}
@@ -214,7 +214,7 @@ export default function MissionPlayer({ mission, number, total, alreadyDone: don
               </button>
             ) : (
               <button type="button" className="btn" onClick={claim} disabled={picked === null}>
-                Claim XP
+                Claim pips
               </button>
             )}
           </>

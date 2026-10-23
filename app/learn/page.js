@@ -7,6 +7,8 @@ import Overlay from "../../components/learn/Overlay";
 import MissionPlayer, { TOOLS } from "../../components/learn/MissionPlayer";
 import CallIt from "../../components/learn/CallIt";
 import ScamOrLegit from "../../components/learn/ScamOrLegit";
+import Blackjack, { BJ_MAX_PIPS } from "../../components/learn/Blackjack";
+import PlayingCard from "../../components/PlayingCard";
 import Glossary from "../../components/learn/Glossary";
 import ToolStyles from "../../components/learn/ToolStyles";
 import { MISSIONS, RANKS, XP_MISSION, XP_CORRECT, rankOf } from "../../components/learn/missions";
@@ -14,14 +16,16 @@ import { MISSIONS, RANKS, XP_MISSION, XP_CORRECT, rankOf } from "../../component
 const KEY = "wcu-academy";
 const TABS = [
   { k: "missions", t: "Missions", d: "8 missions" },
-  { k: "arena", t: "Arena", d: "2 games" },
+  { k: "arena", t: "Arena", d: "3 games" },
   { k: "toolkit", t: "Toolkit", d: "5 tools" },
   { k: "decoder", t: "Decoder", d: "Trading words" },
 ];
 const GAMES = [
-  { k: "callit", t: "Call It", d: "10 rounds. Up or down? Find out if you can really predict the market.", xp: "+50 XP" },
-  { k: "scam", t: "Scam or Legit", d: "Swipe through 8 offers. Spot the scams before they spot you.", xp: "Up to +80 XP" },
+  { k: "callit", t: "Call It", d: "10 rounds. Up or down? Find out if you can really predict the market.", xp: "+50 pips" },
+  { k: "scam", t: "Scam or Legit", d: "Swipe through 8 offers. Spot the scams before they spot you.", xp: "Up to +80 pips" },
+  { k: "blackjack", t: "Blackjack", d: "Ten hands against the dealer with play chips. Earn pips for textbook moves and see why the house always wins.", xp: `Up to +${BJ_MAX_PIPS} pips` },
 ];
+const GAME_NAMES = { callit: "Call It", scam: "Scam or Legit", blackjack: "Blackjack" };
 
 export default function AcademyPage() {
   const [p, setP] = useState({ done: [], xp: 0, games: {} });
@@ -117,7 +121,7 @@ export default function AcademyPage() {
               <Scramble text="to Winner." className="l2 fx-gradient-text" delay={250} />
             </h1>
             <p className="hud-p">
-              No boring lectures. Short missions, mini-games and real tools. Learn how the market actually works, earn XP
+              No boring lectures. Short missions, mini-games and real tools. Learn how the market actually works, earn pips
               and rank up.
             </p>
             <div className="btn-row">
@@ -141,16 +145,16 @@ export default function AcademyPage() {
             <div className="rk">
               <span className="fx-eyebrow">Your rank</span>
               <b className="rk-name">{r.cur.name}</b>
-              <span className="rk-xp">{p.xp} XP</span>
+              <span className="rk-xp">{p.xp} pips</span>
             </div>
-            <div className="xpbar" aria-label={r.next ? `${r.next.xp - p.xp} XP to ${r.next.name}` : "Top rank reached"}>
+            <div className="xpbar" aria-label={r.next ? `${r.next.xp - p.xp} pips to ${r.next.name}` : "Top rank reached"}>
               <i style={{ width: `${r.pct}%` }} />
             </div>
-            <span className="rk-next">{r.next ? `${r.next.xp - p.xp} XP to ${r.next.name}` : "Top rank. You’re a Winner."}</span>
+            <span className="rk-next">{r.next ? `${r.next.xp - p.xp} pips to ${r.next.name}` : "Top rank. You’re a Winner."}</span>
             <div className="rk-stats">
               <div><b>{doneCount}/8</b><span>Missions</span></div>
-              <div><b>{gamesDone}/2</b><span>Games</span></div>
-              <div><b>{p.xp}</b><span>XP</span></div>
+              <div><b>{gamesDone}/{GAMES.length}</b><span>Games</span></div>
+              <div><b>{p.xp}</b><span>Pips</span></div>
             </div>
           </div>
         </section>
@@ -161,7 +165,7 @@ export default function AcademyPage() {
             <div key={rk.name} className={`rung ${k <= r.i ? "on" : ""} ${k === r.i ? "cur" : ""}`}>
               <i />
               <b>{rk.name}</b>
-              <span>{rk.xp} XP</span>
+              <span>{rk.xp} pips</span>
             </div>
           ))}
         </div>
@@ -202,7 +206,7 @@ export default function AcademyPage() {
                     <span className="m-code">{m.code}</span>
                     <b className="m-title">{m.title}</b>
                     <span className="m-foot">
-                      <span>+{XP_MISSION + XP_CORRECT} XP</span>
+                      <span>+{XP_MISSION + XP_CORRECT} pips</span>
                       <span className="m-state">{isDone ? "Complete ✓" : isOpen ? (isNext ? "Play now" : "Ready") : "Locked"}</span>
                     </span>
                   </button>
@@ -231,6 +235,11 @@ export default function AcademyPage() {
                       })}
                       <text x="190" y="40" textAnchor="end" fontSize="34" fill="#e6c36a" fontFamily="Saira, sans-serif">?</text>
                     </svg>
+                  ) : g.k === "blackjack" ? (
+                    <div className="bj-art">
+                      <PlayingCard rank="A" suit="s" />
+                      <PlayingCard rank="K" suit="h" />
+                    </div>
                   ) : (
                     <div className="stack">
                       <i />
@@ -289,8 +298,14 @@ export default function AcademyPage() {
       )}
 
       {open?.type === "game" && (
-        <Overlay label={open.id === "callit" ? "Call It" : "Scam or Legit"} onClose={() => setOpen(null)} wide={open.id === "callit"}>
-          {open.id === "callit" ? (
+        <Overlay label={GAME_NAMES[open.id]} onClose={() => setOpen(null)} wide={open.id !== "scam"}>
+          {open.id === "blackjack" ? (
+            <Blackjack
+              alreadyPlayed={!!p.games.blackjack}
+              onClose={() => setOpen(null)}
+              onFinish={(pips) => !p.games.blackjack && award(pips, (prev) => ({ games: { ...prev.games, blackjack: true } }))}
+            />
+          ) : open.id === "callit" ? (
             <CallIt
               onClose={() => setOpen(null)}
               onFinish={() => !p.games.callit && award(50, (prev) => ({ games: { ...prev.games, callit: true } }))}
@@ -317,7 +332,7 @@ export default function AcademyPage() {
 
       {toast && (
         <div className="toast" key={toast.id} role="status">
-          {toast.xp ? <b className="fx-gradient-text">+{toast.xp} XP</b> : <span>{toast.msg}</span>}
+          {toast.xp ? <b className="fx-gradient-text">+{toast.xp} pips</b> : <span>{toast.msg}</span>}
         </div>
       )}
 
@@ -701,10 +716,15 @@ export default function AcademyPage() {
         /* Arena */
         .arena {
           display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+          grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 16px;
         }
-        @media (max-width: 760px) {
+        @media (max-width: 1000px) {
+          .arena {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+        @media (max-width: 640px) {
           .arena {
             grid-template-columns: 1fr;
           }
@@ -753,6 +773,21 @@ export default function AcademyPage() {
         .g-art svg {
           width: 80%;
           height: auto;
+        }
+        .bj-art {
+          display: flex;
+          align-items: center;
+        }
+        .bj-art .pcard {
+          width: 66px;
+          filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.6));
+        }
+        .bj-art .pcard:first-child {
+          transform: rotate(-10deg) translateY(4px);
+        }
+        .bj-art .pcard + .pcard {
+          margin-left: -18px;
+          transform: rotate(8deg);
         }
         .stack {
           position: relative;
