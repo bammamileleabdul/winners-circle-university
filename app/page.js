@@ -3,6 +3,7 @@
 import { useState } from "react";
 import SiteHeader from "../components/SiteHeader";
 import Crest from "../components/Crest";
+import AceFan from "../components/AceFan";
 import Scramble from "../components/Scramble";
 import MiniLelefx from "../components/MiniLelefx";
 import { SITE } from "../lib/site";
@@ -103,7 +104,10 @@ export default function Home() {
               </dl>
             </div>
             <div className="hero-crest">
-              <Crest size={340} />
+              <div className="fx-crest-host">
+                <AceFan />
+                <Crest size={340} />
+              </div>
             </div>
           </div>
         </section>
@@ -373,7 +377,7 @@ export default function Home() {
         }
         @media (max-width: 860px) {
           .hero {
-            padding-top: 32px;
+            padding-top: 56px;
           }
           .hero-in {
             grid-template-columns: 1fr;

@@ -437,3 +437,27 @@ input, select, textarea { font-family: var(--body); }
   .fx-toggle { padding: 0; width: 34px; height: 34px; justify-content: center; font-size: 0; letter-spacing: 0; }
 }
 .fx-notice a { color: var(--gold); border-bottom: 1px solid var(--line-strong); }
+
+/* ---------- Ace fan (home hero) ---------- */
+.ace-fan { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.ace-fan .pc {
+  position: absolute;
+  left: 29%;
+  bottom: 44%;
+  width: 42%;
+  transform-origin: 50% 100%;
+  transform: rotate(var(--a)) translateY(-21%);
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  filter: drop-shadow(0 12px 22px rgba(0, 0, 0, 0.65));
+  animation: pc-deal 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  animation-delay: calc(0.3s + var(--i) * 0.09s);
+}
+.ace-fan .pc svg { display: block; width: 100%; height: auto; }
+.ace-fan .pc-rank { font: 700 46px var(--display); }
+@keyframes pc-deal {
+  from { opacity: 0; transform: rotate(0deg) translateY(6%); }
+}
+.fx-crest-host { position: relative; isolation: isolate; display: grid; place-items: center; }
+.fx-crest-host > .fx-crest { z-index: 1; }
+.fx-crest-host:hover .pc { transform: rotate(calc(var(--a) * 1.28)) translateY(-28%); }
+.no-fx .ace-fan .pc { animation: none; transition: none; }

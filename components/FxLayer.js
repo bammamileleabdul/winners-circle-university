@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { drawBack, drawFace } from "../lib/cards";
 
-// Site-wide futuristic layer: live gold background, cursor glow, scroll bar,
-// a cursor-following glow on .fx-tilt cards and a Motion switch.
+// Site-wide futuristic layer: live gold background with falling playing cards, cursor glow,
+// scroll bar, a cursor-following glow on .fx-tilt cards and a Motion switch.
 export default function FxLayer() {
   const canvasRef = useRef(null);
   const barRef = useRef(null);
@@ -31,13 +32,32 @@ export default function FxLayer() {
     const cv = canvasRef.current;
     const ctx = cv.getContext("2d");
     let W = 0, H = 0, raf = 0, t = 0;
-    let pts = [], candles = [], ripples = [];
+    let pts = [], ripples = [];
     const mouse = { x: -9999, y: -9999, tx: 0, ty: 0, px: 0, py: 0 };
 
-    const newCandle = (y) => ({
-      x: Math.random() * W, y: y ?? H + 40, h: 14 + Math.random() * 46, w: 4 + Math.random() * 4,
-      up: Math.random() < 0.62, s: 0.15 + Math.random() * 0.35, a: 0.05 + Math.random() * 0.09,
-    });
+    // Falling cards: mostly aces, plus kings, queens and jacks. Each one drifts down,
+    // sways, and slowly turns over to show the crest on its back.
+    const SUITS = ["s", "h", "d", "c"];
+    const sprites = {};
+    const emblem = new Image();
+    let cards = [], cardsW = 0;
+    const sprite = (rank, suit) => (sprites[rank + suit] ||= drawFace(rank, suit));
+    const rebuild = () => {
+      for (const k of Object.keys(sprites)) delete sprites[k];
+      sprites.back = drawBack(emblem);
+      if (!raf) frame();
+    };
+    const newCard = (y) => {
+      const z = 0.3 + Math.random() * 0.7;
+      return {
+        x: Math.random() * W, y: y ?? -120 - Math.random() * H * 0.35, z, vx: 0,
+        rank: Math.random() < 0.45 ? "A" : ["K", "Q", "J"][Math.floor(Math.random() * 3)],
+        suit: SUITS[Math.floor(Math.random() * 4)],
+        rot: (Math.random() - 0.5) * 0.9, vr: (Math.random() - 0.5) * 0.006,
+        flip: Math.random() * 6.28, vf: (0.008 + Math.random() * 0.012) * (Math.random() < 0.5 ? -1 : 1), kick: 0,
+        ph: Math.random() * 6.28, sf: 0.4 + Math.random() * 0.6,
+      };
+    };
 
     const size = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -48,7 +68,12 @@ export default function FxLayer() {
         x: Math.random() * W, y: Math.random() * H, z: 0.35 + Math.random() * 0.65,
         vx: (Math.random() - 0.5) * 0.25, vy: (Math.random() - 0.5) * 0.25,
       }));
-      candles = Array.from({ length: Math.round(W / 90) }, () => newCandle(Math.random() * H));
+      // Rebuild cards only when the width changes, so a phone's address bar showing or hiding doesn't reset them
+      if (!cards.length || Math.abs(W - cardsW) > 60) {
+        cardsW = W;
+        const n = Math.max(6, Math.min(15, Math.round(W / 105)));
+        cards = Array.from({ length: n }, () => newCard(Math.random() * (H + 200) - 120)).sort((a, b) => a.z - b.z);
+      }
       if (!raf) frame();
     };
 
@@ -65,13 +90,28 @@ export default function FxLayer() {
       ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
     };
 
-    const drawCandles = (move) => {
-      for (const c of candles) {
-        if (move) { c.y -= c.s; if (c.y < -80) Object.assign(c, newCandle()); }
-        const col = c.up ? `rgba(230,195,106,${c.a})` : `rgba(239,232,216,${c.a * 0.6})`;
-        ctx.fillStyle = col; ctx.strokeStyle = col;
-        ctx.beginPath(); ctx.moveTo(c.x + c.w / 2, c.y - 8); ctx.lineTo(c.x + c.w / 2, c.y + c.h + 8); ctx.stroke();
-        ctx.fillRect(c.x, c.y, c.w, c.h);
+    const drawCards = (move) => {
+      if (!sprites.back) return;
+      const scale = W < 700 ? 0.8 : 1;
+      for (const c of cards) {
+        const cw = (30 + c.z * 76) * scale, ch = cw * 1.4;
+        if (move) {
+          c.y += 0.25 + c.z * 0.65;
+          c.x += Math.sin(t * c.sf + c.ph) * 0.25 * c.z + c.vx;
+          c.vx *= 0.94;
+          c.rot += c.vr;
+          c.flip += c.vf + c.kick;
+          c.kick *= 0.96;
+          if (c.y - ch > H + 20) Object.assign(c, newCard(), { z: c.z });
+        }
+        const sx = Math.cos(c.flip), sxa = Math.max(0.05, Math.abs(sx));
+        ctx.save();
+        ctx.globalAlpha = (0.1 + c.z * 0.36) * (0.55 + 0.45 * sxa);
+        ctx.translate(c.x + mouse.px * 34 * c.z, c.y + mouse.py * 22 * c.z);
+        ctx.rotate(c.rot);
+        ctx.scale(sxa, 1);
+        ctx.drawImage(sx >= 0 ? sprite(c.rank, c.suit) : sprites.back, -cw / 2, -ch / 2, cw, ch);
+        ctx.restore();
       }
     };
 
@@ -125,7 +165,7 @@ export default function FxLayer() {
       const move = fxRef.current && !document.hidden;
       mouse.px += (mouse.tx - mouse.px) * 0.05; mouse.py += (mouse.ty - mouse.py) * 0.05;
       ctx.clearRect(0, 0, W, H);
-      grid(); drawCandles(move); drawPts(move); drawRipples();
+      grid(); drawCards(move); drawPts(move); drawRipples();
       if (move) { t += 0.016; raf = requestAnimationFrame(frame); }
     }
     startRef.current = () => { if (!raf) frame(); };
@@ -136,7 +176,19 @@ export default function FxLayer() {
       const r = document.documentElement.style;
       r.setProperty("--mx", e.clientX + "px"); r.setProperty("--my", e.clientY + "px");
     };
-    const onDown = (e) => { if (fxRef.current) ripples.push({ x: e.clientX, y: e.clientY, r: 0, life: 1 }); };
+    const onDown = (e) => {
+      if (!fxRef.current) return;
+      ripples.push({ x: e.clientX, y: e.clientY, r: 0, life: 1 });
+      // Cards near a click get flicked: they spin over and slide away from the pointer
+      for (const c of cards) {
+        const dx = c.x - e.clientX, dy = c.y - e.clientY, d = Math.hypot(dx, dy);
+        if (d < 260 && d > 0) {
+          const f = 1 - d / 260;
+          c.kick += 0.16 * f * Math.sign(c.vf);
+          c.vx += (dx / d) * 5 * f;
+        }
+      }
+    };
     const onVis = () => { if (!document.hidden && fxRef.current && !raf) frame(); };
     const onLeave = () => { mouse.x = mouse.y = -9999; };
 
@@ -146,6 +198,14 @@ export default function FxLayer() {
     document.addEventListener("visibilitychange", onVis);
     document.addEventListener("pointerleave", onLeave);
     size();
+    emblem.onload = rebuild;
+    emblem.src = "/emblem.jpg";
+    rebuild();
+    if (document.fonts && document.fonts.load) {
+      Promise.all([document.fonts.load('700 46px "Saira"'), document.fonts.load('italic 600 118px "Saira"')])
+        .then(rebuild)
+        .catch(() => {});
+    }
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", size);
