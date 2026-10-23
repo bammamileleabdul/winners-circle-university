@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { drawBack, drawFace } from "../lib/cards";
+import { CARD_W, PAD, drawBack, drawFace } from "../lib/cards";
 
 // Site-wide futuristic layer: live gold background with falling playing cards, cursor glow,
 // scroll bar, a cursor-following glow on .fx-tilt cards and a Motion switch.
@@ -94,7 +94,7 @@ export default function FxLayer() {
       if (!sprites.back) return;
       const scale = W < 700 ? 0.8 : 1;
       for (const c of cards) {
-        const cw = (30 + c.z * 76) * scale, ch = cw * 1.4;
+        const cw = (38 + c.z * 84) * scale, ch = cw * 1.4;
         if (move) {
           c.y += 0.25 + c.z * 0.65;
           c.x += Math.sin(t * c.sf + c.ph) * 0.25 * c.z + c.vx;
@@ -106,11 +106,12 @@ export default function FxLayer() {
         }
         const sx = Math.cos(c.flip), sxa = Math.max(0.05, Math.abs(sx));
         ctx.save();
-        ctx.globalAlpha = (0.1 + c.z * 0.36) * (0.55 + 0.45 * sxa);
+        ctx.globalAlpha = (0.32 + c.z * 0.5) * (0.6 + 0.4 * sxa);
         ctx.translate(c.x + mouse.px * 34 * c.z, c.y + mouse.py * 22 * c.z);
         ctx.rotate(c.rot);
         ctx.scale(sxa, 1);
-        ctx.drawImage(sx >= 0 ? sprite(c.rank, c.suit) : sprites.back, -cw / 2, -ch / 2, cw, ch);
+        const pad = (PAD / CARD_W) * cw;
+        ctx.drawImage(sx >= 0 ? sprite(c.rank, c.suit) : sprites.back, -cw / 2 - pad, -ch / 2 - pad, cw + pad * 2, ch + pad * 2);
         ctx.restore();
       }
     };
@@ -137,7 +138,7 @@ export default function FxLayer() {
         for (let j = i + 1; j < pts.length; j++) {
           const b = pts[j], d = Math.hypot(a.sx - b.sx, a.sy - b.sy);
           if (d < LINK) {
-            ctx.strokeStyle = `rgba(230,195,106,${(1 - d / LINK) * 0.22 * Math.min(a.z, b.z)})`;
+            ctx.strokeStyle = `rgba(230,195,106,${(1 - d / LINK) * 0.15 * Math.min(a.z, b.z)})`;
             ctx.beginPath(); ctx.moveTo(a.sx, a.sy); ctx.lineTo(b.sx, b.sy); ctx.stroke();
           }
         }
@@ -146,7 +147,7 @@ export default function FxLayer() {
           ctx.strokeStyle = `rgba(243,220,155,${(1 - md / ML) * 0.5})`;
           ctx.beginPath(); ctx.moveTo(a.sx, a.sy); ctx.lineTo(mouse.x, mouse.y); ctx.stroke();
         }
-        ctx.fillStyle = `rgba(230,195,106,${0.35 + a.z * 0.5})`;
+        ctx.fillStyle = `rgba(230,195,106,${0.25 + a.z * 0.4})`;
         ctx.beginPath(); ctx.arc(a.sx, a.sy, a.z * 1.9, 0, 7); ctx.fill();
       }
     };
